@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Astar 公會｜Raid Boss 組隊與互動學習（單頁版）</title>
+<meta name="description" content="Astar 公會專用的 Raid 組隊、名單管理、意見回應、Google Sheet 連動與匯出工具。單一 HTML，無外部依賴，支援 RWD 與漢堡選單。" />
+<meta name="theme-color" content="#0B0F1A" />
+<style>
+  :root{
+    --bg:#0B0F1A; /* 深藍夜空 */
+    --fg:#E5E7EB; /* 淺灰字 */
+    --muted:#94A3B8;
+    --card:rgba(255,255,255,0.08);
+    --glass:rgba(255,255,255,0.06);
+    --accent1:#7C3AED; /* 紫 */
+    --accent2:#06B6D4; /* 青 */
+    --accent3:#F59E0B; /* 金橙 */
+    --ok:#22C55E; --warn:#F59E0B; --bad:#EF4444;
+    --radius:18px; --radius-lg:22px;
+    --shadow:0 12px 30px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    color:var(--fg); background:
+      radial-gradient(1200px 600px at 110% -10%, rgba(124,58,237,0.18), transparent 60%),
+      radial-gradient(1000px 600px at -10% 110%, rgba(6,182,212,0.18), transparent 60%),
+      #0B0F1A;
+  }
+  a{color:inherit}
+  .container{max-width:1200px;margin:0 auto;padding:20px}
+  header{
+    position:sticky;top:0;z-index:20;background:rgba(11,15,26,0.6);backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{width:34px;height:34px;border-radius:12px;background:
+    linear-gradient(135deg,var(--accent1),var(--accent2));
+    box-shadow:0 8px 24px rgba(124,58,237,0.35), inset 0 0 0 2px rgba(255,255,255,0.12);
+  }
+  .brand h1{font-size:18px;letter-spacing:0.2px;margin:0}
+  .tabs{display:flex;gap:8px;align-items:center}
+  .tab-btn{padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,0.10);
+    background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    cursor:pointer;color:var(--fg);font-weight:600;transition:.2s;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+  .tab-btn:hover{transform:translateY(-1px)}
+  .tab-btn.active{border-color:transparent;background:
+    linear-gradient(135deg, rgba(124,58,237,0.65), rgba(6,182,212,0.65));
+    color:white;}
+  .burger{display:none;cursor:pointer;border:1px solid rgba(255,255,255,0.12);padding:8px 10px;border-radius:12px}
+  .burger span{display:block;width:22px;height:2px;background:#fff;margin:5px 0}
+
+  .content{padding:20px}
+  .grid{display:grid;gap:16px}
+  .card{
+    background:var(--card);border:1px solid rgba(255,255,255,0.08);
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+  .card-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .card-body{padding:16px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(124,58,237,0.25);border:1px solid rgba(124,58,237,0.45)}
+  .pill{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.1)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1}
+  .row.inline > *{flex:unset}
+  input, select, textarea{
+    width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.04);color:var(--fg);outline:none
+  }
+  input:focus, select:focus, textarea:focus{border-color: rgba(6,182,212,0.8)}
+  button{cursor:pointer;border:none}
+  .btn{padding:10px 14px;border-radius:12px;font-weight:700;color:white;background:linear-gradient(135deg,var(--accent1),var(--accent2));box-shadow:0 10px 24px rgba(6,182,212,0.25);}
+  .btn.subtle{color:var(--fg);background:rgba(255,255,255,0.06);box-shadow:none;border:1px solid rgba(255,255,255,0.08)}
+  .btn.warn{background:linear-gradient(135deg,#F59E0B,#EF4444)}
+  .table{width:100%;border-collapse:separate;border-spacing:0 10px}
+  .table thead th{position:sticky;top:0;background:rgba(11,15,26,0.9);backdrop-filter:blur(6px);padding:8px 10px;text-align:left;font-size:12px;color:var(--muted);}
+  .table tbody tr{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06)}
+  .table tbody td{padding:12px 10px;border-top:1px solid rgba(255,255,255,0.06)}
+  .scroll{max-height:420px;overflow:auto;padding-right:4px}
+  .muted{color:var(--muted)}
+  .right{margin-left:auto}
+  .hidden{display:none !important}
+
+  /* 拖拉 */
+  .draggable{user-select:none}
+  .dropzone{min-height:70px;padding:8px;border-radius:14px;border:1px dashed rgba(255,255,255,0.2)}
+  .dropzone.highlight{background:rgba(124,58,237,0.12);border-color:rgba(124,58,237,0.7)}
+
+  /* Toast */
+  .toast{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:60}
+  .toast .t{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);}
+
+  /* 漢堡選單 */
+  .mobile-menu{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);z-index:30}
+  .mobile-sheet{position:absolute;left:0;top:0;bottom:0;width:78%;max-width:320px;background:rgba(17,24,39,0.9);border-right:1px solid rgba(255,255,255,0.08);padding:16px 12px}
+  .mobile-sheet .tab-btn{display:block;width:100%;text-align:left;margin:6px 0}
+
+  /* RWD */
+  @media (max-width: 960px){
+    .tabs{display:none}
+    .burger{display:block}
+  }
+  @media (min-width: 961px){
+    .mobile-menu{display:none !important}
+  }
+
+  /* 小徽章 */
+  .role{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.18)}
+  .role.tank{background:rgba(99,102,241,0.2)}
+  .role.heal{background:rgba(34,197,94,0.18)}
+  .role.support{background:rgba(245,158,11,0.18)}
+  .role.dps{background:rgba(239,68,68,0.18)}
+
+  .footer{padding:30px 0;color:var(--muted);text-align:center}
+  
+  /* 指定右側「職業別」下拉選單的選項為黑字（避免白字） */
+  #filterClass option{ color:#111827; background:#ffffff; }
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>Astar 公會｜Raid 組隊中心</h1>
+      <span class="badge" title="Glassmorphism + 漸層">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l3.09 6.26L22 10.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 15.14l-5-4.87 6.91-1.01L12 3z" stroke="currentColor"/></svg>
+        UI Trends 6.5 Mix
+      </span>
+    </div>
+    <div class="tabs" role="tablist" aria-label="主導覽">
+      <button class="tab-btn active" data-tab="members" role="tab" aria-selected="true">公會成員</button>
+      <button class="tab-btn" data-tab="match" role="tab">組隊配對</button>
+      <button class="tab-btn" data-tab="feedback" role="tab">意見回應</button>
+      <button class="tab-btn" data-tab="io" role="tab">匯入/匯出</button>
+      <button class="tab-btn" data-tab="settings" role="tab">連線設定</button>
+    </div>
+    <button class="burger" aria-label="開啟選單">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <div class="mobile-sheet">
+    <div class="row inline" style="justify-content:space-between;align-items:center">
+      <strong>選單</strong>
+      <button class="btn subtle" id="closeMenu">關閉</button>
+    </div>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 0">
+    <button class="tab-btn active" data-tab="members">公會成員</button>
+    <button class="tab-btn" data-tab="match">組隊配對</button>
+    <button class="tab-btn" data-tab="feedback">意見回應</button>
+    <button class="tab-btn" data-tab="io">匯入/匯出</button>
+    <button class="tab-btn" data-tab="settings">連線設定</button>
+  </div>
+</div>
+
+<main class="container content">
+  <!-- 公會成員 -->
+  <section id="tab-members" class="tab">
+    <div class="card">
+      <div class="card-header">
+        <div class="row inline" style="gap:8px;align-items:center">
+          <strong>公會成員</strong>
+          <span class="muted">（啟動自動從 Google Sheet「基本資料表」撈取；若無權限則載入示例）</span>
+        </div>
+        <div class="row inline">
+          <input id="searchInput" placeholder="搜尋 IGN/職業/備註…" style="min-width:220px" />
+          <button class="btn subtle" id="refreshBtn">重新整理</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          
+          <select id="filterClass">
+            <option value="">職業別</option>
+            <option>初新者</option>
+            <option>龍騎士</option>
+            <option>十字軍</option>
+            <option>騎士</option>
+            <option>神偷</option>
+            <option>暗殺者</option>
+            <option>遊俠</option>
+            <option>狙擊手</option>
+            <option>冰魔導士</option>
+            <option>火魔導士</option>
+            <option>祭司</option>
+            <option>神槍手</option>
+            <option>格鬥家</option>
+          </select>
+          <select id="filterVoice">
+            <option value="">語音不限</option>
+            <option>Discord</option>
+            <option>Line</option>
+            <option>皆可</option>
+          </select>
+          <input id="filterPowerMin" type="number" placeholder="最低戰力" />
+          <input id="filterAvail" placeholder="可打時段關鍵字（例：週三20）" />
+          <label class="pill" style="display:flex;align-items:center;gap:6px;padding:8px 10px">
+            <input id="filterExt" type="checkbox" /> 包含外援
+          </label>
+        </div>
+        <div class="scroll" id="memberTableWrap" aria-live="polite" aria-busy="false">
+          <table class="table" id="memberTable">
+            <thead>
+              <tr>
+                <th>IGN</th>
+                <th>職業</th>
+                <th>定位</th>
+                <th>戰力</th>
+                <th>可打時段</th>
+                <th>語音</th>
+                <th>外援</th>
+                <th>聯絡</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 組隊配對 -->
+  <section id="tab-match" class="tab hidden">
+    <div class="grid" style="grid-template-columns: 1.2fr 1fr">
+      <div class="card">
+        <div class="card-header">
+          <strong>配對條件</strong>
+          <div class="row inline">
+            <button class="btn subtle" id="btnDemoTeam">載入示例條件</button>
+            <button class="btn" id="btnSuggest">一鍵建議隊伍</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <input id="raidName" placeholder="Raid 名稱（例：黑魔 12 人）" />
+            <input id="raidTime" placeholder="時間（例：2025-12-24 20:30）" />
+          </div>
+          <div class="row">
+            <label class="pill">坦需求 <input id="needTank" type="number" min="0" value="2" style="width:80px;margin-left:8px"></label>
+            <label class="pill">輔需求 <input id="needSupport" type="number" min="0" value="2" style="width:80px;margin-left:8px"></label>
+            <label class="pill">輸出需求 <input id="needDps" type="number" min="0" value="6" style="width:80px;margin-left:8px"></label>
+            <label class="pill">補需求 <input id="needHeal" type="number" min="0" value="2" style="width:80px;margin-left:8px"></label>
+          </div>
+          <div class="row">
+            <input id="minPower" type="number" placeholder="最低戰力（例：30000）" />
+            <select id="needVoice">
+              <option value="">語音不限</option>
+              <option>Discord</option>
+              <option>Line</option>
+              <option>皆可</option>
+            </select>
+            <label class="pill" title="不足時自動補外援"><input id="allowExt" type="checkbox" checked style="margin-right:8px">可補外援</label>
+          </div>
+          <div class="row">
+            <textarea id="mustList" rows="2" placeholder="必帶名單（以逗號分隔 IGN）"></textarea>
+            <textarea id="banList" rows="2" placeholder="黑名單（以逗號分隔 IGN）"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <strong>建議隊伍（拖拉可調）</strong>
+          <div class="row inline">
+            <button class="btn subtle" id="btnClearTeam">清空</button>
+            <button class="btn" id="btnExportTeam">輸出隊伍</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row" style="gap:12px">
+            <div class="dropzone" data-zone="tank"><strong>坦</strong><div class="list" id="zone-tank"></div></div>
+            <div class="dropzone" data-zone="support"><strong>輔</strong><div class="list" id="zone-support"></div></div>
+            <div class="dropzone" data-zone="dps"><strong>輸出</strong><div class="list" id="zone-dps"></div></div>
+            <div class="dropzone" data-zone="heal"><strong>補</strong><div class="list" id="zone-heal"></div></div>
+          </div>
+          <div class="row inline" style="margin-top:10px">
+            <div id="teamSummary" class="muted">尚未產生隊伍</div>
+            <span class="right pill" id="teamScore">分數：0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 意見回應 -->
+  <section id="tab-feedback" class="tab hidden">
+    <div class="grid" style="grid-template-columns: 1fr 1fr">
+      <div class="card">
+        <div class="card-header">
+          <strong>新增意見</strong>
+          <button class="btn" id="btnAddFeedback">送出</button>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <input id="fbName" placeholder="暱稱（可留空）" />
+            <select id="fbType">
+              <option>Bug</option>
+              <option>優化</option>
+              <option>資料修正</option>
+              <option>活動建議</option>
+            </select>
+          </div>
+          <textarea id="fbContent" rows="4" placeholder="請輸入內容…"></textarea>
+          <div class="row inline" style="margin-top:8px">
+            <label class="pill"><input type="checkbox" id="fbPublic" checked style="margin-right:6px">送出後公開顯示</label>
+            <span class="muted">可於列表自行編輯/刪除</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <strong>意見牆</strong>
+          <div class="row inline">
+            <input id="fbSearch" placeholder="搜尋意見…" />
+            <button class="btn subtle" id="btnClearFB">清空全部（本機）</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="fbList" class="scroll" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 匯入/匯出 -->
+  <section id="tab-io" class="tab hidden">
+    <div class="grid" style="grid-template-columns: 1fr 1fr">
+      <div class="card">
+        <div class="card-header">
+          <strong>本地下載 / 暫存</strong>
+          <div class="row inline">
+            <button class="btn" id="btnExportJSON">下載 JSON</button>
+            <button class="btn" id="btnExportCSV">下載 CSV</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="muted">會打包目前成員快照、隊伍配置與偏好設定，並存到你的電腦。</p>
+          <div class="row inline">
+            <input type="file" id="fileImport" accept=".json,.csv" />
+            <button class="btn subtle" id="btnImport">匯入檔案</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <strong>隊伍卡快照（PNG）</strong>
+          <button class="btn" id="btnSnapshot">產生圖片</button>
+        </div>
+        <div class="card-body">
+          <canvas id="snapshotCanvas" width="1000" height="560" style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,0.1);"></canvas>
+          <p class="muted">產生後可右鍵另存，或自動下載。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 連線設定 -->
+  <section id="tab-settings" class="tab hidden">
+    <div class="grid" style="grid-template-columns: 1fr 1fr">
+      <div class="card">
+        <div class="card-header">
+          <strong>Google Sheet 讀取</strong>
+          <div class="row inline">
+            <button class="btn" id="btnLoadSheet">撈取資料</button>
+            <button class="btn subtle" id="btnSaveEndpoint">保存設定</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <label>Sheet URL 或 CSV 端點</label>
+          <input id="sheetUrl" placeholder="貼上試算表編輯連結或已發布 CSV 連結" />
+          <label style="margin-top:10px">工作表名稱（預設：基本資料表）</label>
+          <input id="sheetName" placeholder="基本資料表" />
+          <p class="muted">若提供一般編輯連結，系統將嘗試轉為：<code>.../gviz/tq?tqx=out:csv&sheet=工作表名</code>（需先公開或發佈到網路）。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <strong>寫入（Apps Script）</strong>
+          <button class="btn subtle" id="btnTestPost">測試上傳</button>
+        </div>
+        <div class="card-body">
+          <label>GAS Web App URL（doPost）</label>
+          <input id="gasUrl" placeholder="https://script.google.com/.../exec" />
+          <label style="margin-top:10px">Token（簡易驗證，可留空）</label>
+          <input id="gasToken" placeholder="可選" />
+          <p class="muted">意見回應或隊伍結果會以 JSON 以 POST 送出。記得在 GAS 端開啟 CORS 與權限。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">Astar Guild · 單頁版 · 本機快取啟用</div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/******************** 基礎工具 ********************/
+const $ = (sel, el=document) => el.querySelector(sel);
+const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+const toast = (msg, ms=1800) => {
+  const t = document.createElement('div'); t.className='t'; t.textContent=msg; $('#toast').appendChild(t);
+  setTimeout(()=>{t.remove()}, ms);
+};
+const download = (filename, content, type='application/json')=>{
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+};
+const toCSV = (rows)=>{
+  if(!rows.length) return '';
+  const esc = v => '"'+String(v??'').replace(/"/g,'""')+'"';
+  const headers = Object.keys(rows[0]);
+  return [headers.join(','), ...rows.map(r=>headers.map(h=>esc(r[h])).join(','))].join('\n');
+};
+
+/******************** 資料層：快取與來源 ********************/
+const Store = {
+  get k(){return 'astar-store-v1'},
+  load(){ try{ return JSON.parse(localStorage.getItem(this.k)||'{}') }catch{ return {} } },
+  save(data){ localStorage.setItem(this.k, JSON.stringify(data)) }
+};
+let app = Object.assign({
+  members: [], // 原始成員
+  team: {tank:[], support:[], dps:[], heal:[]},
+  settings: { sheetUrl:'', sheetName:'基本資料表', gasUrl:'', gasToken:'' },
+  feedback: []
+}, Store.load());
+
+const saveApp = ()=>{ Store.save(app) };
+
+/******************** 解析器：Google Sheet URL → CSV ********************/
+function toCsvUrl(inputUrl, sheetName){
+  if(!inputUrl) return '';
+  // 若已是 CSV 或 gviz
+  if(/\b(out:csv|format=csv)\b/.test(inputUrl)) return inputUrl;
+  // 匹配 spreadsheet ID
+  const m = inputUrl.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if(m){
+    const id = m[1];
+    const name = encodeURIComponent(sheetName||'基本資料表');
+    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${name}`;
+  }
+  return inputUrl; // 其他情況直接使用
+}
+
+/******************** 可打時段解析（簡化） ********************/
+const dayMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':7,'天':7, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6, Sun:7 };
+function parseSlots(s){
+  // 支援：週三20-23、週末整天、每日21後、六 14-18、Mon 20-23
+  s = (s||'').replace(/\s+/g,'');
+  const slots = [];
+  const push = (d, start, end)=>{ if(!isNaN(d)) slots.push({d, start, end}) };
+  if(/整天/.test(s)){
+    (['一','二','三','四','五','六','日']).forEach(ch=>push(dayMap[ch],0,24));
+  }
+  const re = /(週[一二三四五六日天]|[一二三四五六日]|Mon|Tue|Wed|Thu|Fri|Sat|Sun)(\d{1,2})(?:[:：]?(\d{2}))?-(\d{1,2})(?:[:：]?(\d{2}))?/g;
+  let m; while((m = re.exec(s))){
+    const d = dayMap[m[1].replace('週','')] || dayMap[m[1]];
+    const sh = parseInt(m[2]); const sm = parseInt(m[3]||'0');
+    const eh = parseInt(m[4]); const em = parseInt(m[5]||'0');
+    push(d, sh+sm/60, eh+em/60);
+  }
+  // 每日xx後
+  const m2 = s.match(/每日(\d{1,2})後/);
+  if(m2){ const h = parseInt(m2[1]); for(let d=1; d<=7; d++) push(d, h, 24); }
+  // 週末
+  if(/週末/.test(s)){ push(6,0,24); push(7,0,24); }
+  return slots;
+}
+function overlapScore(slots, target){
+  // target: {d,start,end}
+  let score = 0;
+  for(const s of slots){ if(s.d!==target.d) continue; const ov = Math.max(0, Math.min(s.end, target.end) - Math.max(s.start, target.start)); if(ov>=2) score += 3; else if(ov>0) score += 1; }
+  return score;
+}
+
+/******************** 成員載入與渲染 ********************/
+const classSet = new Set();
+function normalizeMember(o){
+  // 兼容兩種欄位格式：
+  // V1（舊）：IGN | UID | 職業 | 定位 | 戰力 | 可打時段 | 語音 | 聯絡 | 備註 | 是否外援
+  // V2（新）：公會成員 | 角色名稱 | 角色代碼 | 角色職業 | 等級 | 乾表 | 所在營區
+  if(o['角色名稱'] || o['角色職業'] || o['等級']){
+    const ign = o['角色名稱']||'';
+    const uid = o['角色代碼']||'';
+    const job = o['角色職業']||'';
+    const lvl = Number(o['等級']||0);
+    const note = o['乾表']||'';
+    const zone = o['所在營區']||'';
+    const guild = o['公會成員']||'';
+    return {
+      // 對現有 UI 的鍵位做映射
+      IGN: ign, UID: uid, 職業: job, 定位: '', 戰力: lvl, 可打時段: '', 語音: '皆可', 聯絡: zone, 備註: note,
+      是否外援: String(guild).includes('外援') ? '是' : '否',
+      // 同時保留原始新欄位便於後續擴充
+      公會成員: guild, 角色名稱: ign, 角色代碼: uid, 角色職業: job, 等級: lvl, 乾表: note, 所在營區: zone
+    };
+  }
+  // 舊欄位回退
+  return {
+    IGN: o.IGN || o.ign || o.暱稱 || o.名稱 || '',
+    UID: o.UID || o.uid || o.ID || '',
+    職業: o.職業 || o.職稱 || o.class || o.CLASS || '',
+    定位: o.定位 || o.role || '',
+    戰力: Number(o.戰力 || o.power || o.戰力值 || 0),
+    可打時段: o.可打時段 || o.時段 || o.availability || '',
+    語音: o.語音 || o.voice || '皆可',
+    聯絡: o.聯絡 || o.contact || '',
+    備註: o.備註 || o.note || '',
+    是否外援: (o.是否外援 || o.外援 || o.external || '').toString().includes('是') ? '是' : (o.external===true?'是':'否')
+  };
+}
+
+function renderMembers(){
+  const tbody = $('#memberTable tbody'); tbody.innerHTML='';
+  const q = $('#searchInput').value.trim().toLowerCase();
+  const fRole = $('#filterRole').value; const fClass = $('#filterClass').value; const fVoice = $('#filterVoice').value; const fMin = Number($('#filterPowerMin').value||0); const fAvail = $('#filterAvail').value.trim(); const incExt = $('#filterExt').checked;
+  const filtered = app.members.filter(m=>{
+    if(q && !(m.IGN+m.職業+m.備註).toLowerCase().includes(q)) return false;
+    if(fRole && m.定位!==fRole) return false;
+    if(fClass && m.職業!==fClass) return false;
+    if(fVoice && m.語音!==fVoice) return false;
+    if(m.戰力 < fMin) return false;
+    if(fAvail && !(m.可打時段||'').includes(fAvail)) return false;
+    if(!incExt && m.是否外援==='是') return false;
+    return true;
+  });
+  // 填職業清單
+  classSet.clear(); app.members.forEach(m=>m.職業&&classSet.add(m.職業));
+  const classSel = $('#filterClass'); if(classSel.options.length<=1){
+    Array.from(classSet).forEach(c=>{ const opt = document.createElement('option'); opt.textContent=c; opt.value=c; classSel.appendChild(opt) })
+  }
+
+  for(const m of filtered){
+    const tr = document.createElement('tr'); tr.setAttribute('tabindex','0');
+    tr.innerHTML = `
+      <td><strong>${m.IGN||'-'}</strong></td>
+      <td>${m.職業||'-'}</td>
+      <td><span class="role ${roleClass(m.定位)}">${m.定位||'-'}</span></td>
+      <td>${m.戰力||0}</td>
+      <td><span class="muted">${m.可打時段||'-'}</span></td>
+      <td>${m.語音||'-'}</td>
+      <td>${m.是否外援}</td>
+      <td>${m.聯絡||''}</td>
+      <td><button class="btn subtle" data-add="${m.IGN}">加入暫存</button></td>`;
+    tbody.appendChild(tr);
+  }
+}
+function roleClass(r){
+  return r==='坦'?'tank': r==='補'?'heal': r==='輔'?'support':'dps';
+}
+
+/******************** 載入資料來源 ********************/
+async function loadFromCSV(url){
+  $('#memberTableWrap').setAttribute('aria-busy','true');
+  try{
+    const res = await fetch(url, {cache:'no-store'});
+    const text = await res.text();
+    // 簡單 CSV 解析
+    const [headerLine, ...lines] = text.split(/\r?\n/).filter(Boolean);
+    const headers = headerLine.split(',').map(h=>h.replace(/^\ufeff/,''));
+    const rows = lines.map(line=>{
+      // 基礎 CSV 拆解（不支援逗號內嵌換行）
+      const cells = [];
+      let cur=''; let inQ=false; for(let i=0;i<line.length;i++){
+        const ch=line[i];
+        if(ch==='"'){
+          if(inQ && line[i+1]==='"'){cur+='"'; i++;}
+          else inQ=!inQ;
+        } else if(ch===',' && !inQ){ cells.push(cur); cur=''; }
+        else cur+=ch;
+      }
+      cells.push(cur);
+      const obj={}; headers.forEach((h,idx)=>obj[h.trim()]=cells[idx]?.trim()); return obj;
+    });
+    app.members = rows.map(normalizeMember).filter(m=>m.IGN);
+    saveApp(); renderMembers(); toast(`載入 ${app.members.length} 筆成員`);
+  }catch(e){ console.error(e); toast('載入失敗，請確認連結或權限'); }
+  $('#memberTableWrap').setAttribute('aria-busy','false');
+}
+
+/******************** 匹配演算法 ********************/
+function suggestTeam(){
+  const needs = {
+    tank: parseInt($('#needTank').value||0),
+    support: parseInt($('#needSupport').value||0),
+    dps: parseInt($('#needDps').value||0),
+    heal: parseInt($('#needHeal').value||0)
+  };
+  const minPow = parseInt($('#minPower').value||0);
+  const needVoice = $('#needVoice').value;
+  const allowExt = $('#allowExt').checked;
+  const must = ($('#mustList').value||'').split(/[，,]/).map(s=>s.trim()).filter(Boolean);
+  const ban = ($('#banList').value||'').split(/[，,]/).map(s=>s.trim()).filter(Boolean);
+  const rt = parseRaidTime($('#raidTime').value);
+
+  const pool = app.members.filter(m=>{
+    if(m.戰力 < minPow) return false;
+    if(needVoice && m.語音!==needVoice) return false;
+    if(ban.includes(m.IGN)) return false;
+    if(!allowExt && m.是否外援==='是') return false;
+    return true;
+  }).map(m=>{
+    const slots = parseSlots(m.可打時段);
+    const score = rt? overlapScore(slots, rt): 0;
+    const v = (m.語音===needVoice && needVoice)? 1: 0;
+    const pow = Math.min(5, Math.floor((m.戰力 - (minPow||0))/5000));
+    return {...m, __score: score*3 + v + pow};
+  });
+
+  // 先處理必帶
+  const team = {tank:[], support:[], dps:[], heal:[]};
+  const used = new Set();
+  for(const name of must){
+    const m = pool.find(x=>x.IGN===name && !used.has(x.IGN)); if(!m) continue;
+    const key = mapRoleKey(m.定位); if(key) { team[key].push(m); used.add(m.IGN); }
+  }
+
+  const buckets = {tank:[], support:[], dps:[], heal:[]};
+  for(const m of pool){
+    if(used.has(m.IGN)) continue;
+    const key = mapRoleKey(m.定位); if(!key) continue;
+    buckets[key].push(m);
+  }
+  Object.values(buckets).forEach(list=>list.sort((a,b)=> b.__score - a.__score));
+
+  for(const role of ['tank','support','dps','heal']){
+    const need = needs[role];
+    for(const cand of buckets[role]){
+      if(team[role].length >= need) break;
+      if(!used.has(cand.IGN)){ team[role].push(cand); used.add(cand.IGN); }
+    }
+  }
+
+  app.team = team; saveApp(); renderTeamSummary(); toast('已產生建議隊伍');
+}
+function parseRaidTime(s){
+  if(!s) return null;
+  // 期望格式：YYYY-MM-DD HH:mm
+  const m = s.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2})(?::(\d{2}))?/);
+  if(!m) return null;
+  const dt = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  const d = ((dt.getDay()+6)%7)+1; // 1..7，將週一=1
+  const start = Number(m[4]) + Number(m[5]||0)/60; const end=start+3; // 預設 3 小時窗
+  return {d, start, end};
+}
+function mapRoleKey(v){
+  if(v==='坦') return 'tank'; if(v==='輔') return 'support'; if(v==='輸出') return 'dps'; if(v==='補') return 'heal'; return '';
+}
+
+function renderTeamSummary(){
+  for(const k of ['tank','support','dps','heal']){
+    const zone = $('#zone-'+k); zone.innerHTML='';
+    for(const m of app.team[k]){
+      const el = document.createElement('div'); el.className='draggable pill'; el.draggable=true; el.dataset.ign=m.IGN; el.dataset.role=k;
+      el.style.display='flex'; el.style.justifyContent='space-between'; el.style.margin='6px 0'; el.title=`${m.職業}｜${m.戰力}`;
+      el.innerHTML = `<span><strong>${m.IGN}</strong> <span class="muted">${m.職業}</span></span><span class="muted">${m.戰力}</span>`;
+      zone.appendChild(el);
+    }
+  }
+  const summary = $('#teamSummary');
+  const counts = Object.fromEntries(['tank','support','dps','heal'].map(k=>[k, app.team[k].length]));
+  const total = counts.tank+counts.support+counts.dps+counts.heal;
+  const avg = avgPower(Object.values(app.team).flat());
+  const score = total + Math.round(avg/1000);
+  $('#teamScore').textContent = `分數：${score}`;
+  const rn = $('#raidName').value||'未命名 Raid';
+  const rt = $('#raidTime').value||'未定時間';
+  summary.textContent = `${rn}｜${rt} ｜隊員 ${total} 人｜平均戰力 ${avg}`;
+}
+function avgPower(list){ if(!list.length) return 0; return Math.round(list.reduce((a,b)=>a+(b.戰力||0),0)/list.length); }
+
+/******************** 拖拉交互 ********************/
+function initDnD(){
+  document.addEventListener('dragstart', e=>{
+    const t = e.target; if(!t.classList.contains('draggable')) return;
+    e.dataTransfer.setData('text/plain', JSON.stringify({ign:t.dataset.ign, from:t.dataset.role}));
+  });
+  $$('.dropzone').forEach(z=>{
+    z.addEventListener('dragover', e=>{e.preventDefault(); z.classList.add('highlight')});
+    z.addEventListener('dragleave', ()=>z.classList.remove('highlight'));
+    z.addEventListener('drop', e=>{
+      e.preventDefault(); z.classList.remove('highlight');
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const to = z.dataset.zone; moveMember(data.ign, data.from, to);
+    });
+  });
+}
+function moveMember(ign, from, to){
+  if(!ign) return;
+  if(from===to) return;
+  const src = app.team[from]; const idx = src.findIndex(m=>m.IGN===ign); if(idx>=0){
+    const [m] = src.splice(idx,1); app.team[to].push(m); saveApp(); renderTeamSummary();
+  }
+}
+
+/******************** 隊伍輸出 ********************/
+function exportTeamText(){
+  const rn = $('#raidName').value||'未命名 Raid';
+  const rt = $('#raidTime').value||'未定時間';
+  const seg = k=> app.team[k].map(m=>m.IGN).join('、')||'（空）';
+  const txt = [
+    `【${rn}】${rt}`,
+    `坦：${seg('tank')}`,
+    `輔：${seg('support')}`,
+    `輸出：${seg('dps')}`,
+    `補：${seg('heal')}`,
+    `總數：${Object.values(app.team).reduce((a,b)=>a+b.length,0)}，平均戰力：${avgPower(Object.values(app.team).flat())}`
+  ].join('\n');
+  return txt;
+}
+
+/******************** 意見回應 CRUD ********************/
+function addFeedback(){
+  const item = {
+    id: 'fb_'+Date.now(),
+    name: $('#fbName').value.trim()||'匿名',
+    type: $('#fbType').value,
+    content: $('#fbContent').value.trim(),
+    public: $('#fbPublic').checked,
+    ts: new Date().toISOString()
+  };
+  if(!item.content){ toast('請輸入內容'); return }
+  app.feedback.unshift(item); saveApp(); renderFeedback(); $('#fbContent').value=''; toast('已送出');
+  // 若設定了 GAS，嘗試上傳（非必要）
+  postToGAS({kind:'feedback', item}).catch(()=>{});
+}
+function renderFeedback(){
+  const q = $('#fbSearch').value.trim().toLowerCase();
+  const wrap = $('#fbList'); wrap.innerHTML='';
+  for(const it of app.feedback){
+    if(q && !(it.name+it.type+it.content).toLowerCase().includes(q)) continue;
+    if(!it.public) continue; // 僅示範公開顯示
+    const row = document.createElement('div'); row.className='pill'; row.style.padding='10px 12px'; row.style.margin='8px 0';
+    row.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+        <div>
+          <strong>${it.type}</strong>
+          <span class="muted">｜${new Date(it.ts).toLocaleString()}</span>
+          <div class="muted">by ${it.name}</div>
+          <div style="margin-top:6px">${escapeHtml(it.content)}</div>
+        </div>
+        <div class="row inline">
+          <button class="btn subtle" data-edit="${it.id}">編輯</button>
+          <button class="btn warn" data-del="${it.id}">刪除</button>
+        </div>
+      </div>`;
+    wrap.appendChild(row);
+  }
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
+
+/******************** GAS 上傳 ********************/
+async function postToGAS(payload){
+  const url = app.settings.gasUrl; if(!url) return {ok:false};
+  const token = app.settings.gasToken;
+  const body = JSON.stringify({token, ...payload});
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body});
+    return {ok:res.ok, status:res.status, text: await res.text()};
+  }catch(e){ return {ok:false, error:String(e)} }
+}
+
+/******************** 匯出 / 匯入 / 快照 ********************/
+function exportJSON(){
+  const data = {members: app.members, team: app.team, settings: app.settings, feedback: app.feedback};
+  download(`index.json`, JSON.stringify(data, null, 2));
+}
+function exportCSV(){
+  download(`index.csv`, toCSV(app.members), 'text/csv');
+}
+function importFile(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const text = reader.result;
+    if(file.name.endsWith('.json')){
+      try{ const data = JSON.parse(text); Object.assign(app, data); saveApp(); renderMembers(); renderTeamSummary(); renderFeedback(); toast('JSON 匯入完成'); }catch{ toast('JSON 格式錯誤') }
+    } else if(file.name.endsWith('.csv')){
+      const [headerLine, ...lines] = text.split(/\r?\n/).filter(Boolean);
+      const headers = headerLine.split(',');
+      const rows = lines.map(l=>{const cells=l.split(','); const o={}; headers.forEach((h,i)=>o[h.trim()]=cells[i]); return o});
+      app.members = rows.map(normalizeMember); saveApp(); renderMembers(); toast('CSV 匯入完成');
+    }
+  };
+  reader.readAsText(file);
+}
+function snapshotTeam(){
+  const c = $('#snapshotCanvas'); const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0B0F1A'; ctx.fillRect(0,0,c.width,c.height);
+  // 標題
+  ctx.fillStyle = '#ffffff'; ctx.font = '28px ui-sans-serif';
+  const rn = $('#raidName').value||'未命名 Raid'; const rt = $('#raidTime').value||'未定時間';
+  ctx.fillText(`【${rn}】${rt}`, 24, 42);
+  // 區塊
+  const roles = [['坦','tank'],['輔','support'],['輸出','dps'],['補','heal']];
+  let x=24, y=70, w=(c.width-24*2-30)/2, h=(c.height-70-24-16)/2;
+  for(let i=0;i<4;i++){
+    const col = i%2, row = Math.floor(i/2);
+    const bx = x + col*(w+30), by = y + row*(h+16);
+    roundRect(ctx, bx, by, w, h, 16, 'rgba(255,255,255,0.09)');
+    ctx.fillStyle = '#A5B4FC'; ctx.font = '20px ui-sans-serif';
+    ctx.fillText(roles[i][0], bx+14, by+28);
+    ctx.fillStyle = '#E5E7EB'; ctx.font = '16px ui-sans-serif';
+    const list = app.team[roles[i][1]];
+    list.forEach((m,idx)=>{ ctx.fillText(`${idx+1}. ${m.IGN} (${m.職業}｜${m.戰力})`, bx+14, by+56+idx*24) });
+  }
+  // 平均、總數
+  ctx.fillStyle='#9CA3AF'; ctx.font='16px ui-sans-serif';
+  const avg = avgPower(Object.values(app.team).flat());
+  const total = Object.values(app.team).reduce((a,b)=>a+b.length,0);
+  ctx.fillText(`總人數：${total} ｜平均戰力：${avg}`, 24, c.height-20);
+  c.toBlob(b=>{ if(!b) return; const url=URL.createObjectURL(b); download(`index.png`, b, 'image/png') });
+}
+function roundRect(ctx,x,y,w,h,r,fill){
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  ctx.fillStyle=fill; ctx.fill();
+}
+
+/******************** 事件與初始化 ********************/
+function switchTab(name){
+  $$('.tab-btn').forEach(b=>{ const active = b.dataset.tab===name; b.classList.toggle('active', active); b.setAttribute('aria-selected', active?'true':'false'); });
+  $$('.tab').forEach(s=>s.classList.toggle('hidden', s.id!==`tab-${name}`));
+  $('#mobileMenu').classList.add('hidden');
+}
+
+function bindEvents(){
+  // Tabs
+  document.addEventListener('click', e=>{
+    const btn = e.target.closest('.tab-btn'); if(btn){ switchTab(btn.dataset.tab) }
+    if(e.target.id==='refreshBtn'){ renderMembers() }
+    if(e.target.id==='btnSuggest'){ suggestTeam() }
+    if(e.target.id==='btnDemoTeam'){ demoPreset() }
+    if(e.target.id==='btnClearTeam'){ app.team={tank:[],support:[],dps:[],heal:[]}; saveApp(); renderTeamSummary(); }
+    if(e.target.id==='btnExportTeam'){
+      const txt = exportTeamText(); navigator.clipboard.writeText(txt).then(()=>toast('已複製隊伍到剪貼簿')); download(`index.txt`, txt, 'text/plain');
+      postToGAS({kind:'team', team:app.team, meta:{raid:$('#raidName').value, time:$('#raidTime').value}}).then(r=>{ if(r.ok) toast('已嘗試上傳 GAS') })
+    }
+    if(e.target.id==='btnAddFeedback'){ addFeedback() }
+    if(e.target.id==='btnClearFB'){ if(confirm('確定清空本機所有意見？')){ app.feedback=[]; saveApp(); renderFeedback() } }
+    if(e.target.id==='btnExportJSON'){ exportJSON() }
+    if(e.target.id==='btnExportCSV'){ exportCSV() }
+    if(e.target.id==='btnImport'){ const f=$('#fileImport').files[0]; if(!f) return toast('請先選擇檔案'); importFile(f) }
+    if(e.target.id==='btnSnapshot'){ snapshotTeam() }
+    if(e.target.id==='btnLoadSheet'){
+      const url = toCsvUrl($('#sheetUrl').value||app.settings.sheetUrl, $('#sheetName').value||app.settings.sheetName);
+      if(!url) return toast('請先填入來源'); app.settings.sheetUrl=url; app.settings.sheetName=$('#sheetName').value||'基本資料表'; saveApp(); loadFromCSV(url);
+    }
+    if(e.target.id==='btnSaveEndpoint'){
+      app.settings.sheetUrl = $('#sheetUrl').value; app.settings.sheetName = $('#sheetName').value||'基本資料表'; saveApp(); toast('已保存');
+    }
+    if(e.target.id==='btnTestPost'){
+      postToGAS({kind:'ping', now:Date.now()}).then(r=> toast(r.ok?`成功：${r.status}`:'失敗'))
+    }
+    if(e.target.closest('[data-add]')){
+      const ign = e.target.closest('[data-add]').dataset.add; const mem = app.members.find(m=>m.IGN===ign); if(!mem) return;
+      const role = mapRoleKey(mem.定位)||'dps'; app.team[role].push(mem); saveApp(); renderTeamSummary(); toast(`已加入 ${ign}`)
+    }
+    if(e.target.id==='closeMenu'){ $('#mobileMenu').classList.add('hidden') }
+  });
+  // 搜尋/篩選
+  ['searchInput','filterRole','filterClass','filterVoice','filterPowerMin','filterAvail','filterExt'].forEach(id=>{
+    $('#'+id).addEventListener('input', renderMembers);
+    $('#'+id).addEventListener('change', renderMembers);
+  });
+  // 漢堡
+  $('.burger').addEventListener('click', ()=>{ $('#mobileMenu').classList.remove('hidden') });
+  $('#mobileMenu').addEventListener('click', e=>{ if(e.target.id==='mobileMenu') $('#mobileMenu').classList.add('hidden') });
+  // 意見列表的編輯/刪除
+  $('#fbList').addEventListener('click', e=>{
+    const del = e.target.closest('[data-del]'); const edit = e.target.closest('[data-edit]');
+    if(del){ const id = del.dataset.del; app.feedback = app.feedback.filter(x=>x.id!==id); saveApp(); renderFeedback(); }
+    if(edit){ const id = edit.dataset.edit; const it = app.feedback.find(x=>x.id===id); if(!it) return; const nv = prompt('編輯內容：', it.content); if(nv!=null){ it.content=nv; saveApp(); renderFeedback(); }}
+  });
+  // 檔案選擇即時匯入
+  $('#fileImport').addEventListener('change', e=>{ const f=e.target.files[0]; if(f) importFile(f) });
+}
+
+function demoData(){
+  if(app.members && app.members.length) return;
+  const demo = [
+    {IGN:'MapleA', 職業:'劍士', 定位:'坦', 戰力:42000, 可打時段:'週三20-23, 週末整天', 語音:'Discord', 聯絡:'mapleA#1234', 備註:'主坦', 是否外援:'否'},
+    {IGN:'MapleB', 職業:'弓箭手', 定位:'輸出', 戰力:38000, 可打時段:'週三21-24, 週六14-18', 語音:'皆可', 聯絡:'@mapleB', 備註:'高爆發', 是否外援:'否'},
+    {IGN:'MapleC', 職業:'盜賊', 定位:'輸出', 戰力:35000, 可打時段:'每日21後', 語音:'Line', 聯絡:'line:maplec', 備註:'機動', 是否外援:'是'},
+    {IGN:'MapleD', 職業:'法師', 定位:'輔', 戰力:36000, 可打時段:'週三20-22', 語音:'Discord', 聯絡:'d#1234', 備註:'增益', 是否外援:'否'},
+    {IGN:'MapleE', 職業:'祭司', 定位:'補', 戰力:33000, 可打時段:'週末整天', 語音:'皆可', 聯絡:'e@dc', 備註:'穩定', 是否外援:'否'},
+    {IGN:'MapleF', 職業:'海盜', 定位:'坦', 戰力:40000, 可打時段:'週三19-22', 語音:'Discord', 聯絡:'f#0001', 備註:'副坦', 是否外援:'否'},
+    {IGN:'MapleG', 職業:'弩手', 定位:'輸出', 戰力:31000, 可打時段:'週末整天', 語音:'Line', 聯絡:'g-line', 備註:'穩定', 是否外援:'是'},
+    {IGN:'MapleH', 職業:'主教', 定位:'補', 戰力:36000, 可打時段:'週三20-23', 語音:'Discord', 聯絡:'h#7777', 備註:'防禦向', 是否外援:'否'},
+    {IGN:'MapleI', 職業:'幻影俠盜', 定位:'輔', 戰力:34500, 可打時段:'週三20-21', 語音:'皆可', 聯絡:'i@i', 備註:'控場', 是否外援:'否'},
+    {IGN:'MapleJ', 職業:'火毒', 定位:'輸出', 戰力:39000, 可打時段:'週三20-23', 語音:'Discord', 聯絡:'j#9999', 備註:'持續輸出', 是否外援:'否'}
+  ];
+  app.members = demo; saveApp();
+}
+function demoPreset(){
+  $('#raidName').value='黑魔 12 人';
+  $('#raidTime').value=new Date(Date.now()+3*86400000).toISOString().slice(0,16).replace('T',' ');
+  $('#needTank').value=2; $('#needSupport').value=2; $('#needDps').value=6; $('#needHeal').value=2; $('#minPower').value=32000; $('#needVoice').value='Discord'; $('#allowExt').checked=true; $('#mustList').value=''; $('#banList').value='';
+  toast('已載入示例條件');
+}
+
+function init(){
+  // 預設你的試算表連結與分頁名稱，啟動時自動撈取
+  const defaultSheetEditUrl = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?usp=sharing';
+  app.settings.sheetUrl = app.settings.sheetUrl || defaultSheetEditUrl;
+  app.settings.sheetName = app.settings.sheetName || '基本資料表';
+
+  // 回填設定
+  $('#sheetUrl').value = app.settings.sheetUrl||'';
+  $('#sheetName').value = app.settings.sheetName||'基本資料表';
+  $('#gasUrl').value = app.settings.gasUrl||'';
+  $('#gasToken').value = app.settings.gasToken||'';
+
+  // 啟動即嘗試從 Google Sheet 撈取（使用 gviz CSV 端點）
+  const csvUrl = toCsvUrl(app.settings.sheetUrl, app.settings.sheetName);
+  if(csvUrl){ loadFromCSV(csvUrl); }
+
+  // 若沒有任何資料才載入示例
+  demoData();
+  renderMembers();
+  renderTeamSummary();
+  renderFeedback();
+  initDnD();
+  bindEvents();
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
