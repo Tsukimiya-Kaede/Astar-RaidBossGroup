@@ -523,7 +523,7 @@ function normalizeMember(o){
 function renderMembers(){
   const tbody = $('#memberTable tbody'); tbody.innerHTML='';
   const q = $('#searchInput').value.trim().toLowerCase();
-  const fRole = $('#filterRole').value; const fClass = $('#filterClass').value; const fVoice = $('#filterVoice').value; const fMin = Number($('#filterPowerMin').value||0); const fAvail = $('#filterAvail').value.trim(); const incExt = $('#filterExt').checked;
+  const fRoleEl = $('#filterRole'); const fRole = fRoleEl ? fRoleEl.value : ''; const fClass = $('#filterClass').value; const fVoice = $('#filterVoice').value; const fMin = Number($('#filterPowerMin').value||0); const fAvail = $('#filterAvail').value.trim(); const incExt = $('#filterExt').checked;
   const filtered = app.members.filter(m=>{
     if(q && !(m.IGN+m.職業+m.備註).toLowerCase().includes(q)) return false;
     if(fRole && m.定位!==fRole) return false;
@@ -833,7 +833,7 @@ function switchTab(name){
 }
 
 function bindEvents(){
-  // Tabs
+  // Tabs & 所有按鈕的事件委派（集中在 document，避免多處掛載）
   document.addEventListener('click', e=>{
     const btn = e.target.closest('.tab-btn'); if(btn){ switchTab(btn.dataset.tab) }
     if(e.target.id==='refreshBtn'){ renderMembers() }
@@ -841,21 +841,29 @@ function bindEvents(){
     if(e.target.id==='btnDemoTeam'){ demoPreset() }
     if(e.target.id==='btnClearTeam'){ app.team={tank:[],support:[],dps:[],heal:[]}; saveApp(); renderTeamSummary(); }
     if(e.target.id==='btnExportTeam'){
-      const txt = exportTeamText(); navigator.clipboard.writeText(txt).then(()=>toast('已複製隊伍到剪貼簿')); download(`index.txt`, txt, 'text/plain');
+      const txt = exportTeamText();
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(()=>toast('已複製隊伍到剪貼簿')); }
+      download(`index.txt`, txt, 'text/plain');
       postToGAS({kind:'team', team:app.team, meta:{raid:$('#raidName').value, time:$('#raidTime').value}}).then(r=>{ if(r.ok) toast('已嘗試上傳 GAS') })
     }
     if(e.target.id==='btnAddFeedback'){ addFeedback() }
     if(e.target.id==='btnClearFB'){ if(confirm('確定清空本機所有意見？')){ app.feedback=[]; saveApp(); renderFeedback() } }
     if(e.target.id==='btnExportJSON'){ exportJSON() }
     if(e.target.id==='btnExportCSV'){ exportCSV() }
-    if(e.target.id==='btnImport'){ const f=$('#fileImport').files[0]; if(!f) return toast('請先選擇檔案'); importFile(f) }
+    if(e.target.id==='btnImport'){ const f=$('#fileImport')?.files?.[0]; if(!f) return toast('請先選擇檔案'); importFile(f) }
     if(e.target.id==='btnSnapshot'){ snapshotTeam() }
     if(e.target.id==='btnLoadSheet'){
-      const url = toCsvUrl($('#sheetUrl').value||app.settings.sheetUrl, $('#sheetName').value||app.settings.sheetName);
-      if(!url) return toast('請先填入來源'); app.settings.sheetUrl=url; app.settings.sheetName=$('#sheetName').value||'基本資料表'; saveApp(); loadFromCSV(url);
+      const inputUrl = $('#sheetUrl')?.value || app.settings.sheetUrl;
+      const sheetName = $('#sheetName')?.value || app.settings.sheetName || '基本資料表';
+      if(!inputUrl) return toast('請先填入來源');
+      app.settings.sheetUrl = inputUrl; app.settings.sheetName = sheetName; saveApp();
+      const url = toCsvUrl(inputUrl, sheetName);
+      loadFromCSV(url);
     }
     if(e.target.id==='btnSaveEndpoint'){
-      app.settings.sheetUrl = $('#sheetUrl').value; app.settings.sheetName = $('#sheetName').value||'基本資料表'; saveApp(); toast('已保存');
+      app.settings.sheetUrl = $('#sheetUrl')?.value || '';
+      app.settings.sheetName = $('#sheetName')?.value || '基本資料表';
+      saveApp(); toast('已保存');
     }
     if(e.target.id==='btnTestPost'){
       postToGAS({kind:'ping', now:Date.now()}).then(r=> toast(r.ok?`成功：${r.status}`:'失敗'))
@@ -864,24 +872,30 @@ function bindEvents(){
       const ign = e.target.closest('[data-add]').dataset.add; const mem = app.members.find(m=>m.IGN===ign); if(!mem) return;
       const role = mapRoleKey(mem.定位)||'dps'; app.team[role].push(mem); saveApp(); renderTeamSummary(); toast(`已加入 ${ign}`)
     }
-    if(e.target.id==='closeMenu'){ $('#mobileMenu').classList.add('hidden') }
+    if(e.target.id==='closeMenu'){ $('#mobileMenu')?.classList.add('hidden') }
   });
-  // 搜尋/篩選
-  ['searchInput','filterRole','filterClass','filterVoice','filterPowerMin','filterAvail','filterExt'].forEach(id=>{
-    $('#'+id).addEventListener('input', renderMembers);
-    $('#'+id).addEventListener('change', renderMembers);
+
+  // 搜尋/篩選（防呆：元素不存在就跳過，避免整頁 JS 中斷）
+  ;['searchInput','filterClass','filterVoice','filterPowerMin','filterAvail','filterExt'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('input', renderMembers);
+    el.addEventListener('change', renderMembers);
   });
-  // 漢堡
-  $('.burger').addEventListener('click', ()=>{ $('#mobileMenu').classList.remove('hidden') });
-  $('#mobileMenu').addEventListener('click', e=>{ if(e.target.id==='mobileMenu') $('#mobileMenu').classList.add('hidden') });
+
+  // 漢堡選單
+  $('.burger')?.addEventListener('click', ()=>{ $('#mobileMenu')?.classList.remove('hidden') });
+  $('#mobileMenu')?.addEventListener('click', e=>{ if(e.target.id==='mobileMenu') $('#mobileMenu')?.classList.add('hidden') });
+
   // 意見列表的編輯/刪除
-  $('#fbList').addEventListener('click', e=>{
+  $('#fbList')?.addEventListener('click', e=>{
     const del = e.target.closest('[data-del]'); const edit = e.target.closest('[data-edit]');
     if(del){ const id = del.dataset.del; app.feedback = app.feedback.filter(x=>x.id!==id); saveApp(); renderFeedback(); }
     if(edit){ const id = edit.dataset.edit; const it = app.feedback.find(x=>x.id===id); if(!it) return; const nv = prompt('編輯內容：', it.content); if(nv!=null){ it.content=nv; saveApp(); renderFeedback(); }}
   });
-  // 檔案選擇即時匯入
-  $('#fileImport').addEventListener('change', e=>{ const f=e.target.files[0]; if(f) importFile(f) });
+
+  // 檔案選擇即時匯入（防呆）
+  $('#fileImport')?.addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) importFile(f) });
 }
 
 function demoData(){
