@@ -116,6 +116,9 @@
   .role.dps{background:rgba(239,68,68,0.18)}
 
   .footer{padding:30px 0;color:var(--muted);text-align:center}
+  
+  /* 指定右側「職業別」下拉選單的選項為黑字（避免白字） */
+  #filterClass option{ color:#111827; background:#ffffff; }
 </style>
 </head>
 <body>
@@ -172,13 +175,7 @@
       </div>
       <div class="card-body">
         <div class="row">
-          <select id="filterRole">
-            <option value="">職業別</option>
-            <option value="坦">坦</option>
-            <option value="輔">輔</option>
-            <option value="輸出">輸出</option>
-            <option value="補">補</option>
-          </select>
+          
           <select id="filterClass">
             <option value="">職業別</option>
             <option>初新者</option>
@@ -193,7 +190,8 @@
             <option>火魔導士</option>
             <option>祭司</option>
             <option>神槍手</option>
-            <option>格鬥家</opti
+            <option>格鬥家</option>
+          </select>
           <select id="filterVoice">
             <option value="">語音不限</option>
             <option>Discord</option>
@@ -775,10 +773,10 @@ async function postToGAS(payload){
 /******************** 匯出 / 匯入 / 快照 ********************/
 function exportJSON(){
   const data = {members: app.members, team: app.team, settings: app.settings, feedback: app.feedback};
-  download(`astar-export-${Date.now()}.json`, JSON.stringify(data, null, 2));
+  download(`index.json`, JSON.stringify(data, null, 2));
 }
 function exportCSV(){
-  download(`astar-members-${Date.now()}.csv`, toCSV(app.members), 'text/csv');
+  download(`index.csv`, toCSV(app.members), 'text/csv');
 }
 function importFile(file){
   const reader = new FileReader();
@@ -820,7 +818,7 @@ function snapshotTeam(){
   const avg = avgPower(Object.values(app.team).flat());
   const total = Object.values(app.team).reduce((a,b)=>a+b.length,0);
   ctx.fillText(`總人數：${total} ｜平均戰力：${avg}`, 24, c.height-20);
-  c.toBlob(b=>{ if(!b) return; const url=URL.createObjectURL(b); download(`astar-team-${Date.now()}.png`, b, 'image/png') });
+  c.toBlob(b=>{ if(!b) return; const url=URL.createObjectURL(b); download(`index.png`, b, 'image/png') });
 }
 function roundRect(ctx,x,y,w,h,r,fill){
   ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
@@ -843,7 +841,7 @@ function bindEvents(){
     if(e.target.id==='btnDemoTeam'){ demoPreset() }
     if(e.target.id==='btnClearTeam'){ app.team={tank:[],support:[],dps:[],heal:[]}; saveApp(); renderTeamSummary(); }
     if(e.target.id==='btnExportTeam'){
-      const txt = exportTeamText(); navigator.clipboard.writeText(txt).then(()=>toast('已複製隊伍到剪貼簿')); download(`astar-team-${Date.now()}.txt`, txt, 'text/plain');
+      const txt = exportTeamText(); navigator.clipboard.writeText(txt).then(()=>toast('已複製隊伍到剪貼簿')); download(`index.txt`, txt, 'text/plain');
       postToGAS({kind:'team', team:app.team, meta:{raid:$('#raidName').value, time:$('#raidTime').value}}).then(r=>{ if(r.ok) toast('已嘗試上傳 GAS') })
     }
     if(e.target.id==='btnAddFeedback'){ addFeedback() }
