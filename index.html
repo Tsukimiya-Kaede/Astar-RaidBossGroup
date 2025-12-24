@@ -59,7 +59,7 @@ input:focus{border-color:rgba(6,182,212,.8);outline:none}
       <div class="hstack" style="margin-bottom:10px">
         <input id="sheetUrl" placeholder="貼上試算表編輯連結或 CSV 連結" />
         <input id="sheetName" placeholder="基本資料表" value="基本資料表" style="max-width:200px" />
-        <button class="btn" id="btnLoad">撈取資料</button>
+        <button class="btn" id="btnLoad" type="button">撈取資料</button>
       </div>
       <div class="scroll" id="wrap" aria-live="polite">
         <table class="table" id="tbl">
@@ -171,21 +171,56 @@ function renderTable(list){
 
 // ====== 事件 ======
 function bind(){
-  $('#btnLoad').addEventListener('click', ()=>{
-    const url = $('#sheetUrl').value || DEFAULT_EDIT_URL;
-    const name = $('#sheetName').value || DEFAULT_SHEET;
-    loadAndRender(url, name);
-  });
-  $('#btnReload').addEventListener('click', ()=>{
-    const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
-    renderTable(cache);
-  });
-  $('#q').addEventListener('input', ()=>{
-    const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
-    renderTable(cache);
+  // 直接綁定（若元件存在）
+  const btnLoad = document.getElementById('btnLoad');
+  if(btnLoad){
+    btnLoad.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      const url = document.getElementById('sheetUrl')?.value || DEFAULT_EDIT_URL;
+      const name = document.getElementById('sheetName')?.value || DEFAULT_SHEET;
+      loadAndRender(url, name);
+    });
+  }
+  const btnReload = document.getElementById('btnReload');
+  if(btnReload){
+    btnReload.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
+      renderTable(cache);
+    });
+  }
+  const q = document.getElementById('q');
+  if(q){
+    q.addEventListener('input', ()=>{
+      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
+      renderTable(cache);
+    });
+  }
+
+  // 事件委派（保險）：就算上面沒綁到，這裡一定能接到點擊
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if(t && (t.id==='btnLoad' || t.closest?.('#btnLoad'))){
+      e.preventDefault();
+      const url = document.getElementById('sheetUrl')?.value || DEFAULT_EDIT_URL;
+      const name = document.getElementById('sheetName')?.value || DEFAULT_SHEET;
+      loadAndRender(url, name);
+    }
+    if(t && (t.id==='btnReload' || t.closest?.('#btnReload'))){
+      e.preventDefault();
+      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
+      renderTable(cache);
+    }
   });
 }
 
 // ====== 啟動 ======
 window.addEventListener('load', ()=>{
   $('#sheetUrl').value = DEFAULT_EDIT_URL;
+  $('#sheetName').value = DEFAULT_SHEET;
+  bind();
+  loadAndRender(DEFAULT_EDIT_URL, DEFAULT_SHEET);
+});
+</script>
+</body>
+</html>
