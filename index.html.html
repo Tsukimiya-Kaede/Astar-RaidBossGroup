@@ -130,7 +130,7 @@
       </span>
     </div>
     <div class="tabs" role="tablist" aria-label="主導覽">
-      <button class="tab-btn active" data-tab="members" role="tab" aria-selected="true">成員名簿</button>
+      <button class="tab-btn active" data-tab="members" role="tab" aria-selected="true">公會成員</button>
       <button class="tab-btn" data-tab="match" role="tab">組隊配對</button>
       <button class="tab-btn" data-tab="feedback" role="tab">意見回應</button>
       <button class="tab-btn" data-tab="io" role="tab">匯入/匯出</button>
@@ -148,7 +148,7 @@
       <button class="btn subtle" id="closeMenu">關閉</button>
     </div>
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 0">
-    <button class="tab-btn active" data-tab="members">成員名簿</button>
+    <button class="tab-btn active" data-tab="members">公會成員</button>
     <button class="tab-btn" data-tab="match">組隊配對</button>
     <button class="tab-btn" data-tab="feedback">意見回應</button>
     <button class="tab-btn" data-tab="io">匯入/匯出</button>
@@ -157,12 +157,12 @@
 </div>
 
 <main class="container content">
-  <!-- 成員名簿 -->
+  <!-- 公會成員 -->
   <section id="tab-members" class="tab">
     <div class="card">
       <div class="card-header">
         <div class="row inline" style="gap:8px;align-items:center">
-          <strong>成員名簿</strong>
+          <strong>公會成員</strong>
           <span class="muted">（啟動自動從 Google Sheet「基本資料表」撈取；若無權限則載入示例）</span>
         </div>
         <div class="row inline">
@@ -173,15 +173,27 @@
       <div class="card-body">
         <div class="row">
           <select id="filterRole">
-            <option value="">全部定位</option>
+            <option value="">職業別</option>
             <option value="坦">坦</option>
             <option value="輔">輔</option>
             <option value="輸出">輸出</option>
             <option value="補">補</option>
           </select>
           <select id="filterClass">
-            <option value="">全部職業</option>
-          </select>
+            <option value="">職業別</option>
+            <option>初新者</option>
+            <option>龍騎士</option>
+            <option>十字軍</option>
+            <option>騎士</option>
+            <option>神偷</option>
+            <option>暗殺者</option>
+            <option>遊俠</option>
+            <option>狙擊手</option>
+            <option>冰魔導士</option>
+            <option>火魔導士</option>
+            <option>祭司</option>
+            <option>神槍手</option>
+            <option>格鬥家</opti
           <select id="filterVoice">
             <option value="">語音不限</option>
             <option>Discord</option>
