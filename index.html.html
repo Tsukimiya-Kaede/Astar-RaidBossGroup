@@ -163,7 +163,7 @@
       <div class="card-header">
         <div class="row inline" style="gap:8px;align-items:center">
           <strong>成員名簿</strong>
-          <span class="muted">（來源：Google Sheet 或快取／示例資料）</span>
+          <span class="muted">（啟動自動從 Google Sheet「基本資料表」撈取；若無權限則載入示例）</span>
         </div>
         <div class="row inline">
           <input id="searchInput" placeholder="搜尋 IGN/職業/備註…" style="min-width:220px" />
@@ -476,7 +476,26 @@ function overlapScore(slots, target){
 /******************** 成員載入與渲染 ********************/
 const classSet = new Set();
 function normalizeMember(o){
-  // 欄位對應：IGN | UID | 職業 | 定位 | 戰力 | 可打時段 | 語音 | 聯絡 | 備註 | 是否外援
+  // 兼容兩種欄位格式：
+  // V1（舊）：IGN | UID | 職業 | 定位 | 戰力 | 可打時段 | 語音 | 聯絡 | 備註 | 是否外援
+  // V2（新）：公會成員 | 角色名稱 | 角色代碼 | 角色職業 | 等級 | 乾表 | 所在營區
+  if(o['角色名稱'] || o['角色職業'] || o['等級']){
+    const ign = o['角色名稱']||'';
+    const uid = o['角色代碼']||'';
+    const job = o['角色職業']||'';
+    const lvl = Number(o['等級']||0);
+    const note = o['乾表']||'';
+    const zone = o['所在營區']||'';
+    const guild = o['公會成員']||'';
+    return {
+      // 對現有 UI 的鍵位做映射
+      IGN: ign, UID: uid, 職業: job, 定位: '', 戰力: lvl, 可打時段: '', 語音: '皆可', 聯絡: zone, 備註: note,
+      是否外援: String(guild).includes('外援') ? '是' : '否',
+      // 同時保留原始新欄位便於後續擴充
+      公會成員: guild, 角色名稱: ign, 角色代碼: uid, 角色職業: job, 等級: lvl, 乾表: note, 所在營區: zone
+    };
+  }
+  // 舊欄位回退
   return {
     IGN: o.IGN || o.ign || o.暱稱 || o.名稱 || '',
     UID: o.UID || o.uid || o.ID || '',
@@ -488,7 +507,7 @@ function normalizeMember(o){
     聯絡: o.聯絡 || o.contact || '',
     備註: o.備註 || o.note || '',
     是否外援: (o.是否外援 || o.外援 || o.external || '').toString().includes('是') ? '是' : (o.external===true?'是':'否')
-  }
+  };
 }
 
 function renderMembers(){
@@ -879,12 +898,22 @@ function demoPreset(){
 }
 
 function init(){
-  // Settings 回填
+  // 預設你的試算表連結與分頁名稱，啟動時自動撈取
+  const defaultSheetEditUrl = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?usp=sharing';
+  app.settings.sheetUrl = app.settings.sheetUrl || defaultSheetEditUrl;
+  app.settings.sheetName = app.settings.sheetName || '基本資料表';
+
+  // 回填設定
   $('#sheetUrl').value = app.settings.sheetUrl||'';
   $('#sheetName').value = app.settings.sheetName||'基本資料表';
   $('#gasUrl').value = app.settings.gasUrl||'';
   $('#gasToken').value = app.settings.gasToken||'';
 
+  // 啟動即嘗試從 Google Sheet 撈取（使用 gviz CSV 端點）
+  const csvUrl = toCsvUrl(app.settings.sheetUrl, app.settings.sheetName);
+  if(csvUrl){ loadFromCSV(csvUrl); }
+
+  // 若沒有任何資料才載入示例
   demoData();
   renderMembers();
   renderTeamSummary();
