@@ -76,6 +76,7 @@ input:focus{border-color:rgba(6,182,212,.8);outline:none}
   </section>
   <p class="small muted" style="margin-top:12px">提示：若撈取失敗，請將試算表分享權限設為「擁有連結者可檢視」，或在『檔案 → 發佈到網路』取得 CSV 連結。</p>
 </main>
+<p id="updateTime" class="small muted" style="text-align:center;margin:16px 0 24px">更新時間 —</p>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -145,6 +146,7 @@ async function loadAndRender(editOrCsvUrl, sheetName=DEFAULT_SHEET){
       角色等級: r['角色等級'] || r['等級'] || r['戰力'] || ''
     })).filter(x=>x['角色名稱']||x['角色代碼']||x['角色職業']);
     renderTable(mapped);
+    setUpdateTime();
     toast(`載入 ${mapped.length} 筆`);
   }catch(e){ console.error(e); toast('撈取失敗：請確認連結或權限'); }
   $('#wrap').setAttribute('aria-busy','false');
@@ -169,6 +171,14 @@ function renderTable(list){
   localStorage.setItem('astar-basic-cache', JSON.stringify(list));
 }
 
+// 更新時間標示（每次資料更新呼叫）
+function setUpdateTime(note=''){
+  const el = document.getElementById('updateTime');
+  if(!el) return;
+  const s = new Date().toLocaleString('zh-TW', { hour12: true });
+  el.textContent = '更新時間 ' + s + (note ? ' ' + note : '');
+}
+
 // ====== 事件 ======
 function bind(){
   // 直接綁定（若元件存在）
@@ -187,6 +197,7 @@ function bind(){
       ev.preventDefault();
       const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
       renderTable(cache);
+      setUpdateTime();
     });
   }
   const q = document.getElementById('q');
@@ -210,6 +221,7 @@ function bind(){
       e.preventDefault();
       const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
       renderTable(cache);
+      setUpdateTime();
     }
   });
 }
