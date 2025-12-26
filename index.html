@@ -1,277 +1,83 @@
-<!doctype html>
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Astar 公會｜基本資料表（精簡顯示）</title>
-<meta name="description" content="從指定 Google 試算表的『基本資料表』自動載入：角色名稱、角色代碼、角色職業、角色等級。單一 HTML，無外部依賴。" />
-<meta name="theme-color" content="#0B0F1A" />
-<style>
-:root{ --bg:#0B0F1A; --fg:#E5E7EB; --muted:#94A3B8; --card:rgba(255,255,255,.08); --accent1:#7C3AED; --accent2:#06B6D4; --radius:18px; --shadow:0 12px 30px rgba(0,0,0,.35) }
-*{box-sizing:border-box}
-body{margin:0;color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,"PingFang TC","Microsoft JhengHei";background:
-  radial-gradient(1200px 600px at 110% -10%, rgba(124,58,237,.18), transparent 60%),
-  radial-gradient(1000px 600px at -10% 110%, rgba(6,182,212,.18), transparent 60%), #0B0F1A}
-.container{max-width:1100px;margin:0 auto;padding:20px}
-header{position:sticky;top:0;z-index:10;background:rgba(11,15,26,.6);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.06)}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px}
-.brand{display:flex;align-items:center;gap:10px}
-.logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));box-shadow:0 8px 24px rgba(124,58,237,.35), inset 0 0 0 2px rgba(255,255,255,.12)}
-.hstack{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.card{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(10px)}
-.card-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
-.card-body{padding:16px}
-input,button{padding:10px 12px;border-radius:12px}
-input{width:100%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--fg)}
-input:focus{border-color:rgba(6,182,212,.8);outline:none}
-.btn{border:none;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--accent1),var(--accent2))}
-.btn.subtle{background:rgba(255,255,255,.06);color:var(--fg);border:1px solid rgba(255,255,255,.08)}
-.table{width:100%;border-collapse:separate;border-spacing:0 10px}
-.table thead th{position:sticky;top:0;background:rgba(11,15,26,.9);padding:8px 10px;font-size:12px;color:var(--muted);text-align:left}
-.table tbody td{padding:12px 10px;border-top:1px solid rgba(255,255,255,.06)}
-.scroll{max-height:520px;overflow:auto}
-.muted{color:var(--muted)}
-.hidden{display:none!important}
-.toast{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
-.toast .t{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
-.small{font-size:12px}
-@media (max-width:640px){ .nav .brand h1{font-size:16px} }
-/* modal overlay */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
-.modal .card{width:100%;max-width:520px}
-.hidden{display:none!important}
-</style>
+    <meta charset="UTF-8">
+    <title>MapleStory Raid Boss</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e5e7eb;
+        }
+        .top-right {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1050;
+        }
+    </style>
 </head>
 <body>
-<header>
-  <div class="nav">
-    <div class="brand"><div class="logo"></div><h1 style="margin:0;font-size:18px">Astar 公會｜基本資料表ver1.0</h1></div>
-    <div class="hstack">
-      <input id="q" placeholder="搜尋 角色名稱/職業/代碼…" style="min-width:220px" />
-      <button class="btn subtle" id="btnReload">重新整理<\/button>
-      <button class="btn subtle" id="btnTeam">組隊功能<\/button>
-    </div>
-  </div>
-</header>
 
-<main class="container">
-  <section class="card">
-    <div class="card-header">
-      <strong>『基本資料表』顯示</strong>
-      <div class="small muted">啟動即從指定 Google Sheet 載入；若權限不足會顯示 0 筆。</div>
-    </div>
-    <div class="card-body">
-      <div class="hstack" style="margin-bottom:10px">
-        <input id="sheetUrl" placeholder="貼上試算表編輯連結或 CSV 連結" />
-        <input id="sheetName" placeholder="基本資料表" value="基本資料表" style="max-width:200px" />
-        <button class="btn" id="btnLoad" type="button">撈取資料</button>
-      </div>
-      <div class="scroll" id="wrap" aria-live="polite">
-        <table class="table" id="tbl">
-          <thead><tr>
-            <th>角色名稱</th>
-            <th>角色代碼</th>
-            <th>角色職業</th>
-            <th>角色等級</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-  <p class="small muted" style="margin-top:12px">提示：若撈取失敗，請將試算表分享權限設為「擁有連結者可檢視」，或在『檔案 → 發佈到網路』取得 CSV 連結。</p>
-</main>
-<p id="updateTime" class="small muted" style="text-align:center;margin:16px 0 24px">更新時間 —</p>
-
-<!-- 組隊功能：角色清單 Modal -->
-<div id="teamModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="teamTitle">
-  <div class="card">
-    <div class="card-header">
-      <strong id="teamTitle">組隊功能｜角色清單</strong>
-      <button class="btn subtle" id="teamClose" type="button">關閉</button>
-    </div>
-    <div class="card-body">
-      <div class="small muted">來源：目前載入的資料（請先按「撈取資料」）。</div>
-      <div id="teamCount" class="small" style="margin:8px 0 12px"></div>
-      <div class="scroll" style="max-height:360px">
-        <ul id="teamList" style="margin:0;padding-left:18px"></ul>
-      </div>
-    </div>
-  </div>
+<!-- 右上角【組隊】按鈕 -->
+<div class="top-right">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#partyModal">
+        👥 組隊
+    </button>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- 組隊 Modal -->
+<div class="modal fade" id="partyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title">組隊角色清單</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="partyList" class="list-group list-group-flush"></ul>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- 範例：角色資料（請替換成你原本的資料來源） -->
 <script>
-// ====== 小工具 ======
-const $=(s,e=document)=>e.querySelector(s); const $$=(s,e=document)=>Array.from(e.querySelectorAll(s));
-const toast=(m,ms=1800)=>{const t=document.createElement('div'); t.className='t'; t.textContent=m; $('#toast').appendChild(t); setTimeout(()=>t.remove(),ms)};
+    // ⚠️ 這裡模擬你原本的角色資料
+    const characterData = [
+        { name: "阿戴爾" },
+        { name: "夜使者" },
+        { name: "主教" }
+    ];
 
-// ====== 設定（你的試算表） ======
-const DEFAULT_EDIT_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
-const DEFAULT_SHEET = '基本資料表';
+    const partyList = document.getElementById("partyList");
 
-// ====== 由編輯連結推導 CSV 端點 ======
-function toCsvUrl(inputUrl, sheetName){
-  if(!inputUrl) return '';
-  if(/\b(out:csv|format=csv)\b/i.test(inputUrl)) return inputUrl; // 已是 CSV
-  const idm = inputUrl.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  const gidm = inputUrl.match(/[?#&]gid=(\d+)/);
-  if(idm){
-    const id = idm[1];
-    const name = encodeURIComponent(sheetName||'基本資料表');
-    if(gidm){ return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gidm[1]}`; }
-    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${name}`;
-  }
-  return inputUrl;
-}
+    function renderParty() {
+        partyList.innerHTML = "";
 
-// ====== 安全 CSV 解析（支援引號/內嵌逗號/跨行） ======
-function parseCSV(text){
-  const lines = text.split(/\r?\n/);
-  // 去除前綴非 CSV（例如權限頁 HTML）
-  while(lines.length && (!/,/.test(lines[0]) || /^\s*</.test(lines[0]))) lines.shift();
-  const headerLine = lines.shift();
-  if(!headerLine) return {headers:[], rows:[]};
-  const headers = headerLine.split(',').map(h=>h.replace(/^\ufeff/,''));
-  const rows=[]; let buf=''; let qcount=0;
-  for(const line of lines){ if(line==='') continue; buf += (buf?'\n':'') + line; qcount += (line.match(/\"/g)||[]).length; if(qcount % 2 === 0){ rows.push(buf); buf=''; qcount=0; } }
-  if(buf) rows.push(buf);
-  const out = rows.map(line=>{
-    const cells=[]; let cur=''; let inQ=false;
-    for(let i=0;i<line.length;i++){
-      const ch=line[i];
-      if(ch==='"'){
-        if(inQ && line[i+1]==='"'){ cur+='"'; i++; } else inQ=!inQ;
-      }else if(ch===',' && !inQ){ cells.push(cur); cur=''; }
-      else{ cur+=ch; }
+        if (!characterData || characterData.length === 0) {
+            partyList.innerHTML = `<li class="list-group-item bg-dark text-secondary">
+                尚未讀取角色資料
+            </li>`;
+            return;
+        }
+
+        characterData.forEach(char => {
+            const li = document.createElement("li");
+            li.className = "list-group-item bg-dark text-light";
+            li.textContent = char.name;
+            partyList.appendChild(li);
+        });
     }
-    cells.push(cur);
-    const obj={}; headers.forEach((h,idx)=>obj[h.trim()]=(cells[idx]??'').trim());
-    return obj;
-  });
-  return {headers, rows:out};
-}
 
-// ====== 載入並渲染 ======
-async function loadAndRender(editOrCsvUrl, sheetName=DEFAULT_SHEET){
-  const csvUrl = toCsvUrl(editOrCsvUrl, sheetName);
-  $('#wrap').setAttribute('aria-busy','true');
-  try{
-    const res = await fetch(csvUrl, {cache:'no-store'});
-    const text = await res.text();
-    if(/^\s*</.test(text)){ toast('撈取失敗：不是 CSV，請確認權限或改用發佈到網路的 CSV 連結'); return; }
-    const {rows} = parseCSV(text);
-    const mapped = rows.map(r=>({
-      角色名稱: r['角色名稱'] || r['IGN'] || '',
-      角色代碼: r['角色代碼'] || r['UID'] || '',
-      角色職業: r['角色職業'] || r['職業'] || '',
-      角色等級: r['角色等級'] || r['等級'] || r['戰力'] || ''
-    })).filter(x=>x['角色名稱']||x['角色代碼']||x['角色職業']);
-    renderTable(mapped);
-    setUpdateTime();
-    toast(`載入 ${mapped.length} 筆`);
-  }catch(e){ console.error(e); toast('撈取失敗：請確認連結或權限'); }
-  $('#wrap').setAttribute('aria-busy','false');
-}
-
-function renderTable(list){
-  const q = ($('#q').value||'').trim().toLowerCase();
-  const data = list.filter(o=>{
-    const txt = `${o['角色名稱']}${o['角色代碼']}${o['角色職業']}`.toLowerCase();
-    return !q || txt.includes(q);
-  });
-  const tbody = $('#tbl tbody'); tbody.innerHTML='';
-  for(const row of data){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><strong>${row['角色名稱']||'-'}</strong></td>
-      <td>${row['角色代碼']||''}</td>
-      <td>${row['角色職業']||''}</td>
-      <td>${row['角色等級']||''}</td>`;
-    tbody.appendChild(tr);
-  }
-  // 存快取，供重新整理時保留
-  localStorage.setItem('astar-basic-cache', JSON.stringify(list));
-}
-
-// 更新時間標示（每次資料更新呼叫）
-function setUpdateTime(note=''){
-  const el = document.getElementById('updateTime');
-  if(!el) return;
-  const s = new Date().toLocaleString('zh-TW', { hour12: true });
-  el.textContent = '更新時間 ' + s + (note ? ' ' + note : '');
-}
-
-// 組隊功能：產生角色名稱清單並開啟/關閉 Modal
-function buildTeamList(){
-  const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
-  const names = Array.from(new Set((cache||[]).map(x=>String(x['角色名稱']||'').trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
-  const ul = document.getElementById('teamList');
-  const cnt = document.getElementById('teamCount');
-  if(!ul||!cnt){ return; }
-  ul.innerHTML = names.length ? names.map(n=>`<li>${n}</li>`).join('') : '<li class="muted">目前沒有資料，請先撈取</li>';
-  cnt.textContent = `共 ${names.length} 位角色`;
-}
-function openTeamModal(){ buildTeamList(); document.getElementById('teamModal')?.classList.remove('hidden'); }
-function closeTeamModal(){ document.getElementById('teamModal')?.classList.add('hidden'); }
-
-// ====== 事件 ======
-function bind(){
-  const btnLoad = document.getElementById('btnLoad');
-  if(btnLoad){
-    btnLoad.addEventListener('click', (ev)=>{
-      ev.preventDefault();
-      const url = document.getElementById('sheetUrl')?.value || DEFAULT_EDIT_URL;
-      const name = document.getElementById('sheetName')?.value || DEFAULT_SHEET;
-      loadAndRender(url, name);
-    });
-  }
-  const btnReload = document.getElementById('btnReload');
-  if(btnReload){
-    btnReload.addEventListener('click', (ev)=>{
-      ev.preventDefault();
-      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
-      renderTable(cache);
-      setUpdateTime();
-    });
-  }
-  const q = document.getElementById('q');
-  if(q){ q.addEventListener('input', ()=>{ const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]'); renderTable(cache); }); }
-
-  const btnTeam = document.getElementById('btnTeam');
-  if(btnTeam){ btnTeam.addEventListener('click', (ev)=>{ ev.preventDefault(); openTeamModal(); }); }
-  const btnClose = document.getElementById('teamClose');
-  if(btnClose){ btnClose.addEventListener('click', (ev)=>{ ev.preventDefault(); closeTeamModal(); }); }
-  const modal = document.getElementById('teamModal');
-  if(modal){ modal.addEventListener('click', (e)=>{ if(e.target && e.target.id==='teamModal'){ closeTeamModal(); } }); }
-
-  // 事件委派保險：
-  document.addEventListener('click', (e)=>{
-    const t = e.target;
-    if(t && (t.id==='btnLoad' || t.closest?.('#btnLoad'))){
-      e.preventDefault();
-      const url = document.getElementById('sheetUrl')?.value || DEFAULT_EDIT_URL;
-      const name = document.getElementById('sheetName')?.value || DEFAULT_SHEET;
-      loadAndRender(url, name);
-    }
-    if(t && (t.id==='btnReload' || t.closest?.('#btnReload'))){
-      e.preventDefault();
-      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
-      renderTable(cache);
-      setUpdateTime();
-    }
-    if(t && (t.id==='btnTeam' || t.closest?.('#btnTeam'))){ e.preventDefault(); openTeamModal(); }
-    if(t && (t.id==='teamClose' || t.closest?.('#teamClose'))){ e.preventDefault(); closeTeamModal(); }
-  });
-}
-
-// ====== 啟動 ======
-window.addEventListener('load', ()=>{
-  $('#sheetUrl').value = DEFAULT_EDIT_URL;
-  $('#sheetName').value = DEFAULT_SHEET;
-  bind();
-  loadAndRender(DEFAULT_EDIT_URL, DEFAULT_SHEET);
-});
+    // 每次打開 Modal 時更新名單
+    document.getElementById("partyModal")
+        .addEventListener("show.bs.modal", renderParty);
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
