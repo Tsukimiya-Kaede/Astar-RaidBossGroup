@@ -131,26 +131,48 @@ function parseCSV(text){
 }
 
 // ====== 載入並渲染 ======
-async function loadAndRender(editOrCsvUrl, sheetName=DEFAULT_SHEET){
+async function loadAndRender(editOrCsvUrl, sheetName='基本資料表'){
   const csvUrl = toCsvUrl(editOrCsvUrl, sheetName);
-  $('#wrap').setAttribute('aria-busy','true');
+  const wrap = document.getElementById('wrap');
+  if(wrap) wrap.setAttribute('aria-busy','true');
   try{
     const res = await fetch(csvUrl, {cache:'no-store'});
     const text = await res.text();
-    if(/^\s*</.test(text)){ toast('撈取失敗：不是 CSV，請確認權限或改用發佈到網路的 CSV 連結'); return; }
-    const {rows} = parseCSV(text);
-    const mapped = rows.map(r=>({
-      角色名稱: r['角色名稱'] || r['IGN'] || '',
-      角色代碼: r['角色代碼'] || r['UID'] || '',
-      角色職業: r['角色職業'] || r['職業'] || '',
-      角色等級: r['角色等級'] || r['等級'] || r['戰力'] || ''
-    })).filter(x=>x['角色名稱']||x['角色代碼']||x['角色職業']);
+
+    // 抓到 HTML（通常是未公開權限），直接提示
+    if(/^\s*</.test(text)){
+      toast('撈取失敗：不是 CSV，請把試算表開成「擁有連結者可檢視」，或用發佈到網路的 CSV。');
+      return;
+    }
+
+    const arrs = csvToArrays(text);
+
+    // 依指定：B/C/D/E 欄 → index 1/2/3/4；並排除表頭殘留/空列
+    const mapped = arrs
+      .map(a=>{
+        if(!a || a.length < 5) return null; // 少於 E 欄，跳過
+        const b = String(a[1]||'').trim(); // 角色名稱（B）
+        const c = String(a[2]||'').trim(); // 角色代碼（C）
+        const d = String(a[3]||'').trim(); // 角色職業（D）
+        const e = String(a[4]||'').trim(); // 角色等級（E）
+        return { '角色名稱': b, '角色代碼': c, '角色職業': d, '角色等級': e };
+      })
+      // 若首列仍殘留表頭（少數情況），也移除
+      .filter(x => x && !(x['角色名稱']==='角色名稱' && x['角色代碼']==='角色代碼'))
+      // 至少有一欄有值才保留
+      .filter(x => x['角色名稱'] || x['角色代碼'] || x['角色職業'] || x['角色等級']);
+
     renderTable(mapped);
-    setUpdateTime();
+    setUpdateTime(); // 若你有顯示更新時間
     toast(`載入 ${mapped.length} 筆`);
-  }catch(e){ console.error(e); toast('撈取失敗：請確認連結或權限'); }
-  $('#wrap').setAttribute('aria-busy','false');
+  }catch(e){
+    console.error(e);
+    toast('撈取失敗：請確認連結或權限');
+  }finally{
+    if(wrap) wrap.setAttribute('aria-busy','false');
+  }
 }
+
 
 function renderTable(list){
   const q = ($('#q').value||'').trim().toLowerCase();
