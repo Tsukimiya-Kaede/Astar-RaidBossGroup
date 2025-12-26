@@ -15,6 +15,7 @@
 
   <style>
     .status-badge { font-size: 0.85rem; }
+    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
   </style>
 </head>
 <body class="bg-body">
@@ -56,11 +57,13 @@
                 <th>角色代碼</th>
                 <th>角色職業</th>
                 <th>角色等級</th>
+                <th>乾表</th>
+                <th>所在營區</th>
               </tr>
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="4" class="text-center text-muted">尚未讀取資料</td>
+                <td colspan="6" class="text-center text-muted">尚未讀取資料</td>
               </tr>
             </tbody>
           </table>
@@ -110,7 +113,7 @@
       $('#msg').text('');
       $('#tableBody').html(`
         <tr>
-          <td colspan="4" class="text-center text-muted">讀取中...</td>
+          <td colspan="6" class="text-center text-muted">讀取中...</td>
         </tr>
       `);
 
@@ -127,16 +130,32 @@
               return;
             }
 
-            // 預設資料欄位：B=名稱, C=代碼, D=職業, E=等級
+            const header = result.data[0].map(h => (h || '').trim());
+            const idx = (name, alts = []) => {
+              const targets = [name, ...alts];
+              for (const t of targets) {
+                const i = header.findIndex(h => h === t);
+                if (i !== -1) return i;
+              }
+              return -1;
+            };
+
+            const iName  = idx('角色名稱', ['名稱','Name']);
+            const iCode  = idx('角色代碼', ['代碼','Code']);
+            const iJob   = idx('角色職業', ['職業','Job']);
+            const iLevel = idx('角色等級', ['等級','Level']);
+            const iDry   = idx('乾表', ['乾表/乾濕','乾/濕']);
+            const iCamp  = idx('所在營區', ['營區','所在 營區','Camp']);
+
             const rows = result.data.slice(1);
-            const data = rows
-              .map((r) => ({
-                name: r[1], // B
-                code: r[2], // C
-                job: r[3],  // D
-                level: r[4] // E
-              }))
-              .filter((r) => r && r.name);
+            const data = rows.map(r => ({
+                name:  iName  >= 0 ? r[iName]  : r[1],
+                code:  iCode  >= 0 ? r[iCode]  : r[2],
+                job:   iJob   >= 0 ? r[iJob]   : r[3],
+                level: iLevel >= 0 ? r[iLevel] : r[4],
+                dry:   iDry   >= 0 ? r[iDry]   : r[5],
+                camp:  iCamp  >= 0 ? r[iCamp]  : r[6]
+            })).filter(r => r && r.name);
 
             renderTable(data);
           } catch (e) {
@@ -156,15 +175,53 @@
     /* =========================
        Render Table
     ========================= */
+    ========================= */
     function renderTable(data) {
       if (!data || !data.length) {
         $('#tableBody').html(`
           <tr>
-            <td colspan="4" class="text-center text-muted">沒有符合的資料</td>
+            <td colspan="6" class="text-center text-muted">沒有符合的資料</td>
           </tr>
         `);
         return;
       }
+
+      // 依「所在營區」分組
+      const groups = {};
+      for (const r of data) {
+        const key = (r.camp || '未填寫').toString();
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(r);
+      }
+
+      // 依營區名稱排序，將「未填寫」排最後
+      const order = Object.keys(groups).sort((a, b) => {
+        if (a === '未填寫') return 1;
+        if (b === '未填寫') return -1;
+        return a.localeCompare(b, 'zh-Hant');
+      });
+
+      let html = '';
+      for (const g of order) {
+        html += `
+          <tr class="group-row">
+            <td colspan="6">所在營區：${g}（${groups[g].length}）</td>
+          </tr>`;
+        for (const r of groups[g]) {
+          html += `
+            <tr>
+              <td>${r.name ?? ''}</td>
+              <td>${r.code ?? ''}</td>
+              <td>${r.job ?? ''}</td>
+              <td>${r.level ?? ''}</td>
+              <td>${r.dry ?? ''}</td>
+              <td>${r.camp ?? ''}</td>
+            </tr>`;
+        }
+      }
+
+      $('#tableBody').html(html);
+    }
 
       const html = data
         .map(
