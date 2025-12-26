@@ -117,6 +117,9 @@
         </tr>
       `);
 
+      // 先清空舊資料，避免誤判
+      $('#tableBody').empty();
+
       const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
       Papa.parse(csvUrl, {
@@ -130,40 +133,18 @@
               return;
             }
 
-            const header = result.data[0].map(h => (h || '').trim());
-            const idx = (name, alts = []) => {
-              const targets = [name, ...alts];
-              for (const t of targets) {
-                const i = header.findIndex(h => h === t);
-                if (i !== -1) return i;
-              }
-              return -1;
-            };
-
-            const iName  = idx('角色名稱', ['名稱','Name']);
-            const iCode  = idx('角色代碼', ['代碼','Code']);
-            const iJob   = idx('角色職業', ['職業','Job']);
-            const iLevel = idx('角色等級', ['等級','Level']);
-            const iDry   = idx('乾表', ['乾表/乾濕','乾/濕']);
-            const iCamp  = idx('所在營區', ['營區','所在 營區','Camp']);
-
             const rows = result.data.slice(1);
             const data = rows.map(r => ({
-                name:  iName  >= 0 ? r[iName]  : r[1],
-                code:  iCode  >= 0 ? r[iCode]  : r[2],
-                job:   iJob   >= 0 ? r[iJob]   : r[3],
-                level: iLevel >= 0 ? r[iLevel] : r[4],
-                dry:   iDry   >= 0 ? r[iDry]   : r[5],
-                camp:  iCamp  >= 0 ? r[iCamp]  : r[6]
+              name:  r[1], // B
+              code:  r[2], // C
+              job:   r[3], // D
+              level: r[4], // E
+              dry:   r[5], // F
+              camp:  r[6]  // G
             })).filter(r => r && r.name);
 
             renderTable(data);
           } catch (e) {
-            console.error(e);
-            $('#msg').text('解析資料時發生錯誤');
-            renderTable([]);
-          }
-        },
         error: function (err) {
           console.error(err);
           $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
