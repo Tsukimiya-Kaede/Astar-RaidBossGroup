@@ -1,175 +1,231 @@
 <!DOCTYPE html>
 <html lang="zh-TW" data-bs-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <title>角色資料檢視工具</title>
+  <meta charset="UTF-8" />
+  <title>角色資料檢視工具（自動讀取版）</title>
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <!-- PapaParse -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+    .status-badge { font-size: 0.85rem; }
+  </style>
 </head>
 <body class="bg-body">
-
-<nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+  <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-        <span class="navbar-brand">角色資料工具</span>
-
-        <div class="ms-auto">
-            <button id="toggleTheme" class="btn btn-outline-light btn-sm">
-                🌙 夜間模式
-            </button>
-        </div>
+      <span class="navbar-brand">角色資料工具</span>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
+        <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
+      </div>
     </div>
-</nav>
+  </nav>
 
-<div class="container py-4">
-
+  <div class="container py-4">
+    <!-- 提示卡片 -->
     <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <h5 class="card-title mb-3">Google Sheet 連結</h5>
-
-            <div class="input-group">
-                <input id="sheetUrl"
-                       class="form-control"
-                       placeholder="貼上 Google Sheet 分享連結（需公開）">
-                <button id="loadBtn" class="btn btn-primary">
-                    讀取
-                </button>
-            </div>
-
-            <div id="msg" class="text-danger mt-2"></div>
-        </div>
+      <div class="card-body">
+        <h5 class="card-title mb-2">資料來源</h5>
+        <p class="mb-0 text-muted">本頁面會在載入後自動讀取指定的 Google Sheet（需設定為「知道連結的任何人皆可檢視」）。</p>
+        <small class="text-muted">若要改讀其他表單，可在網址加上參數：<code>?sheetId=你的sheetId&gid=工作表gid</code> 或 <code>?sheetUrl=完整分享連結</code>。</small>
+        <div id="msg" class="text-danger mt-2"></div>
+      </div>
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title mb-3">角色清單</h5>
-
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead class="table-secondary">
-                        <tr>
-                            <th>角色名稱</th>
-                            <th>角色代碼</th>
-                            <th>角色職業</th>
-                            <th>角色等級</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">
-                                尚未讀取資料
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0">角色清單</h5>
+          <div class="d-flex align-items-center gap-2">
+            <button id="reloadBtn" class="btn btn-outline-primary btn-sm">重新整理</button>
+          </div>
         </div>
+
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead class="table-secondary">
+              <tr>
+                <th>角色名稱</th>
+                <th>角色代碼</th>
+                <th>角色職業</th>
+                <th>角色等級</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="4" class="text-center text-muted">尚未讀取資料</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
+  </div>
 
-</div>
+  <script>
+    /* =========================
+       夜間模式切換
+    ========================= */
+    $('#toggleTheme').on('click', function () {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-bs-theme') === 'dark';
+      html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+      $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
+    });
 
-<script>
-/* =========================
-   夜間模式切換
-========================= */
-$('#toggleTheme').on('click', function () {
-    const html = document.documentElement;
-    const isDark = html.getAttribute('data-bs-theme') === 'dark';
+    /* =========================
+       公用：解析 URL 參數
+    ========================= */
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return Object.fromEntries(params.entries());
+    }
 
-    html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
-    $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
-});
+    /* =========================
+       公用：從分享連結取 sheetId/gid
+    ========================= */
+    function parseSheetFromUrl(url) {
+      if (!url) return null;
+      // 支援：https://docs.google.com/spreadsheets/d/{sheetId}/edit?gid=0#gid=0
+      const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (!idMatch) return null;
+      const sheetId = idMatch[1];
+      // 優先讀取 query 的 gid；若無則嘗試從 URL 抓取 gid；再無則預設 0
+      const urlObj = new URL(url);
+      const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
+      return { sheetId, gid };
+    }
 
-/* =========================
-   讀取 Google Sheet
-========================= */
-$('#loadBtn').on('click', function () {
-    $('#msg').text('');
-    $('#tableBody').html(`
+    /* =========================
+       讀取 Google Sheet（以 CSV 匯出）
+    ========================= */
+    function loadFromSheet(sheetId, gid = '0') {
+      $('#msg').text('');
+      $('#tableBody').html(`
         <tr>
-            <td colspan="4" class="text-center text-muted">讀取中...</td>
+          <td colspan="4" class="text-center text-muted">讀取中...</td>
         </tr>
-    `);
+      `);
 
-    const url = $('#sheetUrl').val().trim();
-    if (!url) {
-        $('#msg').text('請貼上 Google Sheet 連結');
-        return;
-    }
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
-    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-    if (!match) {
-        $('#msg').text('無法解析 Sheet ID');
-        return;
-    }
-
-    const sheetId = match[1];
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-
-    Papa.parse(csvUrl, {
+      Papa.parse(csvUrl, {
         download: true,
         skipEmptyLines: true,
         complete: function (result) {
+          try {
             if (!result.data || result.data.length < 2) {
-                $('#msg').text('沒有資料可顯示');
-                return;
+              $('#msg').text('沒有資料可顯示');
+              renderTable([]);
+              return;
             }
 
+            // 預設資料欄位：B=名稱, C=代碼, D=職業, E=等級
             const rows = result.data.slice(1);
-
-            const data = rows.map(r => ({
-                name:  r[1], // B
-                code:  r[2], // C
-                job:   r[3], // D
-                level: r[4]  // E
-            })).filter(r => r.name);
+            const data = rows
+              .map((r) => ({
+                name: r[1], // B
+                code: r[2], // C
+                job: r[3],  // D
+                level: r[4] // E
+              }))
+              .filter((r) => r && r.name);
 
             renderTable(data);
+          } catch (e) {
+            console.error(e);
+            $('#msg').text('解析資料時發生錯誤');
+            renderTable([]);
+          }
         },
-        error: function () {
-            $('#msg').text('讀取失敗，請確認 Sheet 為公開且使用 http 開啟');
+        error: function (err) {
+          console.error(err);
+          $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
+          renderTable([]);
         }
-    });
-});
-
-/* =========================
-   Render Table
-========================= */
-function renderTable(data) {
-    if (!data.length) {
-        $('#tableBody').html(`
-            <tr>
-                <td colspan="4" class="text-center text-muted">
-                    沒有符合的資料
-                </td>
-            </tr>
-        `);
-        return;
+      });
     }
 
-    let html = '';
-    data.forEach(r => {
-        html += `
-            <tr>
-                <td>${r.name}</td>
-                <td>${r.code}</td>
-                <td>${r.job}</td>
-                <td>${r.level}</td>
-            </tr>
-        `;
+    /* =========================
+       Render Table
+    ========================= */
+    function renderTable(data) {
+      if (!data || !data.length) {
+        $('#tableBody').html(`
+          <tr>
+            <td colspan="4" class="text-center text-muted">沒有符合的資料</td>
+          </tr>
+        `);
+        return;
+      }
+
+      const html = data
+        .map(
+          (r) => `
+          <tr>
+            <td>${r.name ?? ''}</td>
+            <td>${r.code ?? ''}</td>
+            <td>${r.job ?? ''}</td>
+            <td>${r.level ?? ''}</td>
+          </tr>`
+        )
+        .join('');
+
+      $('#tableBody').html(html);
+    }
+
+    /* =========================
+       啟動流程：自動讀取
+    ========================= */
+    const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
+
+    function resolveSheetTarget() {
+      const qp = getQueryParams();
+
+      // 1) 允許 ?sheetUrl=
+      if (qp.sheetUrl) {
+        const parsed = parseSheetFromUrl(qp.sheetUrl);
+        if (parsed) return parsed;
+      }
+
+      // 2) 允許 ?sheetId= 與可選 ?gid=
+      if (qp.sheetId) {
+        return { sheetId: qp.sheetId, gid: qp.gid || '0' };
+      }
+
+      // 3) 預設使用內建連結
+      const parsedDefault = parseSheetFromUrl(DEFAULT_SHEET_URL);
+      return parsedDefault || { sheetId: '', gid: '0' };
+    }
+
+    function updateSourceBadge(sheetId, gid) {
+      if (!sheetId) return;
+      const badge = $('#sourceBadge');
+      badge.text(`sheetId=${sheetId} | gid=${gid}`);
+      badge.removeClass('d-none');
+    }
+
+    $(function () {
+      const target = resolveSheetTarget();
+      if (!target.sheetId) {
+        $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
+        return;
+      }
+
+      updateSourceBadge(target.sheetId, target.gid);
+      loadFromSheet(target.sheetId, target.gid);
+
+      $('#reloadBtn').on('click', function () {
+        loadFromSheet(target.sheetId, target.gid);
+      });
     });
-
-    $('#tableBody').html(html);
-}
-</script>
-
+  </script>
 </body>
 </html>
