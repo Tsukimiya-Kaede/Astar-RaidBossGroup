@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <title>角色資料檢視工具</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- PapaParse -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-body">
+
+<nav class="navbar navbar-expand-lg bg-primary navbar-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">角色資料工具</span>
+
+        <div class="ms-auto">
+            <button id="toggleTheme" class="btn btn-outline-light btn-sm">
+                🌙 夜間模式
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="card-title mb-3">Google Sheet 連結</h5>
+
+            <div class="input-group">
+                <input id="sheetUrl"
+                       class="form-control"
+                       placeholder="貼上 Google Sheet 分享連結（需公開）">
+                <button id="loadBtn" class="btn btn-primary">
+                    讀取
+                </button>
+            </div>
+
+            <div id="msg" class="text-danger mt-2"></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">角色清單</h5>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>角色名稱</th>
+                            <th>角色代碼</th>
+                            <th>角色職業</th>
+                            <th>角色等級</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                尚未讀取資料
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* =========================
+   夜間模式切換
+========================= */
+$('#toggleTheme').on('click', function () {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-bs-theme') === 'dark';
+
+    html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+    $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
+});
+
+/* =========================
+   讀取 Google Sheet
+========================= */
+$('#loadBtn').on('click', function () {
+    $('#msg').text('');
+    $('#tableBody').html(`
+        <tr>
+            <td colspan="4" class="text-center text-muted">讀取中...</td>
+        </tr>
+    `);
+
+    const url = $('#sheetUrl').val().trim();
+    if (!url) {
+        $('#msg').text('請貼上 Google Sheet 連結');
+        return;
+    }
+
+    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match) {
+        $('#msg').text('無法解析 Sheet ID');
+        return;
+    }
+
+    const sheetId = match[1];
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+
+    Papa.parse(csvUrl, {
+        download: true,
+        skipEmptyLines: true,
+        complete: function (result) {
+            if (!result.data || result.data.length < 2) {
+                $('#msg').text('沒有資料可顯示');
+                return;
+            }
+
+            const rows = result.data.slice(1);
+
+            const data = rows.map(r => ({
+                name:  r[1], // B
+                code:  r[2], // C
+                job:   r[3], // D
+                level: r[4]  // E
+            })).filter(r => r.name);
+
+            renderTable(data);
+        },
+        error: function () {
+            $('#msg').text('讀取失敗，請確認 Sheet 為公開且使用 http 開啟');
+        }
+    });
+});
+
+/* =========================
+   Render Table
+========================= */
+function renderTable(data) {
+    if (!data.length) {
+        $('#tableBody').html(`
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    沒有符合的資料
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    let html = '';
+    data.forEach(r => {
+        html += `
+            <tr>
+                <td>${r.name}</td>
+                <td>${r.code}</td>
+                <td>${r.job}</td>
+                <td>${r.level}</td>
+            </tr>
+        `;
+    });
+
+    $('#tableBody').html(html);
+}
+
+<!-- 右上角【組隊】按鈕 -->
+<div class="top-right">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#partyModal">
+        👥 組隊
+    </button>
+</div>
+
+<!-- 組隊 Modal -->
+<div class="modal fade" id="partyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title">組隊角色清單</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="partyList" class="list-group list-group-flush"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+</body>
+</html>
