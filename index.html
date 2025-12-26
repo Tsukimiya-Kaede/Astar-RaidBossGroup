@@ -10,6 +10,9 @@
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+  <!-- Bootstrap JS (Modal 需要) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
@@ -60,11 +63,12 @@
                 <th>角色等級</th>
                 <th>角色乾表</th>
                 <th>所在營區</th>
+                <th>修改資料</th>
               </tr>
             </thead>
             <tbody id="tableBody">
               <tr>
-                <td colspan="6" class="text-center text-muted">尚未讀取資料</td>
+                <td colspan="7" class="text-center text-muted">尚未讀取資料</td>
               </tr>
             </tbody>
           </table>
@@ -161,21 +165,19 @@
       });
     }
 
-    /* =========================
+    /* =========================					
        Render Table
     ========================= */
-
     function renderTable(data) {
       if (!data || !data.length) {
         $('#tableBody').html(`
           <tr>
-            <td colspan="6" class="text-center text-muted">沒有符合的資料</td>
+            <td colspan="7" class="text-center text-muted">沒有符合的資料</td>
           </tr>
         `);
         return;
       }
 
-      // 依「所在營區」分組（第一營區、第二營區...），未填或其他放最後
       const groups = {};
       for (const r of data) {
         const key = (r.camp || '未填寫').toString().trim();
@@ -183,18 +185,14 @@
         groups[key].push(r);
       }
 
-      // 中文數字轉阿拉伯數字，用於『第X營區』排序
       const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
       function chineseNumToInt(txt) {
         if (!txt) return NaN;
-        // 處理如「第一」「第二十」「第十二」等
         const s = txt.replace(/[^零〇一二兩三四五六七八九十]/g,'');
         if (!s) return NaN;
-        if (s.length === 1) return mapCN[s] ?? NaN;
-        // 十X / X十 / X十Y
         if (s === '十') return 10;
         const tenIdx = s.indexOf('十');
-        if (tenIdx === -1) return (mapCN[s[0]] ?? NaN); // 單字
+        if (tenIdx === -1) return mapCN[s] ?? NaN;
         const left = tenIdx === 0 ? 1 : (mapCN[s[0]] ?? 0);
         const right = tenIdx === s.length - 1 ? 0 : (mapCN[s[tenIdx+1]] ?? 0);
         return left * 10 + right;
@@ -215,7 +213,7 @@
       for (const k of orderedKeys) {
         html += `
           <tr class="group-row">
-            <td colspan="6">所在營區：${k}（${groups[k].length}）</td>
+            <td colspan="7">所在營區：${k}（${groups[k].length}）</td>
           </tr>`;
         html += groups[k].map(r => `
           <tr>
@@ -224,6 +222,37 @@
             <td>${r.job ?? ''}</td>
             <td>${r.level ?? ''}</td>
             <td>${r.attack ?? ''}</td>
+            <td>${r.camp ?? ''}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary btn-edit"
+                data-row="${r.rowIndex || ''}"
+                data-name="${r.name ?? ''}"
+                data-code="${r.code ?? ''}"
+                data-job="${r.job ?? ''}"
+                data-level="${r.level ?? ''}"
+                data-attack="${r.attack ?? ''}"
+                data-camp="${r.camp ?? ''}">修改</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      $('#tableBody').html(html);
+
+      $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
+        const $btn = $(this);
+        $('#f_name').val($btn.data('name'));
+        $('#f_code').val($btn.data('code'));
+        $('#f_job').val($btn.data('job'));
+        $('#f_level').val($btn.data('level'));
+        $('#f_dry').val($btn.data('attack'));
+        $('#f_camp').val($btn.data('camp'));
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        modal.show();
+      });
+    }
+
+    /* =========================
+       啟動流程：自動讀取d>
             <td>${r.camp ?? ''}</td>
           </tr>`).join('');
       }
