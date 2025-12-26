@@ -15,7 +15,6 @@
 
   <style>
     .status-badge { font-size: 0.85rem; }
-    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
   </style>
 </head>
 <body class="bg-body">
@@ -57,8 +56,8 @@
                 <th>角色代碼</th>
                 <th>角色職業</th>
                 <th>角色等級</th>
-                <th>乾表</th>
-                <th>所在營區</th>
+				<th>角色乾表</th>
+				<th>所在營區</th>
               </tr>
             </thead>
             <tbody id="tableBody">
@@ -117,9 +116,6 @@
         </tr>
       `);
 
-      // 先清空舊資料，避免誤判
-      $('#tableBody').empty();
-
       const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
       Papa.parse(csvUrl, {
@@ -133,18 +129,26 @@
               return;
             }
 
+            // 預設資料欄位：B=名稱, C=代碼, D=職業, E=等級 F=乾表 G=營區
             const rows = result.data.slice(1);
-            const data = rows.map(r => ({
-              name:  r[1], // B
-              code:  r[2], // C
-              job:   r[3], // D
-              level: r[4], // E
-              dry:   r[5], // F
-              camp:  r[6]  // G
-            })).filter(r => r && r.name);
+            const data = rows
+              .map((r) => ({
+                name: r[1], // B
+                code: r[2], // C
+                job: r[3],  // D
+                level: r[4] // E
+				attack: r[5] //F
+				camp: r[6] //G 
+              }))
+              .filter((r) => r && r.name);
 
             renderTable(data);
           } catch (e) {
+            console.error(e);
+            $('#msg').text('解析資料時發生錯誤');
+            renderTable([]);
+          }
+        },
         error: function (err) {
           console.error(err);
           $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
@@ -156,53 +160,15 @@
     /* =========================
        Render Table
     ========================= */
-    ========================= */
     function renderTable(data) {
       if (!data || !data.length) {
         $('#tableBody').html(`
           <tr>
-            <td colspan="6" class="text-center text-muted">沒有符合的資料</td>
+            <td colspan="4" class="text-center text-muted">沒有符合的資料</td>
           </tr>
         `);
         return;
       }
-
-      // 依「所在營區」分組
-      const groups = {};
-      for (const r of data) {
-        const key = (r.camp || '未填寫').toString();
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(r);
-      }
-
-      // 依營區名稱排序，將「未填寫」排最後
-      const order = Object.keys(groups).sort((a, b) => {
-        if (a === '未填寫') return 1;
-        if (b === '未填寫') return -1;
-        return a.localeCompare(b, 'zh-Hant');
-      });
-
-      let html = '';
-      for (const g of order) {
-        html += `
-          <tr class="group-row">
-            <td colspan="6">所在營區：${g}（${groups[g].length}）</td>
-          </tr>`;
-        for (const r of groups[g]) {
-          html += `
-            <tr>
-              <td>${r.name ?? ''}</td>
-              <td>${r.code ?? ''}</td>
-              <td>${r.job ?? ''}</td>
-              <td>${r.level ?? ''}</td>
-              <td>${r.dry ?? ''}</td>
-              <td>${r.camp ?? ''}</td>
-            </tr>`;
-        }
-      }
-
-      $('#tableBody').html(html);
-    }
 
       const html = data
         .map(
@@ -212,6 +178,8 @@
             <td>${r.code ?? ''}</td>
             <td>${r.job ?? ''}</td>
             <td>${r.level ?? ''}</td>
+			<td>${r.attack ?? ''}</td>
+            <td>${r.camp ?? ''}</td>
           </tr>`
         )
         .join('');
