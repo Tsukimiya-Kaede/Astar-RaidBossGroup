@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Astar 公會｜基本資料表（Ver0.1）</title>
+<title>Astar 公會｜基本資料表（精簡顯示）</title>
+<meta name="description" content="從指定 Google 試算表的『基本資料表』自動載入：角色名稱、角色代碼、角色職業、角色等級。單一 HTML，無外部依賴。" />
 <meta name="theme-color" content="#0B0F1A" />
 <style>
 :root{ --bg:#0B0F1A; --fg:#E5E7EB; --muted:#94A3B8; --card:rgba(255,255,255,.08); --accent1:#7C3AED; --accent2:#06B6D4; --radius:18px; --shadow:0 12px 30px rgba(0,0,0,.35) }
@@ -30,19 +31,20 @@ input:focus{border-color:rgba(6,182,212,.8);outline:none}
 .table tbody td{padding:12px 10px;border-top:1px solid rgba(255,255,255,.06)}
 .scroll{max-height:520px;overflow:auto}
 .muted{color:var(--muted)}
-.small{font-size:12px}
+.hidden{display:none!important}
 .toast{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
 .toast .t{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.small{font-size:12px}
 @media (max-width:640px){ .nav .brand h1{font-size:16px} }
 </style>
 </head>
 <body>
 <header>
   <div class="nav">
-    <div class="brand"><div class="logo"></div><h1 style="margin:0;font-size:18px">Astar 公會｜基本資料表（0143）</h1></div>
+    <div class="brand"><div class="logo"></div><h1 style="margin:0;font-size:18px">Astar 公會｜基本資料表v0.2</h1></div>
     <div class="hstack">
       <input id="q" placeholder="搜尋 角色名稱/職業/代碼…" style="min-width:220px" />
-      <button class="btn subtle" id="btnReload" type="button">重新整理</button>
+      <button class="btn subtle" id="btnReload">重新整理</button>
     </div>
   </div>
 </header>
@@ -62,10 +64,10 @@ input:focus{border-color:rgba(6,182,212,.8);outline:none}
       <div class="scroll" id="wrap" aria-live="polite">
         <table class="table" id="tbl">
           <thead><tr>
-            <th>角色名稱（B）</th>
-            <th>角色代碼（C）</th>
-            <th>角色職業（D）</th>
-            <th>角色等級（E）</th>
+            <th>角色名稱</th>
+            <th>角色代碼</th>
+            <th>角色職業</th>
+            <th>角色等級</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -82,11 +84,11 @@ input:focus{border-color:rgba(6,182,212,.8);outline:none}
 const $=(s,e=document)=>e.querySelector(s); const $$=(s,e=document)=>Array.from(e.querySelectorAll(s));
 const toast=(m,ms=1800)=>{const t=document.createElement('div'); t.className='t'; t.textContent=m; $('#toast').appendChild(t); setTimeout(()=>t.remove(),ms)};
 
-// ====== 設定 ======
+// ====== 設定（你的試算表） ======
 const DEFAULT_EDIT_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
 const DEFAULT_SHEET = '基本資料表';
 
-// ====== URL 轉 CSV 端點 ======
+// ====== 由編輯連結推導 CSV 端點 ======
 function toCsvUrl(inputUrl, sheetName){
   if(!inputUrl) return '';
   if(/\b(out:csv|format=csv)\b/i.test(inputUrl)) return inputUrl; // 已是 CSV
@@ -101,83 +103,133 @@ function toCsvUrl(inputUrl, sheetName){
   return inputUrl;
 }
 
-// ====== 以索引切欄的 CSV 解析（支援引號/逗號/跨行） ======
-function csvToArrays(text){
+// ====== 安全 CSV 解析（支援引號/內嵌逗號/跨行） ======
+function parseCSV(text){
   const lines = text.split(/\r?\n/);
-  // 去掉權限頁/非 CSV 的前綴
+  // 去除前綴非 CSV（例如權限頁 HTML）
   while(lines.length && (!/,/.test(lines[0]) || /^\s*</.test(lines[0]))) lines.shift();
-  // 丟掉表頭行（固定欄位位置，不靠表頭名）
-  if(lines.length) lines.shift();
-
-  const logicalRows=[]; let buf='', qcount=0;
-  for(const line of lines){
-    if(line==='') continue;
-    buf += (buf?'\n':'') + line;
-    qcount += (line.match(/\"/g)||[]).length;
-    if(qcount % 2 === 0){ logicalRows.push(buf); buf=''; qcount=0; }
-  }
-  if(buf) logicalRows.push(buf);
-
-  const arrays=[];
-  for(const s of logicalRows){
-    const cells=[]; let cur='', inQ=false;
-    for(let i=0;i<s.length;i++){
-      const ch=s[i];
+  const headerLine = lines.shift();
+  if(!headerLine) return {headers:[], rows:[]};
+  const headers = headerLine.split(',').map(h=>h.replace(/^\ufeff/,''));
+  const rows=[]; let buf=''; let qcount=0;
+  for(const line of lines){ if(line==='') continue; buf += (buf?'\n':'') + line; qcount += (line.match(/\"/g)||[]).length; if(qcount % 2 === 0){ rows.push(buf); buf=''; qcount=0; } }
+  if(buf) rows.push(buf);
+  const out = rows.map(line=>{
+    const cells=[]; let cur=''; let inQ=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
       if(ch==='"'){
-        if(inQ && s[i+1]==='"'){ cur+='"'; i++; }
-        else inQ=!inQ;
+        if(inQ && line[i+1]==='"'){ cur+='"'; i++; } else inQ=!inQ;
       }else if(ch===',' && !inQ){ cells.push(cur); cur=''; }
       else{ cur+=ch; }
     }
     cells.push(cur);
-    arrays.push(cells.map(x=>String(x??'').trim()));
-  }
-  return arrays;
+    const obj={}; headers.forEach((h,idx)=>obj[h.trim()]=(cells[idx]??'').trim());
+    return obj;
+  });
+  return {headers, rows:out};
 }
 
-// ====== 載入並渲染（固定 B/C/D/E） ======
+// ====== 載入並渲染 ======
 async function loadAndRender(editOrCsvUrl, sheetName=DEFAULT_SHEET){
   const csvUrl = toCsvUrl(editOrCsvUrl, sheetName);
-  const wrap = document.getElementById('wrap'); if(wrap) wrap.setAttribute('aria-busy','true');
+  $('#wrap').setAttribute('aria-busy','true');
   try{
     const res = await fetch(csvUrl, {cache:'no-store'});
     const text = await res.text();
-    if(/^\s*</.test(text)) { toast('撈取失敗：不是 CSV，請把試算表開成「擁有連結者可檢視」或改用發佈到網路的 CSV。'); return; }
-    const arrs = csvToArrays(text);
-    const mapped = arrs
-      .map(a=>{ if(!a || a.length < 5) return null; const b=(a[1]||'').trim(); const c=(a[2]||'').trim(); const d=(a[3]||'').trim(); const e=(a[4]||'').trim(); return({'角色名稱':b,'角色代碼':c,'角色職業':d,'角色等級':e}); })
-      .filter(x=>x && !(x['角色名稱']==='角色名稱' && x['角色代碼']==='角色代碼'))
-      .filter(x=>x['角色名稱']||x['角色代碼']||x['角色職業']||x['角色等級']);
-    renderTable(mapped); setUpdateTime(); toast(`載入 ${mapped.length} 筆`);
-  }catch(err){ console.error(err); toast('撈取失敗：請確認連結或權限'); }
-  finally{ if(wrap) wrap.setAttribute('aria-busy','false'); }
+    if(/^\s*</.test(text)){ toast('撈取失敗：不是 CSV，請確認權限或改用發佈到網路的 CSV 連結'); return; }
+    const {rows} = parseCSV(text);
+    const mapped = rows.map(r=>({
+      角色名稱: r['角色名稱'] || r['IGN'] || '',
+      角色代碼: r['角色代碼'] || r['UID'] || '',
+      角色職業: r['角色職業'] || r['職業'] || '',
+      角色等級: r['角色等級'] || r['等級'] || r['戰力'] || ''
+    })).filter(x=>x['角色名稱']||x['角色代碼']||x['角色職業']);
+    renderTable(mapped);
+    setUpdateTime();
+    toast(`載入 ${mapped.length} 筆`);
+  }catch(e){ console.error(e); toast('撈取失敗：請確認連結或權限'); }
+  $('#wrap').setAttribute('aria-busy','false');
 }
 
 function renderTable(list){
-  const q = (document.getElementById('q')?.value||'').trim().toLowerCase();
-  const data = list.filter(o=>{ const txt=`${o['角色名稱']}${o['角色代碼']}${o['角色職業']}`.toLowerCase(); return !q || txt.includes(q); });
-  const tbody = document.getElementById('tbl').querySelector('tbody'); tbody.innerHTML='';
+  const q = ($('#q').value||'').trim().toLowerCase();
+  const data = list.filter(o=>{
+    const txt = `${o['角色名稱']}${o['角色代碼']}${o['角色職業']}`.toLowerCase();
+    return !q || txt.includes(q);
+  });
+  const tbody = $('#tbl tbody'); tbody.innerHTML='';
   for(const row of data){
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td><strong>${row['角色名稱']||'-'}</strong></td><td>${row['角色代碼']||''}</td><td>${row['角色職業']||''}</td><td>${row['角色等級']||''}</td>`;
+    tr.innerHTML = `<td><strong>${row['角色名稱']||'-'}</strong></td>
+      <td>${row['角色代碼']||''}</td>
+      <td>${row['角色職業']||''}</td>
+      <td>${row['角色等級']||''}</td>`;
     tbody.appendChild(tr);
   }
+  // 存快取，供重新整理時保留
   localStorage.setItem('astar-basic-cache', JSON.stringify(list));
 }
 
-function setUpdateTime(){
-  const el = document.getElementById('updateTime'); if(!el) return; const s = new Date().toLocaleString('zh-TW', { hour12:true }); el.textContent = '更新時間 ' + s;
+// 更新時間標示（每次資料更新呼叫）
+function setUpdateTime(note=''){
+  const el = document.getElementById('updateTime');
+  if(!el) return;
+  const s = new Date().toLocaleString('zh-TW', { hour12: true });
+  el.textContent = '更新時間 ' + s + (note ? ' ' + note : '');
 }
 
+// ====== 事件 ======
 function bind(){
-  document.getElementById('btnLoad').addEventListener('click', (e)=>{ e.preventDefault(); const url=document.getElementById('sheetUrl').value||DEFAULT_EDIT_URL; const name=document.getElementById('sheetName').value||DEFAULT_SHEET; loadAndRender(url,name); });
-  document.getElementById('btnReload').addEventListener('click', (e)=>{ e.preventDefault(); const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]'); renderTable(cache); setUpdateTime(); });
-  document.getElementById('q').addEventListener('input', ()=>{ const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]'); renderTable(cache); });
+  // 直接綁定（若元件存在）
+  const btnLoad = document.getElementById('btnLoad');
+  if(btnLoad){
+    btnLoad.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      const url = document.getElementById('sheetUrl')?.value || DEFAULT_EDIT_URL;
+      const name = document.getElementById('sheetName')?.value || DEFAULT_SHEET;
+      loadAndRender(url, name);
+    });
+  }
+  const btnReload = document.getElementById('btnReload');
+  if(btnReload){
+    btnReload.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
+      renderTable(cache);
+      setUpdateTime();
+    });
+  }
+  const q = document.getElementById('q');
+  if(q){
+    q.addEventListener('input', ()=>{
+      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
+      renderTable(cache);
+    });
+  }
+
+  // 事件委派（保險）：就算上面沒綁到，這裡一定能接到點擊
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if(t && (t.id==='btnLoad' || t.closest?.('#btnLoad'))){
+      e.preventDefault();
+      const url = document.getElementById('sheetUrl')?.value || DEFAULT_EDIT_URL;
+      const name = document.getElementById('sheetName')?.value || DEFAULT_SHEET;
+      loadAndRender(url, name);
+    }
+    if(t && (t.id==='btnReload' || t.closest?.('#btnReload'))){
+      e.preventDefault();
+      const cache = JSON.parse(localStorage.getItem('astar-basic-cache')||'[]');
+      renderTable(cache);
+      setUpdateTime();
+    }
+  });
 }
 
+// ====== 啟動 ======
 window.addEventListener('load', ()=>{
-  document.getElementById('sheetUrl').value = DEFAULT_EDIT_URL;
-  document.getElementById('sheetName').value = DEFAULT_SHEET;
+  $('#sheetUrl').value = DEFAULT_EDIT_URL;
+  $('#sheetName').value = DEFAULT_SHEET;
   bind();
   loadAndRender(DEFAULT_EDIT_URL, DEFAULT_SHEET);
 });
