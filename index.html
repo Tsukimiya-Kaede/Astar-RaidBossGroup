@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Astar 公會｜基本資料表（V0.1）</title>
+<title>Astar 公會｜基本資料表V0.1</title>
 <meta name="description" content="從指定 Google 試算表的『基本資料表』自動載入：角色名稱、角色代碼、角色職業、角色等級。單一 HTML，無外部依賴。" />
 <meta name="theme-color" content="#0B0F1A" />
 <style>
@@ -129,28 +129,85 @@ function parseCSV(text){
   });
   return {headers, rows:out};
 }
+// 以索引切欄的 CSV 解析（支援引號/逗號/跨行）；用於 B/C/D/E 定位
+function csvToArrays(text){
+  const lines = text.split(/\r?\n/);
+  // 去掉權限頁/非 CSV 的前綴
+  while(lines.length && (!/,/.test(lines[0]) || /^\s*</.test(lines[0]))) lines.shift();
+  // 丟掉表頭行（我們用固定欄位位置，不靠表頭名）
+  if(lines.length) lines.shift();
+
+  const rows=[]; let buf='', qcount=0;
+  for(const line of lines){
+    if(line==='') continue;
+    buf += (buf? '\n' : '') + line;
+    qcount += (line.match(/\"/g) || []).length;
+    if(qcount % 2 === 0){ rows.push(buf); buf=''; qcount=0; }
+  }
+  if(buf) rows.push(buf);
+
+  const arrays=[];
+  for(const s of rows){
+    const cells=[]; let cur='', inQ=false;
+    for(let i=0;i<s.length;i++){
+      const ch=s[i];
+      if(ch === '"'){
+        if(inQ && s[i+1] === '"'){ cur+='"'; i++; } else inQ=!inQ;
+      }else if(ch === ',' && !inQ){
+        cells.push(cur); cur='';
+      }else{
+        cur += ch;
+      }
+    }
+    cells.push(cur);
+    arrays.push(cells.map(x=>String(x ?? '').trim()));
+  }
+  return arrays;
+}
 
 // ====== 載入並渲染 ======
-async function loadAndRender(editOrCsvUrl, sheetName=DEFAULT_SHEET){
+async function loadAndRender(editOrCsvUrl, sheetName = DEFAULT_SHEET){
   const csvUrl = toCsvUrl(editOrCsvUrl, sheetName);
-  $('#wrap').setAttribute('aria-busy','true');
+  const wrap = document.getElementById('wrap');
+  if(wrap) wrap.setAttribute('aria-busy','true');
   try{
-    const res = await fetch(csvUrl, {cache:'no-store'});
+    const res = await fetch(csvUrl, { cache: 'no-store' });
     const text = await res.text();
-    if(/^\s*</.test(text)){ toast('撈取失敗：不是 CSV，請確認權限或改用發佈到網路的 CSV 連結'); return; }
-    const {rows} = parseCSV(text);
-    const mapped = rows.map(r=>({
-      角色名稱: r['角色名稱'] || r['IGN'] || '',
-      角色代碼: r['角色代碼'] || r['UID'] || '',
-      角色職業: r['角色職業'] || r['職業'] || '',
-      角色等級: r['角色等級'] || r['等級'] || r['戰力'] || ''
-    })).filter(x=>x['角色名稱']||x['角色代碼']||x['角色職業']);
+
+    // 抓到 HTML（通常是未公開權限）就提示
+    if (/^\s*</.test(text)){
+      toast('撈取失敗：不是 CSV，請把試算表開成「擁有連結者可檢視」，或用發佈到網路的 CSV。');
+      return;
+    }
+
+    const arrs = csvToArrays(text);
+
+    // 依指定：B/C/D/E 欄 → index 1/2/3/4；排除表頭殘留與空列
+    const mapped = arrs
+      .map(a=>{
+        if(!a || a.length < 5) return null; // 少於 E 欄，跳過
+        const b = String(a[1]||'').trim(); // 角色名稱（B）
+        const c = String(a[2]||'').trim(); // 角色代碼（C）
+        const d = String(a[3]||'').trim(); // 角色職業（D）
+        const e = String(a[4]||'').trim(); // 角色等級（E）
+        return { '角色名稱': b, '角色代碼': c, '角色職業': d, '角色等級': e };
+      })
+      // 若極少數情況首列仍殘留表頭，過濾掉
+      .filter(x => x && !(x['角色名稱'] === '角色名稱' && x['角色代碼'] === '角色代碼'))
+      // 至少有一欄有值才保留
+      .filter(x => x['角色名稱'] || x['角色代碼'] || x['角色職業'] || x['角色等級']);
+
     renderTable(mapped);
-    setUpdateTime();
+    setUpdateTime();   // 你已經有的更新時間顯示
     toast(`載入 ${mapped.length} 筆`);
-  }catch(e){ console.error(e); toast('撈取失敗：請確認連結或權限'); }
-  $('#wrap').setAttribute('aria-busy','false');
+  }catch(e){
+    console.error(e);
+    toast('撈取失敗：請確認連結或權限');
+  }finally{
+    if(wrap) wrap.setAttribute('aria-busy','false');
+  }
 }
+
 
 function renderTable(list){
   const q = ($('#q').value||'').trim().toLowerCase();
