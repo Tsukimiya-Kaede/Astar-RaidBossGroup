@@ -15,6 +15,8 @@
 
   <style>
     .status-badge { font-size: 0.85rem; }
+    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
+    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
   </style>
 </head>
 <body class="bg-body">
@@ -56,7 +58,7 @@
                 <th>角色代碼</th>
                 <th>角色職業</th>
                 <th>角色等級</th>
-				<th>角色乾表</th>
+                <th>角色乾表</th>
                 <th>所在營區</th>
               </tr>
             </thead>
@@ -116,6 +118,9 @@
         </tr>
       `);
 
+      // 先清空舊資料，避免誤判
+      $('#tableBody').empty();
+
       const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
       Papa.parse(csvUrl, {
@@ -129,16 +134,15 @@
               return;
             }
 
-            // 預設資料欄位：B=名稱, C=代碼, D=職業, E=等級 F=乾表 G=營區
             const rows = result.data.slice(1);
             const data = rows
               .map((r) => ({
                 name: r[1], // B
                 code: r[2], // C
-                job: r[3],  // D
-                level: r[4], // E
-				attack: r[6], //F
-				camp: r[7] //G 
+                job:  r[3], // D
+                level:r[4], // E
+                attack:  r[5], // F 乾表
+                camp: r[6]  // G 所在營區
               }))
               .filter((r) => r && r.name);
 
@@ -148,7 +152,7 @@
             $('#msg').text('解析資料時發生錯誤');
             renderTable([]);
           }
-        },
+        },  
         error: function (err) {
           console.error(err);
           $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
@@ -160,6 +164,7 @@
     /* =========================
        Render Table
     ========================= */
+
     function renderTable(data) {
       if (!data || !data.length) {
         $('#tableBody').html(`
@@ -170,19 +175,58 @@
         return;
       }
 
-      const html = data
-        .map(
-          (r) => `
+      // 依「所在營區」分組（第一營區、第二營區...），未填或其他放最後
+      const groups = {};
+      for (const r of data) {
+        const key = (r.camp || '未填寫').toString().trim();
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(r);
+      }
+
+      // 中文數字轉阿拉伯數字，用於『第X營區』排序
+      const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
+      function chineseNumToInt(txt) {
+        if (!txt) return NaN;
+        // 處理如「第一」「第二十」「第十二」等
+        const s = txt.replace(/[^零〇一二兩三四五六七八九十]/g,'');
+        if (!s) return NaN;
+        if (s.length === 1) return mapCN[s] ?? NaN;
+        // 十X / X十 / X十Y
+        if (s === '十') return 10;
+        const tenIdx = s.indexOf('十');
+        if (tenIdx === -1) return (mapCN[s[0]] ?? NaN); // 單字
+        const left = tenIdx === 0 ? 1 : (mapCN[s[0]] ?? 0);
+        const right = tenIdx === s.length - 1 ? 0 : (mapCN[s[tenIdx+1]] ?? 0);
+        return left * 10 + right;
+      }
+
+      const orderedKeys = Object.keys(groups).sort((a,b) => {
+        if (a === '未填寫') return 1;
+        if (b === '未填寫') return -1;
+        const na = chineseNumToInt(a);
+        const nb = chineseNumToInt(b);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        if (!isNaN(na)) return -1;
+        if (!isNaN(nb)) return 1;
+        return a.localeCompare(b, 'zh-Hant');
+      });
+
+      let html = '';
+      for (const k of orderedKeys) {
+        html += `
+          <tr class="group-row">
+            <td colspan="6">所在營區：${k}（${groups[k].length}）</td>
+          </tr>`;
+        html += groups[k].map(r => `
           <tr>
             <td>${r.name ?? ''}</td>
             <td>${r.code ?? ''}</td>
             <td>${r.job ?? ''}</td>
             <td>${r.level ?? ''}</td>
-			<td>${r.attack ?? ''}</td>
+            <td>${r.attack ?? ''}</td>
             <td>${r.camp ?? ''}</td>
-          </tr>`
-        )
-        .join('');
+          </tr>`).join('');
+      }
 
       $('#tableBody').html(html);
     }
