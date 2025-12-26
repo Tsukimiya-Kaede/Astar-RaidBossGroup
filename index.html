@@ -57,7 +57,7 @@
                 <th>角色職業</th>
                 <th>角色等級</th>
 				<th>角色乾表</th>
-				<th>所在營區</th>
+                <th>所在營區</th>
               </tr>
             </thead>
             <tbody id="tableBody">
@@ -136,8 +136,8 @@
                 name: r[1], // B
                 code: r[2], // C
                 job: r[3],  // D
-                level: r[4] // E
-				attack: r[5] //F
+                level: r[4], // E
+				attack: r[5], //F
 				camp: r[6] //G 
               }))
               .filter((r) => r && r.name);
@@ -164,7 +164,7 @@
       if (!data || !data.length) {
         $('#tableBody').html(`
           <tr>
-            <td colspan="4" class="text-center text-muted">沒有符合的資料</td>
+            <td colspan="6" class="text-center text-muted">沒有符合的資料</td>
           </tr>
         `);
         return;
