@@ -229,7 +229,7 @@
             <td>${r.attack ?? ''}</td>
             <td>${r.camp ?? ''}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary btn-edit"
+              <button class="btn btn-sm btn-outline-primary btn_cancel"
                 data-row="${r.rowIndex || ''}"
                 data-name="${r.name ?? ''}"
                 data-code="${r.code ?? ''}"
@@ -243,7 +243,7 @@
 
       $('#tableBody').html(html);
 
-      $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
+      $('#tableBody').off('click', '.btn_cancel').on('click', '.btn_cancel', function(){
         const $btn = $(this);
         $('#f_name').val($btn.data('name'));
         $('#f_code').val($btn.data('code'));
