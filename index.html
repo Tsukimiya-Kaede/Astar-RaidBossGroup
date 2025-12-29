@@ -20,11 +20,7 @@
     .status-badge { font-size: 0.85rem; }
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
-	button.secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
   </style>
 </head>
 <body class="bg-body">
@@ -47,7 +43,7 @@
         <small class="text-muted">
 		  <a href="https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0"
 			 target="_blank" rel="noopener noreferrer">
-			https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0*/	
+			https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0
 		  </a>
 		</small>
         <div id="msg" class="text-danger mt-2"></div>
@@ -87,241 +83,249 @@
     </div>
   </div>
 
-  <script>
-    /* =========================
-       夜間模式切換
-    ========================= */
-    $('#toggleTheme').on('click', function () {
-      const html = document.documentElement;
-      const isDark = html.getAttribute('data-bs-theme') === 'dark';
-      html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
-      $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
-    });
+<script>
+/* =========================
+   設定：請填你的 Apps Script Web App（exec）URL
+========================= */
+const GAS_UPDATE_URL = '<<在這裡貼上你的 GAS Web App exec URL>>';
+// 例如：const GAS_UPDATE_URL = 'https://script.google.com/macros/s/xxxxxxxxxxxxxxx/exec';
 
-    /* =========================
-       公用：解析 URL 參數
-    ========================= */
-    function getQueryParams() {
-      const params = new URLSearchParams(window.location.search);
-      return Object.fromEntries(params.entries());
-    }
+/* =========================
+   夜間模式切換
+========================= */
+$('#toggleTheme').on('click', function () {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-bs-theme') === 'dark';
+  html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+  $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
+});
 
-    /* =========================
-       公用：從分享連結取 sheetId/gid
-    ========================= */
-    function parseSheetFromUrl(url) {
-      if (!url) return null;
-      // 支援：https://docs.google.com/spreadsheets/d/{sheetId}/edit?gid=0#gid=0
-      const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      if (!idMatch) return null;
-      const sheetId = idMatch[1];
-      // 優先讀取 query 的 gid；若無則嘗試從 URL 抓取 gid；再無則預設 0
-      const urlObj = new URL(url);
-      const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
-      return { sheetId, gid };
-    }
+/* =========================
+   公用：解析 URL 參數
+========================= */
+function getQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  return Object.fromEntries(params.entries());
+}
 
-    /* =========================
-       讀取 Google Sheet（以 CSV 匯出）
-    ========================= */
-    function loadFromSheet(sheetId, gid = '0') {
-      $('#msg').text('');
-      $('#tableBody').html(`
-        <tr>
-          <td colspan="6" class="text-center text-muted">讀取中...</td>
-        </tr>
-      `);
+/* =========================
+   公用：從分享連結取 sheetId/gid
+========================= */
+function parseSheetFromUrl(url) {
+  if (!url) return null;
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!idMatch) return null;
+  const sheetId = idMatch[1];
+  const urlObj = new URL(url);
+  const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
+  return { sheetId, gid };
+}
 
-      // 先清空舊資料，避免誤判
-      $('#tableBody').empty();
+/* =========================
+   讀取 Google Sheet（以 CSV 匯出）
+========================= */
+function loadFromSheet(sheetId, gid = '0') {
+  $('#msg').text('');
+  $('#tableBody').html(`
+    <tr>
+      <td colspan="7" class="text-center text-muted">讀取中...</td>
+    </tr>
+  `);
 
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
-      Papa.parse(csvUrl, {
-        download: true,
-        skipEmptyLines: true,
-        complete: function (result) {
-          try {
-            if (!result.data || result.data.length < 2) {
-              $('#msg').text('沒有資料可顯示');
-              renderTable([]);
-              return;
-            }
-
-            const rows = result.data.slice(1);
-            const data = rows
-              .map((r) => ({
-                name: r[1], // B
-                code: r[2], // C
-                job:  r[3], // D
-                level:r[4], // E
-                attack:  r[6], // F 乾表
-                camp: r[9]  // G 所在營區
-              }))
-              .filter((r) => r && r.name);
-
-            renderTable(data);
-          } catch (e) {
-            console.error(e);
-            $('#msg').text('解析資料時發生錯誤');
-            renderTable([]);
-          }
-        },  
-        error: function (err) {
-          console.error(err);
-          $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
+  Papa.parse(csvUrl, {
+    download: true,
+    skipEmptyLines: true,
+    complete: function (result) {
+      try {
+        if (!result.data || result.data.length < 2) {
+          $('#msg').text('沒有資料可顯示');
           renderTable([]);
+          return;
         }
-      });
+
+        const rows = result.data.slice(1);
+        const data = rows
+          .map((r, i) => ({
+            name:  r[1], // B
+            code:  r[2], // C（主鍵）
+            job:   r[3], // D
+            level: r[4], // E
+            attack:r[5], // F 乾表  ← 若你的表不是在 F/G，請依實際欄位調整
+            camp:  r[6], // G 營區
+            rowIndex: i + 2 // 含標題列
+          }))
+          .filter(r => r && r.name);
+
+        renderTable(data);
+      } catch (e) {
+        console.error(e);
+        $('#msg').text('解析資料時發生錯誤');
+        renderTable([]);
+      }
+    },  
+    error: function (err) {
+      console.error(err);
+      $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
+      renderTable([]);
     }
+  });
+}
 
-    /* =========================					
-       Render Table
-    ========================= */
-    function renderTable(data) {
-      if (!data || !data.length) {
-        $('#tableBody').html(`
-          <tr>
-            <td colspan="7" class="text-center text-muted">沒有符合的資料</td>
-          </tr>
-        `);
-        return;
-      }
+/* =========================					
+   Render Table
+========================= */
+function renderTable(data) {
+  if (!data || !data.length) {
+    $('#tableBody').html(`
+      <tr>
+        <td colspan="7" class="text-center text-muted">沒有符合的資料</td>
+      </tr>
+    `);
+    return;
+  }
 
-      const groups = {};
-      for (const r of data) {
-        const key = (r.camp || '未填寫').toString().trim();
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(r);
-      }
+  const groups = {};
+  for (const r of data) {
+    const key = (r.camp || '未填寫').toString().trim();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
 
-      const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
-      function chineseNumToInt(txt) {
-        if (!txt) return NaN;
-        const s = txt.replace(/[^零〇一二兩三四五六七八九十]/g,'');
-        if (!s) return NaN;
-        if (s === '十') return 10;
-        const tenIdx = s.indexOf('十');
-        if (tenIdx === -1) return mapCN[s] ?? NaN;
-        const left = tenIdx === 0 ? 1 : (mapCN[s[0]] ?? 0);
-        const right = tenIdx === s.length - 1 ? 0 : (mapCN[s[tenIdx+1]] ?? 0);
-        return left * 10 + right;
-      }
+  const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
+  function chineseNumToInt(txt) {
+    if (!txt) return NaN;
+    const s = txt.replace(/[^零〇一二兩三四五六七八九十]/g,'');
+    if (!s) return NaN;
+    if (s === '十') return 10;
+    const tenIdx = s.indexOf('十');
+    if (tenIdx === -1) return mapCN[s] ?? NaN;
+    const left = tenIdx === 0 ? 1 : (mapCN[s[0]] ?? 0);
+    const right = tenIdx === s.length - 1 ? 0 : (mapCN[s[tenIdx+1]] ?? 0);
+    return left * 10 + right;
+  }
 
-      const orderedKeys = Object.keys(groups).sort((a,b) => {
-        if (a === '未填寫') return 1;
-        if (b === '未填寫') return -1;
-        const na = chineseNumToInt(a);
-        const nb = chineseNumToInt(b);
-        if (!isNaN(na) && !isNaN(nb)) return na - nb;
-        if (!isNaN(na)) return -1;
-        if (!isNaN(nb)) return 1;
-        return a.localeCompare(b, 'zh-Hant');
-      });
+  const orderedKeys = Object.keys(groups).sort((a,b) => {
+    if (a === '未填寫') return 1;
+    if (b === '未填寫') return -1;
+    const na = chineseNumToInt(a);
+    const nb = chineseNumToInt(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    if (!isNaN(na)) return -1;
+    if (!isNaN(nb)) return 1;
+    return a.localeCompare(b, 'zh-Hant');
+  });
 
-      let html = '';
-      for (const k of orderedKeys) {
-        html += `
-          <tr class="group-row">
-            <td colspan="7">所在營區：${k}（${groups[k].length}）</td>
-          </tr>`;
-        html += groups[k].map(r => `
-          <tr>
-            <td>${r.name ?? ''}</td>
-            <td>${r.code ?? ''}</td>
-            <td>${r.job ?? ''}</td>
-            <td>${r.level ?? ''}</td>
-            <td>${r.attack ?? ''}</td>
-            <td>${r.camp ?? ''}</td>
-            <td>
-              <button class="btn btn-outline-secondary btn-edit"
-                data-row="${r.rowIndex || ''}"
-                data-name="${r.name ?? ''}"
-                data-code="${r.code ?? ''}"
-                data-job="${r.job ?? ''}"
-                data-level="${r.level ?? ''}"
-                data-attack="${r.attack ?? ''}"
-                data-camp="${r.camp ?? ''}">修改</button>
-            </td>
-          </tr>`).join('');
-      }
+  let html = '';
+  for (const k of orderedKeys) {
+    html += `
+      <tr class="group-row">
+        <td colspan="7">所在營區：${k}（${groups[k].length}）</td>
+      </tr>`;
+    html += groups[k].map(r => `
+      <tr>
+        <td>${r.name ?? ''}</td>
+        <td>${r.code ?? ''}</td>
+        <td>${r.job ?? ''}</td>
+        <td>${r.level ?? ''}</td>
+        <td>${r.attack ?? ''}</td>
+        <td>${r.camp ?? ''}</td>
+        <td>
+          <button class="btn btn-outline-secondary btn-edit"
+            data-row="${r.rowIndex || ''}"
+            data-name="${r.name ?? ''}"
+            data-code="${r.code ?? ''}"
+            data-job="${r.job ?? ''}"
+            data-level="${r.level ?? ''}"
+            data-attack="${r.attack ?? ''}"
+            data-camp="${r.camp ?? ''}">修改</button>
+        </td>
+      </tr>`).join('');
+  }
 
-      $('#tableBody').html(html);
+  $('#tableBody').html(html);
 
-      $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
-        const $btn = $(this);
-        $('#f_name').val($btn.data('name'));
-        $('#f_code').val($btn.data('code'));
-        $('#f_job').val($btn.data('job'));
-        $('#f_level').val($btn.data('level'));
-        $('#f_dry').val($btn.data('attack'));
-        $('#f_camp').val($btn.data('camp'));
-        const modal = new bootstrap.Modal(document.getElementById('editModal'));
-        modal.show();
-      });
-    }
+  // 綁定「修改」→ 打開編輯器
+  $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
+    const $btn = $(this);
+    openEditor({
+      name:  $btn.data('name'),
+      code:  $btn.data('code'),
+      job:   $btn.data('job'),
+      level: $btn.data('level'),
+      attack:$btn.data('attack'),
+      camp:  $btn.data('camp'),
+      rowIndex: Number($btn.data('row') || 0)
+    }, (updated) => {
+      // 儲存成功後，更新前端該列顯示與按鈕 data
+      const tr = $btn.closest('tr')[0];
+      const tds = tr.querySelectorAll('td');
+      tds[0].textContent = updated.name;
+      tds[1].textContent = updated.code;
+      tds[2].textContent = updated.job;
+      tds[3].textContent = updated.level;
+      tds[4].textContent = updated.attack;
+      tds[5].textContent = updated.camp;
 
-    /* =========================
-       啟動流程：自動讀取d>
-            <td>${r.camp ?? ''}</td>
-          </tr>`).join('');
-      }
-
-      $('#tableBody').html(html);
-    }
-
-    /* =========================
-       啟動流程：自動讀取
-    ========================= */
-    const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
-
-    function resolveSheetTarget() {
-      const qp = getQueryParams();
-
-      // 1) 允許 ?sheetUrl=
-      if (qp.sheetUrl) {
-        const parsed = parseSheetFromUrl(qp.sheetUrl);
-        if (parsed) return parsed;
-      }
-
-      // 2) 允許 ?sheetId= 與可選 ?gid=
-      if (qp.sheetId) {
-        return { sheetId: qp.sheetId, gid: qp.gid || '0' };
-      }
-
-      // 3) 預設使用內建連結
-      const parsedDefault = parseSheetFromUrl(DEFAULT_SHEET_URL);
-      return parsedDefault || { sheetId: '', gid: '0' };
-    }
-
-    function updateSourceBadge(sheetId, gid) {
-      if (!sheetId) return;
-      const badge = $('#sourceBadge');
-      badge.text(`sheetId=${sheetId} | gid=${gid}`);
-      badge.removeClass('d-none');
-    }
-
-    $(function () {
-      const target = resolveSheetTarget();
-      if (!target.sheetId) {
-        $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
-        return;
-      }
-
-      updateSourceBadge(target.sheetId, target.gid);
-      loadFromSheet(target.sheetId, target.gid);
-
-      $('#reloadBtn').on('click', function () {
-        loadFromSheet(target.sheetId, target.gid);
-      });
+      $btn.data('name',  updated.name);
+      $btn.data('code',  updated.code);
+      $btn.data('job',   updated.job);
+      $btn.data('level', updated.level);
+      $btn.data('attack',updated.attack);
+      $btn.data('camp',  updated.camp);
     });
-	
-		function createEditor() {
-	  const overlay = document.createElement('div');
-	  overlay.id = 'editOverlay';
-	  Object.assign(overlay.style, {
-		position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
-		display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+  });
+}
+
+/* =========================
+   啟動流程：自動讀取
+========================= */
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
+
+function resolveSheetTarget() {
+  const qp = getQueryParams();
+  if (qp.sheetUrl) {
+    const parsed = parseSheetFromUrl(qp.sheetUrl);
+    if (parsed) return parsed;
+  }
+  if (qp.sheetId) {
+    return { sheetId: qp.sheetId, gid: qp.gid || '0' };
+  }
+  const parsedDefault = parseSheetFromUrl(DEFAULT_SHEET_URL);
+  return parsedDefault || { sheetId: '', gid: '0' };
+}
+
+function updateSourceBadge(sheetId, gid) {
+  if (!sheetId) return;
+  const badge = $('#sourceBadge');
+  badge.text(`sheetId=${sheetId} | gid=${gid}`);
+  badge.removeClass('d-none');
+}
+
+$(function () {
+  const target = resolveSheetTarget();
+  if (!target.sheetId) {
+    $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
+    return;
+  }
+  updateSourceBadge(target.sheetId, target.gid);
+  loadFromSheet(target.sheetId, target.gid);
+
+  $('#reloadBtn').on('click', function () {
+    loadFromSheet(target.sheetId, target.gid);
+  });
+});
+
+/* =========================
+   編輯視窗（含營區下拉）
+========================= */
+function createEditor() {
+  const overlay = document.createElement('div');
+  overlay.id = 'editOverlay';
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
   });
 
   const card = document.createElement('div');
@@ -332,48 +336,48 @@
   card.innerHTML = `
     <h3 style="margin:0 0 12px;font-size:18px;width:100%; max-width:100%; box-sizing:border-box;">修改資料</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-        <span>角色名稱</span>
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span>角色名稱（B）</span>
         <input id="edit_name" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
-      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-        <span>角色代碼</span>
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span>角色代碼（C）</span>
         <input id="edit_code" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
-      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-        <span>角色職業</span>
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span>角色職業（D）</span>
         <input id="edit_job" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
-      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-        <span>等級</span>
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span>角色等級（E）</span>
         <input id="edit_level" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
-      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-        <span>角色乾表</span>
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span>角色乾表（F）</span>
         <input id="edit_attack" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
-      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-	  <span>所在營區</span>
-	  <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-		<option value="">（請選擇）</option>
-		<option>第一營區</option>
-		<option>第二營區</option>
-		<option>第三營區</option>
-		<option>第四營區</option>
-		<option>第五營區</option>
-		<option>第六營區</option>
-		<option>第七營區</option>
-		<option>第八營區</option>
-		<option>第九營區</option>
-		<option>第十營區</option>
-		<option>訓練營</option>
-		<option>外援大大</option>
-	  </select>
-	</label>	  
+      <label style="display:flex;flex-direction:column;gap:6px;">
+        <span>所在營區（G）</span>
+        <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+          <option value="">（請選擇）</option>
+          <option>第一營區</option>
+          <option>第二營區</option>
+          <option>第三營區</option>
+          <option>第四營區</option>
+          <option>第五營區</option>
+          <option>第六營區</option>
+          <option>第七營區</option>
+          <option>第八營區</option>
+          <option>第九營區</option>
+          <option>第十營區</option>
+          <option>訓練營</option>
+          <option>外援大大</option>
+        </select>
+      </label>
     </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
-      <button id="btn_cancel"style="padding:8px 14px;background:#e9ecef;color:#000;border:1px solid #ced4da;border-radius:8px;cursor:pointer;">取消</button>
-      <button id="btn_save" style="padding:8px 14px;background:#4f46e5;color:#fff;border:none;border-radius:8px;cursor:pointer;">儲存</button>
+    <div class="d-flex gap-2 justify-content-end mt-3">
+      <button id="btn_cancel" class="btn btn-light border">取消</button>
+      <button id="btn_save" class="btn btn-primary">儲存</button>
     </div>
   `;
   overlay.appendChild(card);
@@ -387,81 +391,79 @@ function openEditor(values, onSave) {
   if (!overlay) overlay = createEditor();
 
   // 指派值
-  overlay.querySelector('#edit_name').value  = values.name  ?? '';
-  overlay.querySelector('#edit_code').value  = values.code  ?? '';
-  overlay.querySelector('#edit_job').value   = values.job   ?? '';
-  overlay.querySelector('#edit_level').value = values.level ?? '';
-  overlay.querySelector('#edit_attack').value   = values.attack   ?? '';
-  overlay.querySelector('#edit_camp').value = values.camp ?? '';
-  
- // 設定營區預選值（若值不在選項裡，會先加進去再選取）
+  overlay.querySelector('#edit_name').value   = values.name  ?? '';
+  overlay.querySelector('#edit_code').value   = values.code  ?? '';
+  overlay.querySelector('#edit_job').value    = values.job   ?? '';
+  overlay.querySelector('#edit_level').value  = values.level ?? '';
+  overlay.querySelector('#edit_attack').value = values.attack?? '';
+
   const campSelect = overlay.querySelector('#edit_camp');
   const campValue  = values.camp ?? '';
   if (campValue) {
-	const exists = Array.from(campSelect.options).some(o => o.value === campValue || o.text === campValue);
-	if (!exists) campSelect.add(new Option(campValue, campValue));
-	  campSelect.value = campValue;
-	} else {
-	  campSelect.value = '';
-	}
-  // 綁定事件（先移除舊的）
+    const exists = Array.from(campSelect.options).some(o => o.value === campValue || o.text === campValue);
+    if (!exists) campSelect.add(new Option(campValue, campValue));
+    campSelect.value = campValue;
+  } else {
+    campSelect.value = '';
+  }
+
+  // 綁定事件
   const btnCancel = overlay.querySelector('#btn_cancel');
   const btnSave   = overlay.querySelector('#btn_save');
 
   const close = () => overlay.remove();
 
   btnCancel.onclick = close;
-  btnSave.onclick = () => {
+
+  // 🔥 儲存 → 呼叫 GAS 寫回（以「角色代碼」為主鍵）
+  btnSave.onclick = async () => {
     const updated = {
-      name:  overlay.querySelector('#edit_name').value.trim(),
-      code:  overlay.querySelector('#edit_code').value.trim(),
-      job:   overlay.querySelector('#edit_job').value.trim(),
-      level: overlay.querySelector('#edit_level').value.trim(),
-      attack:overlay.querySelector('#edit_attack').value.trim(),
-      camp:  overlay.querySelector('#edit_camp').value.trim(),	  
+      name:   overlay.querySelector('#edit_name').value.trim(),
+      code:   overlay.querySelector('#edit_code').value.trim(),  // 主鍵
+      job:    overlay.querySelector('#edit_job').value.trim(),
+      level:  overlay.querySelector('#edit_level').value.trim(),
+      attack: overlay.querySelector('#edit_attack').value.trim(),
+      camp:   overlay.querySelector('#edit_camp').value.trim(),
     };
-	alert('修改功能還不能使用!還在努力做功能中!!按再多次都不會更新的!!!');
-    onSave?.(updated);
-    close();
+
+    if (!GAS_UPDATE_URL || GAS_UPDATE_URL.startsWith('<<')) {
+      alert('尚未設定 GAS_UPDATE_URL，請先填入你的 Apps Script Web App URL');
+      return;
+    }
+    if (!updated.code) {
+      alert('角色代碼不可為空，因為要用它來找到要更新的那一列');
+      return;
+    }
+
+    try {
+      const resp = await fetch(GAS_UPDATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateByCode',
+          code: updated.code,  // 以 C 欄作為主鍵
+          values: {
+            name:   updated.name,   // B
+            job:    updated.job,    // D
+            level:  updated.level,  // E
+            attack: updated.attack, // F
+            camp:   updated.camp    // G
+          }
+        })
+      });
+      const result = await resp.json();
+      if (!resp.ok || result.status !== 'ok') {
+        throw new Error(result.message || '更新失敗');
+      }
+
+      onSave?.(updated); // 更新前端列
+      close();
+    } catch (e) {
+      console.error(e);
+      alert('更新失敗：' + e.message);
+    }
   };
 }
-
-/* ====== 事件委派：把 alert 換成可編輯表單 ====== */
-document.getElementById('tableBody').addEventListener('click', (e) => {
-  const btn = e.target.closest('.btn-edit');
-  if (!btn) return;
-
-  const tr = btn.closest('tr');  // 這列
-  const oldData = {
-    name:  btn.dataset.name  || '',
-    code:  btn.dataset.code  || '',
-    job:   btn.dataset.job   || '',
-    level: btn.dataset.level || '',
-	attack:   btn.dataset.attack   || '',
-    camp: btn.dataset.camp || '',
-  };
-
-  openEditor(oldData, (updated) => {
-    // 1) 更新表格該列顯示（假設欄位順序：名稱、代碼、職業、等級、修改）
-    const tds = tr.querySelectorAll('td');
-    tds[0].textContent = updated.name;
-    tds[1].textContent = updated.code;
-    tds[2].textContent = updated.job;
-    tds[3].textContent = updated.level;
-    tds[4].textContent = updated.attack;
-    tds[5].textContent = updated.camp;	
-
-    // 2) 回寫到按鈕的 data-*，確保下次再編輯能帶入最新值
-    btn.dataset.name  = updated.name;
-    btn.dataset.code  = updated.code;
-    btn.dataset.job   = updated.job;
-    btn.dataset.level = updated.level;
-	btn.dataset.attack   = updated.attack;
-    btn.dataset.camp = updated.camp;
-
-    // TODO：若要同步到 Google Sheet，這裡接 fetch(GAS_URL, { method:'POST', body: JSON.stringify(updated) ... })
-  });
-});
-  </script>
+</script>
 </body>
 </html>
