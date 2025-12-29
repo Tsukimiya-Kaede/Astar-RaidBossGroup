@@ -10,6 +10,9 @@
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+  <!-- Bootstrap JS (Modal 需要) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
@@ -35,8 +38,13 @@
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h5 class="card-title mb-2">資料來源</h5>
-        <p class="mb-0 text-muted">本頁面會在載入後自動讀取指定的 Google Sheet（需設定為「知道連結的任何人皆可檢視」）。</p>
-        <small class="text-muted">若要改讀其他表單，可在網址加上參數：<code>?sheetId=你的sheetId&gid=工作表gid</code> 或 <code>?sheetUrl=完整分享連結</code>。</small>
+        <p class="mb-0 text-muted">請各位檢視一下自己的資料是否須更新，若要更新請點擊以下網址進入Excel表找到自己的欄位更新資料 　～感恩的心～</p>
+        <small class="text-muted">
+		  <a href="https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0"
+			 target="_blank" rel="noopener noreferrer">
+			https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0
+		  </a>
+		</small>
         <div id="msg" class="text-danger mt-2"></div>
       </div>
     </div>
@@ -162,7 +170,7 @@
       });
     }
 
-    /* =========================
+    /* =========================					
        Render Table
     ========================= */
     function renderTable(data) {
@@ -235,29 +243,29 @@
 
       $('#tableBody').html(html);
 
-      // 事件委派：點擊「修改」按鈕 → 顯示該筆資料（僅顯示）
       $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
         const $btn = $(this);
-        $('#v_name').text($btn.data('name'));
-        $('#v_code').text($btn.data('code'));
-        $('#v_job').text($btn.data('job'));
-        $('#v_level').text($btn.data('level'));
-        $('#attack').text($btn.data('attack'));
-        $('#v_camp').text($btn.data('camp'));
+        $('#f_name').val($btn.data('name'));
+        $('#f_code').val($btn.data('code'));
+        $('#f_job').val($btn.data('job'));
+        $('#f_level').val($btn.data('level'));
+        $('#f_dry').val($btn.data('attack'));
+        $('#f_camp').val($btn.data('camp'));
         const modal = new bootstrap.Modal(document.getElementById('editModal'));
         modal.show();
       });
     }
 
     /* =========================
-									
-									
-						   
-	   
+       啟動流程：自動讀取d>
+            <td>${r.camp ?? ''}</td>
+          </tr>`).join('');
+      }
 
-								 
-	 
+      $('#tableBody').html(html);
+    }
 
+    /* =========================
        啟動流程：自動讀取
     ========================= */
     const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
@@ -303,47 +311,5 @@
       });
     });
   </script>
-
-  <!-- 顯示 B~G 欄位的 Modal -->
-  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">資料檢視</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>角色名稱</th>
-                  <th>角色代碼</th>
-                  <th>角色職業</th>
-                  <th>角色等級</th>
-                  <th>角色乾表</th>
-                  <th>所在營區</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td id="v_name"></td>
-                  <td id="v_code"></td>
-                  <td id="v_job"></td>
-                  <td id="v_level"></td>
-                  <td id="v_attack"></td>
-                  <td id="v_camp"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>
