@@ -42,7 +42,7 @@
         <small class="text-muted">
 		  <a href="https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0"
 			 target="_blank" rel="noopener noreferrer">
-			https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0
+			https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0*/	
 		  </a>
 		</small>
         <div id="msg" class="text-danger mt-2"></div>
@@ -310,6 +310,110 @@
         loadFromSheet(target.sheetId, target.gid);
       });
     });
+	
+		function createEditor() {
+	  const overlay = document.createElement('div');
+	  overlay.id = 'editOverlay';
+	  Object.assign(overlay.style, {
+		position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
+		display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+  });
+
+  const card = document.createElement('div');
+  Object.assign(card.style, {
+    background: '#fff', borderRadius: '12px', padding: '18px', width: 'min(520px, 92vw)',
+    boxShadow: '0 10px 30px rgba(0,0,0,.2)', color: '#222', fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont'
+  });
+  card.innerHTML = `
+    <h3 style="margin:0 0 12px;font-size:18px;width:100%; max-width:100%; box-sizing:border-box;">修改資料</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
+        <span>角色名稱</span>
+        <input id="edit_name" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
+        <span>角色代碼</span>
+        <input id="edit_code" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
+        <span>角色職業</span>
+        <input id="edit_job" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
+        <span>等級</span>
+        <input id="edit_level" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      </label>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+      <button id="btn_cancel"style="padding:8px 14px;background:#e9ecef;color:#000;border:1px solid #ced4da;border-radius:8px;cursor:pointer;">取消</button>
+      <button id="btn_save" style="padding:8px 14px;background:#4f46e5;color:#fff;border:none;border-radius:8px;cursor:pointer;">儲存</button>
+    </div>
+  `;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function openEditor(values, onSave) {
+  // 取得或建立 overlay
+  let overlay = document.getElementById('editOverlay');
+  if (!overlay) overlay = createEditor();
+
+  // 指派值
+  overlay.querySelector('#edit_name').value  = values.name  ?? '';
+  overlay.querySelector('#edit_code').value  = values.code  ?? '';
+  overlay.querySelector('#edit_job').value   = values.job   ?? '';
+  overlay.querySelector('#edit_level').value = values.level ?? '';
+
+  // 綁定事件（先移除舊的）
+  const btnCancel = overlay.querySelector('#btn_cancel');
+  const btnSave   = overlay.querySelector('#btn_save');
+
+  const close = () => overlay.remove();
+
+  btnCancel.onclick = close;
+  btnSave.onclick = () => {
+    const updated = {
+      name:  overlay.querySelector('#edit_name').value.trim(),
+      code:  overlay.querySelector('#edit_code').value.trim(),
+      job:   overlay.querySelector('#edit_job').value.trim(),
+      level: overlay.querySelector('#edit_level').value.trim(),
+    };
+    onSave?.(updated);
+    close();
+  };
+}
+
+/* ====== 事件委派：把 alert 換成可編輯表單 ====== */
+document.getElementById('tableBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('.edit-btn');
+  if (!btn) return;
+
+  const tr = btn.closest('tr');  // 這列
+  const oldData = {
+    name:  btn.dataset.name  || '',
+    code:  btn.dataset.code  || '',
+    job:   btn.dataset.job   || '',
+    level: btn.dataset.level || '',
+  };
+
+  openEditor(oldData, (updated) => {
+    // 1) 更新表格該列顯示（假設欄位順序：名稱、代碼、職業、等級、修改）
+    const tds = tr.querySelectorAll('td');
+    tds[0].textContent = updated.name;
+    tds[1].textContent = updated.code;
+    tds[2].textContent = updated.job;
+    tds[3].textContent = updated.level;
+
+    // 2) 回寫到按鈕的 data-*，確保下次再編輯能帶入最新值
+    btn.dataset.name  = updated.name;
+    btn.dataset.code  = updated.code;
+    btn.dataset.job   = updated.job;
+    btn.dataset.level = updated.level;
+
+    // TODO：若要同步到 Google Sheet，這裡接 fetch(GAS_URL, { method:'POST', body: JSON.stringify(updated) ... })
+  });
+});
   </script>
 </body>
 </html>
