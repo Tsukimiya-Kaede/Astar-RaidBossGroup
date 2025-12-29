@@ -343,6 +343,14 @@
         <span>等級</span>
         <input id="edit_level" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
+      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
+        <span>角色乾表</span>
+        <input id="edit_attack" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
+        <span>所在營區</span>
+        <input id="edit_camp" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      </label>	  
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
       <button id="btn_cancel"style="padding:8px 14px;background:#e9ecef;color:#000;border:1px solid #ced4da;border-radius:8px;cursor:pointer;">取消</button>
@@ -364,7 +372,8 @@ function openEditor(values, onSave) {
   overlay.querySelector('#edit_code').value  = values.code  ?? '';
   overlay.querySelector('#edit_job').value   = values.job   ?? '';
   overlay.querySelector('#edit_level').value = values.level ?? '';
-
+  overlay.querySelector('#edit_attack').value   = values.job   ?? '';
+  overlay.querySelector('#edit_camp').value = values.level ?? '';
   // 綁定事件（先移除舊的）
   const btnCancel = overlay.querySelector('#btn_cancel');
   const btnSave   = overlay.querySelector('#btn_save');
@@ -378,6 +387,8 @@ function openEditor(values, onSave) {
       code:  overlay.querySelector('#edit_code').value.trim(),
       job:   overlay.querySelector('#edit_job').value.trim(),
       level: overlay.querySelector('#edit_level').value.trim(),
+      attack:overlay.querySelector('#edit_attack').value.trim(),
+      camp:  overlay.querySelector('#edit_camp').value.trim(),	  
     };
     onSave?.(updated);
     close();
@@ -395,6 +406,8 @@ document.getElementById('tableBody').addEventListener('click', (e) => {
     code:  btn.dataset.code  || '',
     job:   btn.dataset.job   || '',
     level: btn.dataset.level || '',
+	attack:   btn.dataset.attack   || '',
+    camp: btn.dataset.camp || '',
   };
 
   openEditor(oldData, (updated) => {
@@ -404,12 +417,16 @@ document.getElementById('tableBody').addEventListener('click', (e) => {
     tds[1].textContent = updated.code;
     tds[2].textContent = updated.job;
     tds[3].textContent = updated.level;
+    tds[4].textContent = updated.attack;
+    tds[5].textContent = updated.camp;	
 
     // 2) 回寫到按鈕的 data-*，確保下次再編輯能帶入最新值
     btn.dataset.name  = updated.name;
     btn.dataset.code  = updated.code;
     btn.dataset.job   = updated.job;
     btn.dataset.level = updated.level;
+	btn.dataset.attack   = updated.attack;
+    btn.dataset.camp = updated.camp;
 
     // TODO：若要同步到 Google Sheet，這裡接 fetch(GAS_URL, { method:'POST', body: JSON.stringify(updated) ... })
   });
