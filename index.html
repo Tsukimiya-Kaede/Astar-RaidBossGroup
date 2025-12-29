@@ -152,8 +152,8 @@ function loadFromSheet(sheetId, gid = '0') {
             code:  r[2], // C（主鍵）
             job:   r[3], // D
             level: r[4], // E
-            attack:r[5], // F 乾表  ← 若你的表不是在 F/G，請依實際欄位調整
-            camp:  r[6], // G 營區
+            attack:r[6], // F 乾表  ← 若你的表不是在 F/G，請依實際欄位調整
+            camp:  r[9], // G 營區
             rowIndex: i + 2 // 含標題列
           }))
           .filter(r => r && r.name);
