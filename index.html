@@ -353,9 +353,23 @@
         <input id="edit_attack" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
       </label>
       <label style="display:flex;flex-direction:column;gap:6px;width:100%; max-width:100%; box-sizing:border-box;">
-        <span>所在營區</span>
-        <input id="edit_camp" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-      </label>	  
+	  <span>所在營區</span>
+	  <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+		<option value="">（請選擇）</option>
+		<option>第一營區</option>
+		<option>第二營區</option>
+		<option>第三營區</option>
+		<option>第四營區</option>
+		<option>第五營區</option>
+		<option>第六營區</option>
+		<option>第七營區</option>
+		<option>第八營區</option>
+		<option>第九營區</option>
+		<option>第十營區</option>
+		<option>訓練營</option>
+		<option>外援大大</option>
+	  </select>
+	</label>	  
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
       <button id="btn_cancel"style="padding:8px 14px;background:#e9ecef;color:#000;border:1px solid #ced4da;border-radius:8px;cursor:pointer;">取消</button>
@@ -379,6 +393,17 @@ function openEditor(values, onSave) {
   overlay.querySelector('#edit_level').value = values.level ?? '';
   overlay.querySelector('#edit_attack').value   = values.attack   ?? '';
   overlay.querySelector('#edit_camp').value = values.camp ?? '';
+  
+ // 設定營區預選值（若值不在選項裡，會先加進去再選取）
+  const campSelect = overlay.querySelector('#edit_camp');
+  const campValue  = values.camp ?? '';
+  if (campValue) {
+	const exists = Array.from(campSelect.options).some(o => o.value === campValue || o.text === campValue);
+	if (!exists) campSelect.add(new Option(campValue, campValue));
+	  campSelect.value = campValue;
+	} else {
+	  campSelect.value = '';
+	}
   // 綁定事件（先移除舊的）
   const btnCancel = overlay.querySelector('#btn_cancel');
   const btnSave   = overlay.querySelector('#btn_save');
