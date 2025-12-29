@@ -26,7 +26,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">角色資料工具-0444</span>
+      <span class="navbar-brand">角色資料工具-0450</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
         <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
@@ -417,52 +417,62 @@ function openEditor(values, onSave) {
 
   // 🔥 儲存 → 呼叫 GAS 寫回（以「角色代碼」為主鍵）
   btnSave.onclick = async () => {
-    const updated = {
-      name:   overlay.querySelector('#edit_name').value.trim(),
-      code:   overlay.querySelector('#edit_code').value.trim(),  // 主鍵
-      job:    overlay.querySelector('#edit_job').value.trim(),
-      level:  overlay.querySelector('#edit_level').value.trim(),
-      attack: overlay.querySelector('#edit_attack').value.trim(),
-      camp:   overlay.querySelector('#edit_camp').value.trim(),
-    };
-
-    if (!GAS_UPDATE_URL || GAS_UPDATE_URL.startsWith('<<')) {
-      alert('尚未設定 GAS_UPDATE_URL，請先填入你的 Apps Script Web App URL');
-      return;
-    }
-    if (!updated.code) {
-      alert('角色代碼不可為空，因為要用它來找到要更新的那一列');
-      return;
-    }
-
-    try {
-      const resp = await fetch(GAS_UPDATE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'updateByCode',
-          code: updated.code,  // 以 C 欄作為主鍵
-          values: {
-            name:   updated.name,   // B
-            job:    updated.job,    // D
-            level:  updated.level,  // E
-            attack: updated.attack, // F
-            camp:   updated.camp    // G
-          }
-        })
-      });
-      const result = await resp.json();
-      if (!resp.ok || result.status !== 'ok') {
-        throw new Error(result.message || '更新失敗');
-      }
-
-      onSave?.(updated); // 更新前端列
-      close();
-    } catch (e) {
-      console.error(e);
-      alert('更新失敗：' + e.message);
-    }
+  const updated = {
+    name:   overlay.querySelector('#edit_name').value.trim(),
+    code:   overlay.querySelector('#edit_code').value.trim(),  // 主鍵（C欄）
+    job:    overlay.querySelector('#edit_job').value.trim(),
+    level:  overlay.querySelector('#edit_level').value.trim(),
+    attack: overlay.querySelector('#edit_attack').value.trim(),
+    camp:   overlay.querySelector('#edit_camp').value.trim(),
   };
+
+  if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
+    alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
+    return;
+  }
+  if (!updated.code) {
+    alert('角色代碼不可為空（用來定位要更新的列）');
+    return;
+  }
+
+  try {
+    // 用 x-www-form-urlencoded 傳，GAS 用 e.parameter 讀
+    const form = new URLSearchParams();
+    form.set('action', 'updateByCode');
+    form.set('code',   updated.code);
+    form.set('name',   updated.name);
+    form.set('job',    updated.job);
+    form.set('level',  updated.level);
+    form.set('attack', updated.attack);
+    form.set('camp',   updated.camp);
+
+    const resp = await fetch(GAS_UPDATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: form.toString(),
+      cache: 'no-store',
+      redirect: 'follow'
+    });
+
+    const text = await resp.text(); // 先拿文字，避免不是 JSON 直接爆
+    let result;
+    try { result = JSON.parse(text); } catch {
+      // 多半是權限或 URL 錯誤，GAS回了HTML
+      throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
+    }
+    if (!resp.ok || result.status !== 'ok') {
+      throw new Error(result.message || '更新失敗');
+    }
+
+    // 成功後更新前端這一列 & 關閉
+    onSave?.(updated);
+    close();
+  } catch (e) {
+    console.error(e);
+    alert('更新失敗：' + e.message);
+  }
+};
+
 }
 </script>
 </body>
