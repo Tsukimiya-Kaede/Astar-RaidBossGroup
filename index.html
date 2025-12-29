@@ -229,7 +229,7 @@
             <td>${r.attack ?? ''}</td>
             <td>${r.camp ?? ''}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary btn_cancel"
+              <button class="btn btn-sm btn-outline-primary btn-edit"
                 data-row="${r.rowIndex || ''}"
                 data-name="${r.name ?? ''}"
                 data-code="${r.code ?? ''}"
@@ -243,7 +243,7 @@
 
       $('#tableBody').html(html);
 
-      $('#tableBody').off('click', '.btn_cancel').on('click', '.btn_cancel', function(){
+      $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
         const $btn = $(this);
         $('#f_name').val($btn.data('name'));
         $('#f_code').val($btn.data('code'));
@@ -386,7 +386,7 @@ function openEditor(values, onSave) {
 
 /* ====== 事件委派：把 alert 換成可編輯表單 ====== */
 document.getElementById('tableBody').addEventListener('click', (e) => {
-  const btn = e.target.closest('.edit-btn');
+  const btn = e.target.closest('.btn-edit');
   if (!btn) return;
 
   const tr = btn.closest('tr');  // 這列
