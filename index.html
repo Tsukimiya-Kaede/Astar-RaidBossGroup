@@ -26,7 +26,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">角色資料工具-0423</span>
+      <span class="navbar-brand">角色資料工具-0430</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
         <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
@@ -464,6 +464,17 @@ function openEditor(values, onSave) {
     }
   };
 }
+	async function testGAS() {
+	  try {
+		const ping = await fetch(GAS_UPDATE_URL + '?t=' + Date.now(), { method: 'GET', cache: 'no-store' });
+		const text = await ping.text();
+		console.log('GET /exec 回應：', text);
+		alert('GET /exec 成功（詳情見 console）');
+	  } catch (e) {
+		console.error(e);
+		alert('連線至 /exec 失敗：' + e.message);
+	  }
+	}
 </script>
 </body>
 </html>
