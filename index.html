@@ -20,6 +20,11 @@
     .status-badge { font-size: 0.85rem; }
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
+	button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
   </style>
 </head>
 <body class="bg-body">
@@ -54,7 +59,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="card-title mb-0">角色清單</h5>
           <div class="d-flex align-items-center gap-2">
-            <button id="reloadBtn" class="btn btn-outline-primary btn-sm">重新整理</button>
+            <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
           </div>
         </div>
 
@@ -229,7 +234,7 @@
             <td>${r.attack ?? ''}</td>
             <td>${r.camp ?? ''}</td>
             <td>
-              <button class="btn btn-sm btn-outline-primary btn-edit"
+              <button class="btn btn-outline-secondary btn-edit"
                 data-row="${r.rowIndex || ''}"
                 data-name="${r.name ?? ''}"
                 data-code="${r.code ?? ''}"
