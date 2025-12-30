@@ -27,7 +27,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">角色資料工具-1142</span>
+      <span class="navbar-brand">角色資料工具-1156</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
         <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
@@ -361,16 +361,16 @@ function createEditor() {
         <span>所在營區（G）</span>
         <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
           <option value="">（請選擇）</option>
-          <option>第一營區</option>
-          <option>第二營區</option>
-          <option>第三營區</option>
-          <option>第四營區</option>
-          <option>第五營區</option>
-          <option>第六營區</option>
-          <option>第七營區</option>
-          <option>第八營區</option>
-          <option>第九營區</option>
-          <option>第十營區</option>
+          <option>第一軍營</option>
+          <option>第二軍營</option>
+          <option>第三軍營</option>
+          <option>第四軍營</option>
+          <option>第五軍營</option>
+          <option>第六軍營</option>
+          <option>第七軍營</option>
+          <option>第八軍營</option>
+          <option>第九軍營</option>
+          <option>第十軍營</option>
           <option>訓練營</option>
           <option>外援大大</option>
         </select>
@@ -440,8 +440,8 @@ function openEditor(values, onSave) {
     // 用 x-www-form-urlencoded 傳，GAS 用 e.parameter 讀
     const form = new URLSearchParams();
     form.set('action', 'updateByCode');
+    form.set('name',   updated.name);   
     form.set('code',   updated.code);
-    form.set('name',   updated.name);
     form.set('job',    updated.job);
     form.set('level',  updated.level);
     form.set('attack', updated.attack);
