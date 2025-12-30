@@ -27,7 +27,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">角色資料工具-1111</span>
+      <span class="navbar-brand">角色資料工具-1117</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
         <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
@@ -467,6 +467,7 @@ function openEditor(values, onSave) {
 
     // 成功後更新前端這一列 & 關閉
     onSave?.(updated);
+    alert('更新成功!!!');
     close();
   } catch (e) {
     console.error(e);
