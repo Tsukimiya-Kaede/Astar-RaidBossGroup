@@ -27,7 +27,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">角色資料工具-0225</span>
+      <span class="navbar-brand">角色資料工具-1125</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
         <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
@@ -56,6 +56,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="card-title mb-0">角色清單</h5>
           <div class="d-flex align-items-center gap-2">
+            <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
             <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
           </div>
         </div>
@@ -88,7 +89,7 @@
 /* =========================
    設定：請填你的 Apps Script Web App（exec）URL
 ========================= */
-const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbzMTglc-UQDJZqZ3_hvbSeVBsYd0K1e_5u4pvZjvnMYrlKNrrwrftGWNt3p5m3bag8U/exec';
+const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
 // 例如：const GAS_UPDATE_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
 
 /* =========================
@@ -316,6 +317,25 @@ $(function () {
   $('#reloadBtn').on('click', function () {
     loadFromSheet(target.sheetId, target.gid);
   });
+$('#addBtn').on('click', function () {
+  // 開空白的編輯器
+  openEditor({
+    name:   '',
+    code:   '',   // 新增時請輸入 code（後端以此為主鍵）
+    job:    '',
+    level:  '',
+    attack: '',
+    camp:   '',
+    rowIndex: 0,
+	__isNew: true
+  }, (updated) => {
+    // 儲存成功的回呼（目前後端只支援更新既有列）
+    // 若你未來改成 upsert/append，這裡可以選擇重新整理列表：
+    // loadFromSheet(resolveSheetTarget().sheetId, resolveSheetTarget().gid);
+    alert('已新增');
+  });
+});
+
 });
 
 /* =========================
@@ -426,6 +446,7 @@ function openEditor(values, onSave) {
     attack: overlay.querySelector('#edit_attack').value.trim(),
     camp:   overlay.querySelector('#edit_camp').value.trim(),
   };
+  const isNew = !!values.__isNew; // ← 由新增按鈕帶入
 
   if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
     alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
@@ -437,11 +458,11 @@ function openEditor(values, onSave) {
   }
 
   try {
-    // 用 x-www-form-urlencoded 傳，GAS 用 e.parameter 讀
+    // x-www-form-urlencoded，GAS 用 e.parameter 讀
     const form = new URLSearchParams();
-    form.set('action', 'updateByCode');
-    form.set('name',   updated.name);   
+    form.set('action', 'upsertByCode'); // ← 重點：統一呼叫 upsert
     form.set('code',   updated.code);
+    form.set('name',   updated.name);
     form.set('job',    updated.job);
     form.set('level',  updated.level);
     form.set('attack', updated.attack);
@@ -455,25 +476,32 @@ function openEditor(values, onSave) {
       redirect: 'follow'
     });
 
-    const text = await resp.text(); // 先拿文字，避免不是 JSON 直接爆
+    const text = await resp.text();
     let result;
     try { result = JSON.parse(text); } catch {
-      // 多半是權限或 URL 錯誤，GAS回了HTML
       throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
     }
     if (!resp.ok || result.status !== 'ok') {
-      throw new Error(result.message || '更新失敗');
+      throw new Error(result.message || '更新/新增失敗');
     }
 
-    // 成功後更新前端這一列 & 關閉
-    onSave?.(updated);
-    alert('更新成功!!!');
+    if (isNew) {
+      // 新增：為了正確分類/顯示，直接重抓一次
+      const t = resolveSheetTarget();
+      loadFromSheet(t.sheetId, t.gid);
+    } else {
+      // 更新：直接刷新當列
+      onSave?.(updated);
+    }
+
+    alert(isNew ? '新增成功！' : '更新成功！');
     close();
   } catch (e) {
     console.error(e);
-    alert('更新失敗：' + e.message);
+    alert('送出失敗：' + e.message);
   }
 };
+
 
 }
 </script>
