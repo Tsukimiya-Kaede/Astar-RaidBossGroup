@@ -21,6 +21,47 @@
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
     button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
     #sourceBadge { display: none !important; }
+	
+	<!-- /* 分頁外框 + 顏色 */ -->
+	.nav-tabs-custom .nav-link{
+	  border:2px solid transparent;
+	  font-weight:600;
+	  margin-right:.5rem;
+	}
+	.nav-tabs-custom .nav-link:hover{
+	  opacity:.9;
+	}
+
+	<!-- /* 拉圖斯（藍） */ -->
+	.nav-tabs-custom .tab-latus{
+	  color:#0d6efd;
+	  border-color:#0d6efd;
+	}
+	.nav-tabs-custom .tab-latus.active{
+	  color:#fff;
+	  background:#0d6efd;
+	}
+
+	<!-- /* 殘暴炎魔（橘） */ -->
+	.nav-tabs-custom .tab-zakum{
+	  color:#fd7e14;
+	  border-color:#fd7e14;
+	}
+	.nav-tabs-custom .tab-zakum.active{
+	  color:#fff;
+	  background:#fd7e14;
+	}
+
+	<!-- /* 訓練營&外援（黑） */ -->
+	.nav-tabs-custom .tab-misc{
+	  color:#212529;
+	  border-color:#212529;
+	}
+	.nav-tabs-custom .tab-misc.active{
+	  color:#fff;
+	  background:#212529;
+	}
+
   </style>
 </head>
 <body class="bg-body">
@@ -69,14 +110,18 @@
         </div>
 
         <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
-        <ul class="nav nav-pills mb-3" id="campTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button id="tabLatus" class="nav-link active" type="button" role="tab">拉圖斯</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button id="tabZakumList" class="nav-link" type="button" role="tab">殘暴炎魔</button>
-          </li>
-        </ul>
+        <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
+		  <li class="nav-item" role="presentation">
+			<button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯</button>
+		  </li>
+		  <li class="nav-item" role="presentation">
+			<button id="tabZakumList" class="nav-link tab-zakum" type="button" role="tab">殘暴炎魔</button>
+		  </li>
+		  <li class="nav-item" role="presentation">
+			<button id="tabTrainExt" class="nav-link tab-misc" type="button" role="tab">訓練營&外援專區</button>
+		  </li>
+		</ul>
+
 
         <div class="table-responsive">
           <table class="table table-striped table-hover align-middle">
@@ -241,10 +286,14 @@ function renderTable(data) {
 
   const filtered = (data || []).filter(r => {
     const camp = (r.camp || '').trim();
-    if (currentTab === 'latus') return reLatus.test(camp);
-    if (currentTab === 'zakum') return reZakum.test(camp);
+    if (currentTab === 'latus')   return reLatus.test(camp);
+    if (currentTab === 'zakum')   return reZakum.test(camp);
+    if (currentTab === 'trainext')return (camp === '訓練營' || camp === '外援大大');
     return true;
   });
+
+  // ...（你原本 renderTable 後續的分組/排序/輸出保持不變）
+
 
   if (!filtered.length) {
     $('#tableBody').html(`
@@ -350,15 +399,19 @@ function renderTable(data) {
    分頁切換（★ 新增）
 ========================= */
 function setTab(tab) {
-  currentTab = tab; // 'latus' | 'zakum'
+  currentTab = tab; // 'latus' | 'zakum' | 'trainext'
   // 切換樣式
   $('#tabLatus').toggleClass('active', tab === 'latus');
   $('#tabZakumList').toggleClass('active', tab === 'zakum');
+  $('#tabTrainExt').toggleClass('active', tab === 'trainext');
   // 依目前分頁重繪
   renderTable(lastData);
 }
-$('#tabLatus').on('click', () => setTab('latus'));
-$('#tabZakumList').on('click', () => setTab('zakum'));
+
+	$('#tabLatus').on('click',     () => setTab('latus'));
+	$('#tabZakumList').on('click', () => setTab('zakum'));
+	$('#tabTrainExt').on('click',  () => setTab('trainext'));
+
 
 /* =========================
    啟動流程：自動讀取
