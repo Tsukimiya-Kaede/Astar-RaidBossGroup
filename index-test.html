@@ -70,6 +70,10 @@
       <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-0231</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
+		<!-- 全職業攻略按鈕（武器圖案） -->
+		<a href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="全職業攻略">⚔️ 全職業攻略</a>
+		<!-- 全職業四轉技能任務按鈕（任務圖案） -->
+		<a href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="全職業攻略">🧾 全職業技能任務</a>
         <!-- 第三方交易平台按鈕 -->
         <a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="第三方交易平台">🏪 第三方交易平台</a>
         <!-- 怪物掉落物查詢工具按鈕（怪物圖案） -->
@@ -96,20 +100,6 @@
           </a>
         </small>
         <div id="msg" class="text-danger mt-2"></div>
-      </div>
-    </div>
-
-   <!-- ✅ 新增：Discord 聊天視窗（WidgetBot） -->
-    <div class="card shadow-sm mt-4">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Discord 聊天視窗</h5>
-        <!-- 建議寬度用 100% 以配合 RWD -->
-        <widgetbot
-          server="1308244297480540321"
-          channel="1308353298218221618"
-          width="100%"
-          height="600"
-        ></widgetbot>
       </div>
     </div>
 
@@ -164,7 +154,7 @@
   <!-- Zakum 殘暴炎魔攻略（預設隱藏） -->
   <div id="zakumPage" class="container py-4 d-none">
     <div class="d-flex align-items-center justify-content-between mb-3">
-      <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）※AI精簡版 會再微調※</h3>
+      <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h3>
       <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
     </div>
 
@@ -184,7 +174,6 @@
   </div>
 
 <script>
-
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
 //const ZAKUM_DOC_EMBED = "https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/pub?embedded=true";
 // 若未發佈、但分享權限開放，也可暫用 preview（可能會被 X-Frame-Options 擋）
@@ -308,6 +297,14 @@ function renderTable(data) {
   const zhNums = '一二三四五六七八九十';
   const reLatus = new RegExp(`^拉圖[${zhNums}]營$`);
   const reZakum = new RegExp(`^炎魔[${zhNums}]營$`);
+
+  const groupNotes = {
+    '拉圖一營': '🔰歐皇指定席🎗️',
+    '拉圖二營': '🔰瑞氣千條團💎',
+    '拉圖三營': '🔰馬到成功團🐎',
+    '拉圖四營': '🔰傳奇空殼團🥥',
+    '拉圖七營': '🔰非洲畢業班🗿',
+  };
 
   const filtered = (data || []).filter(r => {
     const camp = (r.camp || '').trim();
@@ -631,12 +628,5 @@ function openEditor(values, onSave) {
   };
 }
 </script>
-  <!-- ...你原本的 <script> 都在這上面... -->
-
-  <!-- ✅ WidgetBot 內嵌腳本：放在 </body> 前 -->
-  <script src="https://cdn.jsdelivr.net/npm/@widgetbot/html-embed"></script>
-</body>
-</html>
-
 </body>
 </html>
