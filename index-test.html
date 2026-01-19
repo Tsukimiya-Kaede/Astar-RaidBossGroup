@@ -358,6 +358,7 @@ function renderTable(data) {
 
   let html = '';
   for (const k of orderedKeys) {
+    const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
     html += `
       <tr class="group-row">
         <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
