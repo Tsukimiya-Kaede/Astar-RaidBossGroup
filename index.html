@@ -2,7 +2,7 @@
 <html lang="zh-TW" data-bs-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <title>角色資料檢視工具（自動讀取版）</title>
+  <title>🍁MapleStory Astar公會專屬網站🍁</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -67,7 +67,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-0231</span>
+      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-0855</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
 		<!-- 全職業攻略按鈕（武器圖案） -->
@@ -298,6 +298,14 @@ function renderTable(data) {
   const reLatus = new RegExp(`^拉圖[${zhNums}]營$`);
   const reZakum = new RegExp(`^炎魔[${zhNums}]營$`);
 
+  const groupNotes = {
+    '拉圖一營': '🔰歐皇指定席🎗️',
+    '拉圖二營': '🔰瑞氣千條團💎',
+    '拉圖三營': '🔰馬到成功團🐎',
+    '拉圖四營': '🔰傳奇空殼團🥥',
+    '拉圖七營': '🔰非洲畢業班🗿',
+  };
+
   const filtered = (data || []).filter(r => {
     const camp = (r.camp || '').trim();
     if (currentTab === 'latus')   return reLatus.test(camp);
@@ -350,9 +358,10 @@ function renderTable(data) {
 
   let html = '';
   for (const k of orderedKeys) {
+    const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
     html += `
       <tr class="group-row">
-        <td colspan="7">所在營區：${k}（${groups[k].length}）</td>
+        <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
       </tr>`;
     html += groups[k].map(r => `
       <tr>
