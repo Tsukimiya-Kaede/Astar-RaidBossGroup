@@ -15,6 +15,34 @@
 
   <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!---->
+  <!-- 職業分佈統計 Modal -->
+<div class="modal fade" id="jobStatsModal" tabindex="-1" aria-labelledby="jobStatsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+	<div class="modal-content">
+	  <div class="modal-header">
+		<h5 class="modal-title" id="jobStatsLabel">公會職業分佈統計（不含外援大大）</h5>
+		<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	  </div>
+	  <div class="modal-body">
+		<canvas id="jobStatsCanvas" height="140"></canvas>
+		<small class="text-muted d-block mt-2">
+		  說明：統計來源為列表讀入的 Google Sheet；同義職業會自動合併（如「十字軍=英雄」）。
+		</small>
+	  </div>
+	  <div class="modal-footer">
+		<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+	  </div>
+	</div>
+  </div>
+</div>
+
+  <!---->
+
 
   <style>
     .status-badge { font-size: 0.85rem; }
@@ -109,6 +137,7 @@
           <h5 class="card-title mb-0">角色清單</h5>
           <div class="d-flex align-items-center gap-2">
             <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+			<button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
             <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
           </div>
         </div>
@@ -627,6 +656,136 @@ function openEditor(values, onSave) {
       alert('送出失敗：' + e.message);
     }
   };
+
+/* =========================
+   公會職業分佈統計（Chart.js）
+========================= */
+
+// 職業名稱正規化（同義合併）
+function normalizeJob(raw) {
+  if (!raw) return '（未填寫）';
+  let s = String(raw).trim();
+
+  // 統一標點
+  s = s.replace(/，/g, '、');
+
+  // 對照表（左邊是條件，右邊是最終歸戶名稱）
+  const map = [
+    { test: /^(十字軍|英雄)$/ , to: '英雄' },
+    { test: /^(騎士|聖騎士)$/ , to: '聖騎士' },
+    { test: /^(龍騎士|黑騎士)$/ , to: '黑騎士' },
+
+    { test: /^(火魔導士|大魔導士\(火、毒\))$/ , to: '大魔導士(火、毒)' },
+    { test: /^(冰魔導士|大魔導士\(冰、雷\))$/ , to: '大魔導士(冰、雷)' },
+
+    { test: /^(祭司|主教)$/ , to: '主教' },
+    { test: /^(遊俠|箭神)$/ , to: '箭神' },
+    { test: /^(狙擊手|神射手)$/ , to: '神射手' },
+
+    { test: /^(暗殺者|夜使者)$/ , to: '夜使者' },
+    { test: /^(神偷|暗影神偷)$/ , to: '暗影神偷' },
+
+    { test: /^(格鬥家|拳霸)$/ , to: '拳霸' },
+    { test: /^(神槍手|槍神)$/ , to: '槍神' },
+
+    { test: /^初新者$/, to: '初新者' } // 依你提供的字樣
+  ];
+
+  for (const rule of map) {
+    if (rule.test.test(s)) return rule.to;
+  }
+  return s; // 其他職業維持原名
+}
+
+// 生成統計資料（不含外援大大）
+function buildJobStatsData() {
+  const source = Array.isArray(lastData) ? lastData : [];
+  const rows = source.filter(r => (r?.camp || '').trim() !== '外援大大');
+
+  const counter = Object.create(null);
+  for (const r of rows) {
+    const key = normalizeJob(r?.job);
+    counter[key] = (counter[key] || 0) + 1;
+  }
+
+  // 轉陣列且依數量排序（由多到少）
+  const entries = Object.entries(counter).sort((a,b) => b[1] - a[1]);
+  return {
+    labels: entries.map(e => e[0]),
+    values: entries.map(e => e[1]),
+    total: rows.length
+  };
+}
+
+let _jobChartInstance = null;
+
+function renderJobChart() {
+  const ctx = document.getElementById('jobStatsCanvas');
+  if (!ctx) return;
+
+  const data = buildJobStatsData();
+
+  const chartData = {
+    labels: data.labels,
+    datasets: [{
+      label: '人數',
+      data: data.values
+      // 不刻意指定顏色，沿用 Chart.js 預設調色
+    }]
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'bottom' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const value = ctx.parsed;
+            const total = data.total || 1;
+            const pct = (value * 100 / total).toFixed(1);
+            return `${ctx.label}: ${value} 人（${pct}%）`;
+          }
+        }
+      },
+      title: {
+        display: true,
+        text: `公會職業分佈（總數：${data.total}）`
+      }
+    }
+  };
+
+  if (_jobChartInstance) {
+    _jobChartInstance.data = chartData;
+    _jobChartInstance.options = options;
+    _jobChartInstance.update();
+  } else {
+    // 你可以改成 'bar'、'pie'；這裡用 'doughnut' 視覺較直覺
+    _jobChartInstance = new Chart(ctx, { type: 'doughnut', data: chartData, options });
+  }
+}
+
+// 綁定按鈕：點擊時開啟 Modal 並渲染
+$(document).on('click', '#btnJobStats', function(){
+  // 若清單尚未載入，提示一下
+  if (!Array.isArray(lastData) || lastData.length === 0) {
+    alert('尚未讀取到資料，請先等待列表載入或點擊重新整理後再試。');
+    return;
+  }
+  // 先打開 Modal，再渲染（可確保 canvas 尺寸正確）
+  const modal = new bootstrap.Modal(document.getElementById('jobStatsModal'));
+  modal.show();
+  // 等 Modal 動畫跑起來再渲染，避免初始寬度 0
+  setTimeout(renderJobChart, 150);
+});
+
+// 若你希望每次關閉都銷毀圖表（避免記憶體累積），可啟用以下：
+// $('#jobStatsModal').on('hidden.bs.modal', function() {
+//   if (_jobChartInstance) {
+//     _jobChartInstance.destroy();
+//     _jobChartInstance = null;
+//   }
+// });
 }
 </script>
 </body>
