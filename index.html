@@ -95,7 +95,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-1047</span>
+      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-1347</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
 		<!-- 全職業攻略按鈕（武器圖案） -->
@@ -696,6 +696,38 @@ function normalizeJob(raw) {
   }
   return s; // 其他職業維持原名
 }
+/* ===== 顏色對照（依你指定的色系） ===== */
+const JOB_COLOR = {
+  '英雄':            '#FFD24D', // 黃色
+  '聖騎士':          '#F5F5F0', // 奶白色
+  '黑騎士':          '#1F1F1F', // 黑色
+
+  '大魔導士(火、毒)': '#FF9999', // 淺紅色
+  '大魔導士(冰、雷)': '#99CCFF', // 淺藍色
+  '主教':            '#FFF3B0', // 淡黃色
+  '箭神':            '#4CAF50', // 綠色
+  '神射手':          '#26A69A', // 藍綠色
+
+  '夜使者':          '#5E35B1', // 深紫色
+  '暗影神偷':        '#4A4A4A', // 黑灰色
+  '拳霸':            '#D4AF37', // 金色
+  '槍神':            '#E0E0E0', // 白灰色
+  '初新者':          '#FFFFFF'  // 白色
+};
+
+// 取得顏色（未知職業給中性灰）
+function getJobColor(name) {
+  return JOB_COLOR[name] || '#9E9E9E';
+}
+
+// 白/奶白等很淺的顏色加深邊框，其他統一深邊框，讓切片有界線
+function getJobBorderColor(name) {
+  const c = (JOB_COLOR[name] || '').toLowerCase();
+  if (c === '#ffffff' || c === '#f5f5f0' || c === '#fff3b0' || c === '#ff9999' || c === '#99ccff') {
+    return '#333333';
+  }
+  return '#222222';
+}
 
 // 生成統計資料（不含外援大大）
 function buildJobStatsData() {
@@ -725,12 +757,18 @@ function renderJobChart() {
 
   const data = buildJobStatsData();
 
+  const bgColors = data.labels.map((name) => getJobColor(name));
+  const borderColors = data.labels.map((name) => getJobBorderColor(name));
+
   const chartData = {
     labels: data.labels,
     datasets: [{
       label: '人數',
-      data: data.values
-      // 不刻意指定顏色，沿用 Chart.js 預設調色
+      data: data.values,
+      backgroundColor: bgColors,
+      borderColor: borderColors,
+      borderWidth: 1.5,
+      hoverOffset: 6
     }]
   };
 
@@ -760,10 +798,10 @@ function renderJobChart() {
     _jobChartInstance.options = options;
     _jobChartInstance.update();
   } else {
-    // 你可以改成 'bar'、'pie'；這裡用 'doughnut' 視覺較直覺
     _jobChartInstance = new Chart(ctx, { type: 'doughnut', data: chartData, options });
   }
 }
+
 
 // 綁定按鈕：點擊時開啟 Modal 並渲染
 $(document).on('click', '#btnJobStats', function(){
