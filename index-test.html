@@ -345,7 +345,7 @@ function renderTable(data) {
   const filtered = (data || []).filter(r => {
     const camp = (r.camp || '').trim();
     if (currentTab === 'latus')   return reLatus.test(camp);
-	if (currentTab === 'latushard')  return isLatusHardCamp(camp);
+	if (currentTab === 'latushard')  return reLatushard.test(camp);
     if (currentTab === 'zakum')   return reZakum.test(camp);
     if (currentTab === 'trainext')return (camp === '訓練營' || camp === '外援大大');
     return true;
