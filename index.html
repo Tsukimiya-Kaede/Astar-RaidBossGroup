@@ -949,11 +949,10 @@ $(document).off('click', '#backToList').on('click', '#backToList', function () {
 });
 
 
-// 叔叔版一圖流攻略（Google Drive 嵌入）
-const UNCLE_GUIDE_FILE_ID = '1Fdb5iUqoxuQk8f5erxvOd73IDuxX_NqL';
-const UNCLE_GUIDE_EMBED = `https://drive.google.com/file/d/${UNCLE_GUIDE_FILE_ID}/preview`;
-const UNCLE_GUIDE_LINK  = `https://drive.google.com/file/d/${UNCLE_GUIDE_FILE_ID}/view?usp=sharing`;
-
+// 叔叔版一圖流攻略（Google Sheets 嵌入）
+const UNCLE_GUIDE_SHEET_ID = '1a3nRjzvfelHg1zeKyJpUfddRO9A1v68SnS4VnPp2K1s';
+const UNCLE_GUIDE_EMBED = `https://docs.google.com/spreadsheets/d/${UNCLE_GUIDE_SHEET_ID}/preview`;
+const UNCLE_GUIDE_LINK  = `https://docs.google.com/spreadsheets/d/${UNCLE_GUIDE_SHEET_ID}/edit?usp=sharing`;
 
 $(document).on('click', '#btnUncleGuide', function () {
   // 設定 iframe 與「在新頁面開啟」超連結
