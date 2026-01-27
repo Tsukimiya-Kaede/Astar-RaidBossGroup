@@ -194,10 +194,34 @@
     </div>
   </div>
 
+<!-- 叔叔版一圖流攻略 Modal -->
+	<div class="modal fade" id="uncleGuideModal" tabindex="-1" aria-labelledby="uncleGuideLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="uncleGuideLabel">叔叔版一圖流攻略</h5>
+			<a id="uncleGuideOpenNew" class="btn btn-link btn-sm" target="_blank" rel="noopener noreferrer">在新頁面開啟</a>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+		  </div>
+		  <div class="modal-body">
+			<div class="ratio ratio-16x9">
+			  <iframe id="uncleGuideFrame" src="" title="Uncle Guide" style="border:0;"></iframe>
+			</div>
+			<small class="text-muted d-block mt-2">若未顯示，請確認雲端資料夾權限為「知道連結的任何人可檢視」。</small>
+		  </div>
+		  <div class="modal-footer">
+			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
   <!-- Zakum 殘暴炎魔攻略（預設隱藏） -->
   <div id="zakumPage" class="container py-4 d-none">
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h3>
+	  <!-- 放在 Zakum 區塊標題列中，backToList 左側 -->
+      <button id="btnUncleGuide" class="btn btn-outline-primary btn-sm me-2">📜 叔叔版一圖流攻略</button>
       <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
     </div>
 
@@ -822,7 +846,6 @@ function renderJobChart() {
   }
 }
 
-
 // 綁定按鈕：點擊時開啟 Modal 並渲染
 $(document).on('click', '#btnJobStats', function(){
   // 若清單尚未載入，提示一下
@@ -844,6 +867,25 @@ $(document).on('click', '#btnJobStats', function(){
 //     _jobChartInstance = null;
 //   }
 // });
+
+// 叔叔版一圖流攻略（Google Drive 嵌入）
+const UNCLE_GUIDE_FOLDER_ID = '1sm44PAz8MeBXFhWzOST3jCAgTrvrL6HU';
+const UNCLE_GUIDE_EMBED = `https://drive.google.com/embeddedfolderview?id=${UNCLE_GUIDE_FOLDER_ID}#grid`;
+const UNCLE_GUIDE_LINK  = `https://drive.google.com/drive/folders/${UNCLE_GUIDE_FOLDER_ID}`;
+
+$(document).on('click', '#btnUncleGuide', function () {
+  // 設定 iframe 與「在新頁面開啟」超連結
+  const $frame = $('#uncleGuideFrame');
+  if ($frame.attr('src') !== UNCLE_GUIDE_EMBED) {
+    $frame.attr('src', UNCLE_GUIDE_EMBED);
+  }
+  $('#uncleGuideOpenNew').attr('href', UNCLE_GUIDE_LINK);
+
+  // 顯示 Modal
+  const modal = new bootstrap.Modal(document.getElementById('uncleGuideModal'));
+  modal.show();
+});
+
 
 </script>
 </body>
