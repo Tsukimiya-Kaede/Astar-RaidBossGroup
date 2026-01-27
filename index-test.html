@@ -220,9 +220,8 @@
   <div id="zakumPage" class="container py-4 d-none">
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h3>
-	  <!-- 放在 Zakum 區塊標題列中，backToList 左側 -->
-      <button id="btnUncleGuide" class="btn btn-outline-primary btn-sm me-2">📜 叔叔版一圖流攻略</button>
       <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
+	  <button id="btnUncleGuide" class="btn btn-outline-primary btn-sm me-2">📜 叔叔版一圖流攻略</button>
     </div>
 
 	<div class="card shadow-sm mb-3">
@@ -869,9 +868,10 @@ $(document).on('click', '#btnJobStats', function(){
 // });
 
 // 叔叔版一圖流攻略（Google Drive 嵌入）
-const UNCLE_GUIDE_FOLDER_ID = '1sm44PAz8MeBXFhWzOST3jCAgTrvrL6HU';
-const UNCLE_GUIDE_EMBED = `https://drive.google.com/embeddedfolderview?id=${UNCLE_GUIDE_FOLDER_ID}#grid`;
-const UNCLE_GUIDE_LINK  = `https://drive.google.com/drive/folders/${UNCLE_GUIDE_FOLDER_ID}`;
+const UNCLE_GUIDE_FILE_ID = '1Fdb5iUqoxuQk8f5erxvOd73IDuxX_NqL';
+const UNCLE_GUIDE_EMBED = `https://drive.google.com/file/d/${UNCLE_GUIDE_FILE_ID}/preview`;
+const UNCLE_GUIDE_LINK  = `https://drive.google.com/file/d/${UNCLE_GUIDE_FILE_ID}/view?usp=sharing`;
+
 
 $(document).on('click', '#btnUncleGuide', function () {
   // 設定 iframe 與「在新頁面開啟」超連結
