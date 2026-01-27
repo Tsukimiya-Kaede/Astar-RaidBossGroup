@@ -60,7 +60,7 @@
 	  opacity:.9;
 	}
 
-	<!-- /* 拉圖斯（藍） */ -->
+	<!-- /* 普通拉圖斯（藍） */ -->
 	.nav-tabs-custom .tab-latus{
 	  color:#0d6efd;
 	  border-color:#0d6efd;
@@ -69,6 +69,16 @@
 	  color:#fff;
 	  background:#0d6efd;
 	}
+	
+	<!-- /* 困藍拉圖斯（紫） */ -->
+	.nav-tabs-custom .tab-latushard{
+	  color:#6f42c1;
+	  border-color:#6f42c1;
+	}
+	.nav-tabs-custom .tab-latushard.active{
+	  color:#fff;
+	  background:#6f42c1;
+	}	
 
 	<!-- /* 殘暴炎魔（橘） */ -->
 	.nav-tabs-custom .tab-zakum{
@@ -80,14 +90,14 @@
 	  background:#fd7e14;
 	}
 
-	<!-- /* 訓練營&外援（黑） */ -->
+	<!-- /* 訓練營&外援（綠） */ -->
 	.nav-tabs-custom .tab-misc{
-	  color:#212529;
-	  border-color:#212529;
+	  color:#198754;
+	  border-color:#198754;
 	}
 	.nav-tabs-custom .tab-misc.active{
 	  color:#fff;
-	  background:#212529;
+	  background:#198754;
 	}
 
   </style>
@@ -95,7 +105,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-1347</span>
+      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-1423</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
 		<!-- 全職業攻略按鈕（武器圖案） -->
@@ -110,6 +120,8 @@
         <a href="https://rvgin.github.io/tower-of-goddess/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="女神 400 速解小工具">👸 女神 400 速解小工具</a>
         <!-- 補品生存模擬器按鈕 -->
         <a href="https://philipc-1.github.io/MapleStory/HPsimulator.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="補品生存模擬器">💊 補品生存模擬器</a>
+		<!-- 放在 id="Zakum" 按鈕「前面」 -->
+		<button id="LatusGuide" class="btn btn-outline-light btn-sm">⏰ 拉圖斯攻略</button>
         <button id="Zakum" class="btn btn-outline-light btn-sm">🗿 殘暴炎魔攻略</button>
         <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
       </div>
@@ -145,7 +157,11 @@
         <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
         <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
 		  <li class="nav-item" role="presentation">
-			<button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯</button>
+			<button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯(普通)</button>
+		  </li>
+		  <!-- 放在 id="tabLatus" 之後、id="tabZakumList" 之前 -->
+		  <li class="nav-item" role="presentation">
+			<button id="tabLatusHard" class="nav-link tab-latushard" type="button" role="tab">拉圖斯(困難)</button>
 		  </li>
 		  <li class="nav-item" role="presentation">
 			<button id="tabZakumList" class="nav-link tab-zakum" type="button" role="tab">殘暴炎魔</button>
@@ -180,12 +196,37 @@
     </div>
   </div>
 
-  <!-- Zakum 殘暴炎魔攻略（預設隱藏） -->
-  <div id="zakumPage" class="container py-4 d-none">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h3>
-      <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
-    </div>
+<!-- 叔叔版一圖流攻略 Modal -->
+	<div class="modal fade" id="uncleGuideModal" tabindex="-1" aria-labelledby="uncleGuideLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="uncleGuideLabel">叔叔版一圖流攻略</h5>
+			<a id="uncleGuideOpenNew" class="btn btn-link btn-sm" target="_blank" rel="noopener noreferrer">在新頁面開啟</a>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+		  </div>
+		  <div class="modal-body">
+			<div class="ratio ratio-16x9">
+			  <iframe id="uncleGuideFrame" src="" title="Uncle Guide" style="border:0;"></iframe>
+			</div>
+			<small class="text-muted d-block mt-2">若未顯示，請確認雲端資料夾權限為「知道連結的任何人可檢視」。</small>
+		  </div>
+		  <div class="modal-footer">
+			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+
+	<!-- Zakum 殘暴炎魔攻略（預設隱藏） -->
+	<div id="zakumPage" class="container py-4 d-none">
+	<div class="d-flex align-items-center justify-content-between mb-3">
+	  <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h3>
+		  <div class="d-flex align-items-center gap-2">
+			<button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
+			<button id="btnUncleGuide" class="btn btn-outline-primary btn-sm">📜 叔叔版一圖流攻略</button>
+		  </div>
+	</div>
 
 	<div class="card shadow-sm mb-3">
 	  <div class="card-body">
@@ -199,8 +240,32 @@
 		</small>
 	  </div>
 	</div>
+	</div>
 
-  </div>
+	<!-- 放在 #zakumPage 區塊後面（同層級） -->
+	<div id="latusPage" class="container py-4 d-none">
+	  <div class="d-flex align-items-center justify-content-between mb-3">
+		<h3 class="mb-0">🐉 拉圖斯攻略（Latus Guide）</h3>
+		<div class="d-flex align-items-center gap-2">
+		  <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
+		  <button id="btnLatusNormal" class="btn btn-outline-primary btn-sm">📘 普通拉圖斯攻略</button>
+		  <button id="btnLatusHard" class="btn btn-outline-primary btn-sm">📙 困難拉圖斯攻略</button>
+		</div>
+	  </div>
+
+	  <div class="card shadow-sm mb-3">
+		<div class="card-body">
+		  <h5 class="card-title mb-2">攻略文件（內嵌）</h5>
+		  <div class="ratio ratio-16x9">
+			<iframe id="latusDocFrame" src="" title="Latus Guide Doc" allowfullscreen style="border:0;"></iframe>
+		  </div>
+		  <small class="text-muted d-block mt-2">
+			若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
+		  </small>
+		</div>
+	  </div>
+	</div>
+
 
 <script>
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
@@ -260,7 +325,7 @@ function parseSheetFromUrl(url) {
 /* =========================
    全域狀態（★ 新增）
 ========================= */
-let currentTab = 'latus';   // 'latus' | 'zakum'
+let currentTab = 'latus';   // 'latus' | 'latushard' | 'zakum' | 'trainext'
 let lastData   = [];        // 讀取後保存，切分頁時重繪使用
 
 /* =========================
@@ -324,22 +389,24 @@ function loadFromSheet(sheetId, gid = '0') {
 function renderTable(data) {
   // 依目前分頁過濾營區
   const zhNums = '一二三四五六七八九十';
-  const reLatus = new RegExp(`^拉圖[${zhNums}]營$`);
+  const reLatus = new RegExp(`^普拉[${zhNums}]營$`);
+  const reLatushard = new RegExp(`^困拉[${zhNums}]營$`);
   const reZakum = new RegExp(`^炎魔[${zhNums}]營$`);
 
   const groupNotes = {
-    '拉圖一營': '🔰歐皇指定席🎗️',
-    '拉圖二營': '🔰瑞氣千條團💎',
-    '拉圖三營': '🔰馬到成功團🐎',
-    '拉圖四營': '🔰傳奇空殼團🥥',
+    '普拉一營': '🔰歐皇指定席🎗️',
+    '普拉二營': '🔰瑞氣千條團💎',
+    '普拉三營': '🔰馬到成功團🐎',
+    '普拉四營': '🔰傳奇空殼團🥥',
 	'拉圖五營': '🔰祖宗BOBI團🏛️',
 	'拉圖六營': '🔰命定之六：萬象神引之絕世掉寶🎲',
-    '拉圖七營': '🔰非洲畢業班🗿',
+    '普拉七營': '🔰非洲畢業班🗿',
   };
 
   const filtered = (data || []).filter(r => {
     const camp = (r.camp || '').trim();
     if (currentTab === 'latus')   return reLatus.test(camp);
+	if (currentTab === 'latushard')  return reLatushard.test(camp);
     if (currentTab === 'zakum')   return reZakum.test(camp);
     if (currentTab === 'trainext')return (camp === '訓練營' || camp === '外援大大');
     return true;
@@ -456,6 +523,7 @@ function setTab(tab) {
   currentTab = tab; // 'latus' | 'zakum' | 'trainext'
   // 切換樣式
   $('#tabLatus').toggleClass('active', tab === 'latus');
+  $('#tabLatusHard').toggleClass('active', tab === 'latushard');
   $('#tabZakumList').toggleClass('active', tab === 'zakum');
   $('#tabTrainExt').toggleClass('active', tab === 'trainext');
   // 依目前分頁重繪
@@ -463,6 +531,7 @@ function setTab(tab) {
 }
 
 	$('#tabLatus').on('click',     () => setTab('latus'));
+	$('#tabLatusHard').on('click', () => setTab('latushard'));
 	$('#tabZakumList').on('click', () => setTab('zakum'));
 	$('#tabTrainExt').on('click',  () => setTab('trainext'));
 
@@ -555,8 +624,8 @@ function createEditor() {
         <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
           <option value="">（請選擇）</option>
           <!-- 依你實際使用的營區字樣維持即可 -->
-          <option>拉圖一營</option><option>拉圖二營</option><option>拉圖三營</option><option>拉圖四營</option><option>拉圖五營</option>
-          <option>拉圖六營</option><option>拉圖七營</option><option>拉圖八營</option><option>拉圖九營</option><option>拉圖十營</option>
+          <option>普拉一營</option><option>普拉二營</option><option>普拉三營</option><option>普拉四營</option><option>普拉五營</option>
+          <option>普拉六營</option><option>普拉七營</option><option>普拉八營</option><option>普拉九營</option><option>普拉十營</option>
           <option>炎魔一營</option><option>炎魔二營</option><option>炎魔三營</option><option>炎魔四營</option><option>炎魔五營</option>
           <option>炎魔六營</option><option>炎魔七營</option><option>炎魔八營</option><option>炎魔九營</option><option>炎魔十營</option>
           <option>訓練營</option><option>外援大大</option>
@@ -804,7 +873,6 @@ function renderJobChart() {
   }
 }
 
-
 // 綁定按鈕：點擊時開啟 Modal 並渲染
 $(document).on('click', '#btnJobStats', function(){
   // 若清單尚未載入，提示一下
@@ -826,6 +894,78 @@ $(document).on('click', '#btnJobStats', function(){
 //     _jobChartInstance = null;
 //   }
 // });
+
+/* ==== 拉圖斯攻略：常數 ==== */
+// 困難拉圖斯（Google Doc 頁面）
+const LATUS_HARD_DOC_EMBED = "https://docs.google.com/document/d/1UrV2RrEJwLZJ8X5t88GXRuxKbbxp9vq6W2Qeu1nqzV0/preview";
+
+// 普通拉圖斯：顯示「施工中」
+const LATUS_WIP_HTML = `
+<!doctype html><html lang="zh-TW"><meta charset="utf-8">
+<title>施工中</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,BlinkMacSystemFont;
+       background:#f8f9fa}
+  .box{text-align:center}
+  h1{font-size:28px;margin:0 0 8px}
+  p{margin:0;color:#6c757d}
+</style>
+<div class="box">
+  <h1>🛠️ 施工中</h1>
+  <p>普通拉圖斯攻略內容建置中，敬請期待！</p>
+</div>`;
+const LATUS_WIP_DATAURL = "data:text/html;charset=UTF-8," + encodeURIComponent(LATUS_WIP_HTML);
+
+/* ==== 導覽列：拉圖斯攻略 按鈕切頁 ==== */
+$('#LatusGuide').on('click', function () {
+  $('#homePage').addClass('d-none');
+  $('#zakumPage').addClass('d-none');
+  $('#latusPage').removeClass('d-none');
+
+  // 預設顯示「施工中」
+  const $f = $('#latusDocFrame');
+  if ($f.attr('src') !== LATUS_WIP_DATAURL) $f.attr('src', LATUS_WIP_DATAURL);
+});
+
+/* ==== 拉圖斯攻略：子按鈕行為 ==== */
+$('#btnLatusNormal').on('click', function(){
+  const $f = $('#latusDocFrame');
+  if ($f.attr('src') !== LATUS_WIP_DATAURL) $f.attr('src', LATUS_WIP_DATAURL);
+});
+
+$('#btnLatusHard').on('click', function(){
+  const $f = $('#latusDocFrame');
+  if ($f.attr('src') !== LATUS_HARD_DOC_EMBED) $f.attr('src', LATUS_HARD_DOC_EMBED);
+});
+
+/* ==== 返回角色清單：擴充既有處理，讓兩個攻略頁都能返回 ==== */
+// 將你原本的 backToList 事件「替換」成下面這段（或直接覆寫）
+$(document).off('click', '#backToList').on('click', '#backToList', function () {
+  $('#zakumPage, #latusPage').addClass('d-none');
+  $('#homePage').removeClass('d-none');
+});
+
+
+// 叔叔版一圖流攻略（Google Drive 嵌入）
+const UNCLE_GUIDE_FILE_ID = '1Fdb5iUqoxuQk8f5erxvOd73IDuxX_NqL';
+const UNCLE_GUIDE_EMBED = `https://drive.google.com/file/d/${UNCLE_GUIDE_FILE_ID}/preview`;
+const UNCLE_GUIDE_LINK  = `https://drive.google.com/file/d/${UNCLE_GUIDE_FILE_ID}/view?usp=sharing`;
+
+
+$(document).on('click', '#btnUncleGuide', function () {
+  // 設定 iframe 與「在新頁面開啟」超連結
+  const $frame = $('#uncleGuideFrame');
+  if ($frame.attr('src') !== UNCLE_GUIDE_EMBED) {
+    $frame.attr('src', UNCLE_GUIDE_EMBED);
+  }
+  $('#uncleGuideOpenNew').attr('href', UNCLE_GUIDE_LINK);
+
+  // 顯示 Modal
+  const modal = new bootstrap.Modal(document.getElementById('uncleGuideModal'));
+  modal.show();
+});
+
 
 </script>
 </body>
