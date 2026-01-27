@@ -145,7 +145,11 @@
         <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
         <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
 		  <li class="nav-item" role="presentation">
-			<button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯</button>
+			<button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯(普通)</button>
+		  </li>
+		  <!-- 放在 id="tabLatus" 之後、id="tabZakumList" 之前 -->
+		  <li class="nav-item" role="presentation">
+			<button id="tabLatusHard" class="nav-link tab-latus" type="button" role="tab">拉圖斯(困難)</button>
 		  </li>
 		  <li class="nav-item" role="presentation">
 			<button id="tabZakumList" class="nav-link tab-zakum" type="button" role="tab">殘暴炎魔</button>
@@ -260,7 +264,7 @@ function parseSheetFromUrl(url) {
 /* =========================
    全域狀態（★ 新增）
 ========================= */
-let currentTab = 'latus';   // 'latus' | 'zakum'
+let currentTab = 'latus';   // 'latus' | 'latushard' | 'zakum' | 'trainext'
 let lastData   = [];        // 讀取後保存，切分頁時重繪使用
 
 /* =========================
@@ -324,15 +328,18 @@ function loadFromSheet(sheetId, gid = '0') {
 function renderTable(data) {
   // 依目前分頁過濾營區
   const zhNums = '一二三四五六七八九十';
-  const reLatus = new RegExp(`^拉圖[${zhNums}]營$`);
+  const reLatus = new RegExp(`^普拉[${zhNums}]營$`);
+  const reLatushard = new RegExp(`^困拉[${zhNums}]營$`);
   const reZakum = new RegExp(`^炎魔[${zhNums}]營$`);
 
   const groupNotes = {
-    '拉圖一營': '🔰歐皇指定席🎗️',
-    '拉圖二營': '🔰瑞氣千條團💎',
-    '拉圖三營': '🔰馬到成功團🐎',
-    '拉圖四營': '🔰傳奇空殼團🥥',
-    '拉圖七營': '🔰非洲畢業班🗿',
+    '普拉一營': '🔰歐皇指定席🎗️',
+    '普拉二營': '🔰瑞氣千條團💎',
+    '普拉三營': '🔰馬到成功團🐎',
+    '普拉四營': '🔰傳奇空殼團🥥',
+	'拉圖五營': '🔰祖宗BOBI團🏛️',
+	'拉圖六營': '🔰命定之六：萬象神引之絕世掉寶🎲',
+    '普拉七營': '🔰非洲畢業班🗿',
   };
 
   const filtered = (data || []).filter(r => {
@@ -454,6 +461,7 @@ function setTab(tab) {
   currentTab = tab; // 'latus' | 'zakum' | 'trainext'
   // 切換樣式
   $('#tabLatus').toggleClass('active', tab === 'latus');
+  $('#tabLatusHard').toggleClass('active', tab === 'latushard');
   $('#tabZakumList').toggleClass('active', tab === 'zakum');
   $('#tabTrainExt').toggleClass('active', tab === 'trainext');
   // 依目前分頁重繪
@@ -461,6 +469,7 @@ function setTab(tab) {
 }
 
 	$('#tabLatus').on('click',     () => setTab('latus'));
+	$('#tabLatusHard').on('click', () => setTab('latushard'));
 	$('#tabZakumList').on('click', () => setTab('zakum'));
 	$('#tabTrainExt').on('click',  () => setTab('trainext'));
 
@@ -553,8 +562,8 @@ function createEditor() {
         <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
           <option value="">（請選擇）</option>
           <!-- 依你實際使用的營區字樣維持即可 -->
-          <option>拉圖一營</option><option>拉圖二營</option><option>拉圖三營</option><option>拉圖四營</option><option>拉圖五營</option>
-          <option>拉圖六營</option><option>拉圖七營</option><option>拉圖八營</option><option>拉圖九營</option><option>拉圖十營</option>
+          <option>普拉一營</option><option>普拉二營</option><option>普拉三營</option><option>普拉四營</option><option>普拉五營</option>
+          <option>普拉六營</option><option>普拉七營</option><option>普拉八營</option><option>普拉九營</option><option>普拉十營</option>
           <option>炎魔一營</option><option>炎魔二營</option><option>炎魔三營</option><option>炎魔四營</option><option>炎魔五營</option>
           <option>炎魔六營</option><option>炎魔七營</option><option>炎魔八營</option><option>炎魔九營</option><option>炎魔十營</option>
           <option>訓練營</option><option>外援大大</option>
