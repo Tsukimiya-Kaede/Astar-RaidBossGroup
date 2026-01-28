@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW" data-bs-theme="light">
 <head>
@@ -45,6 +46,13 @@
 
 
   <style>
+	body 
+	{
+        overflow-y: scroll;
+        margin: 0;
+        padding: 0;
+    }
+  
     .status-badge { font-size: 0.85rem; }
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
     button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
@@ -99,36 +107,56 @@
 	  color:#fff;
 	  background:#198754;
 	}
+	
+	.tab_css{display:flex;flex-wrap:wrap;justify-content:flex-start;}
+	.tab_css input{display:none}
+	.tab_css label{margin: 0 5px 5px 0; padding: 10px 16px; cursor: pointer; border-radius: 5px; background: #0d6efd; color: #fff; opacity: 0.638;}
+	.tab_content{order:1;display: none; width:100%; border-bottom: 3px solid #ddd; line-height: 1.6; font-size: 0.85rem; padding: 15px; border: 1px solid #ddd; border-radius: 5px;}
+	.tab_css input:checked + label, .tab_css label:hover{opacity: 1; font-weight:bold;}
+	.tab_css input:checked + label + .tab_content{display: initial;}
+	
+	.tab_css_Blue label{margin: 0 5px 5px 0; padding: 10px 16px; cursor: pointer; border-radius: 5px; background: #0d6efd; color: #fff; opacity: 0.1;}
+	.tab_css_Orange label{margin: 0 5px 5px 0; padding: 10px 16px; cursor: pointer; border-radius: 5px; background: #fd7e14; color: #fff; opacity: 0.1;}
+	
+	.title{font-weight:bold; font-size:1.0rem;}
 
   </style>
 </head>
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
     <div class="container-fluid">
-      <span class="navbar-brand">🍁MapleStory Astar公會專屬網站🍁-1423</span>
+      <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1423</span>
       <div class="ms-auto d-flex align-items-center gap-2">
-        <span id="sourceBadge" class="badge bg-light text-dark status-badge d-none"></span>
+        <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
+		<!-- 小夥伴清單 -->
+		<button id="backToList" class="btn btn-outline-light btn-sm title">👨‍👩‍👧‍👦 公會小夥伴</button>
+        <button id="Guide" class="btn btn-outline-light btn-sm title">🚀 遊戲攻略</button>
 		<!-- 全職業攻略按鈕（武器圖案） -->
-		<a href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="全職業攻略">⚔️ 全職業攻略</a>
+		<!-- <a href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="全職業攻略">⚔️ 全職業攻略</a> -->
 		<!-- 全職業四轉技能任務按鈕（任務圖案） -->
-		<a href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="全職業攻略">🧾 全職業技能任務</a>
+		<!-- <a href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="全職業攻略">🧾 全職業技能任務</a> -->
         <!-- 第三方交易平台按鈕 -->
-        <a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="第三方交易平台">🏪 第三方交易平台</a>
+        <a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="第三方交易平台">🏪 第三方交易平台</a>
         <!-- 怪物掉落物查詢工具按鈕（怪物圖案） -->
-        <a href="https://a2983456456.github.io/artale-drop/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="怪物掉落物查詢工具">👾 怪物掉落物查詢工具</a>
+        <a href="https://a2983456456.github.io/artale-drop/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="怪物掉落物查詢工具">👾 怪物掉落物查詢工具</a>
         <!-- 女神 400 速解小工具按鈕 -->
-        <a href="https://rvgin.github.io/tower-of-goddess/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="女神 400 速解小工具">👸 女神 400 速解小工具</a>
+        <!--  <a href="https://rvgin.github.io/tower-of-goddess/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="女神 400 速解小工具">👸 女神 400 速解小工具</a> -->
         <!-- 補品生存模擬器按鈕 -->
-        <a href="https://philipc-1.github.io/MapleStory/HPsimulator.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="補品生存模擬器">💊 補品生存模擬器</a>
+        <!-- <a href="https://philipc-1.github.io/MapleStory/HPsimulator.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm" title="補品生存模擬器">💊 補品生存模擬器</a> -->
 		<!-- 放在 id="Zakum" 按鈕「前面」 -->
-		<button id="LatusGuide" class="btn btn-outline-light btn-sm">⏰ 拉圖斯攻略</button>
-        <button id="Zakum" class="btn btn-outline-light btn-sm">🗿 殘暴炎魔攻略</button>
-        <button id="toggleTheme" class="btn btn-outline-light btn-sm">🌙 夜間模式</button>
+		<!-- <button id="LatusGuide" class="btn btn-outline-light btn-sm">⏰ 拉圖斯攻略</button> -->
+        <!-- <button id="Zakum" class="btn btn-outline-light btn-sm">🗿 殘暴炎魔攻略</button> -->
+        <button id="toggleTheme" class="btn btn-outline-light btn-sm title"">🌙 夜間模式</button>
       </div>
     </div>
   </nav>
 
-  <div id="homePage" class="container py-4">
+  <!-- 公會小夥伴 -->
+	<div id="homePage" class="container py-4">
+		<div class="d-flex align-items-center justify-content-between mb-3">
+			<h3 class="mb-0"><b>👩‍👩‍👧‍👦 公會小夥伴</b></h3>
+		</div>
+		
     <!-- 提示卡片 -->
     <div class="card shadow-sm mb-4">
       <div class="card-body">
@@ -221,7 +249,7 @@
 	<!-- Zakum 殘暴炎魔攻略（預設隱藏） -->
 	<div id="zakumPage" class="container py-4 d-none">
 	<div class="d-flex align-items-center justify-content-between mb-3">
-	  <h3 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h3>
+	  <h5 class="mb-0">🗿 殘暴炎魔攻略（Zakum Guide）</h5>
 		  <div class="d-flex align-items-center gap-2">
 			<button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
 			<button id="btnUncleGuide" class="btn btn-outline-primary btn-sm">📜 叔叔版一圖流攻略</button>
@@ -266,6 +294,119 @@
 	  </div>
 	</div>
 
+	<!-- 放在 #zakumPage 區塊後面（同層級） -->
+	<div id="GuidePage" class="container py-4 d-none">
+		<div class="d-flex align-items-center justify-content-between mb-3">
+			<h3 class="mb-0"><b>🚀 遊戲攻略（Game Guide）<b></h3>
+			<div class="d-flex align-items-center gap-2">
+				<button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
+				<!-- <button id="btnUncleGuide" class="btn btn-outline-primary btn-sm">📜 叔叔版一圖流攻略</button> -->
+			</div>
+		</div>
+
+		<div class="card shadow-sm">
+			<div class="card-body">
+		<!--
+			<div class="d-flex justify-content-between align-items-center mb-3">
+			<h5 class="card-title mb-0">角色清單</h5>
+			<div class="d-flex align-items-center gap-2">
+				<button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+				<button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
+				<button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
+			</div>
+			</div>
+			-->
+			
+			<!-- <div class="tab_css nav-link"> -->
+			<div class="tab_css nav-link">
+			<!-- TAB1 打包區塊 start -->
+			<input id="tab1" type="radio" name="tab" checked="checked"/>
+			<label for="tab1" style="background-color:#fd7e14;">叔叔一圖流</label>
+			<div class="tab_content card border-0">
+				第 1 個頁籤內容區塊<br/>
+				第 1 個頁籤內容區塊<br/>
+			</div>
+			<!-- TAB1 打包區塊 end -->
+	
+			<!-- TAB2 打包區塊 start -->
+			<input id="tab2" type="button" name="tab"/>
+			<label for="tab2" ><a href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">全職業攻略</a></label>
+			<div class="tab_content card border-0">
+				第 2 個頁籤內容區塊<br/>
+				第 2 個頁籤內容區塊<br/>
+			</div>
+			<!-- TAB2 打包區塊 end -->
+	
+			<!-- TAB3 打包區塊 start -->
+			<input id="tab3" type="button" name="tab"/>
+			<label for="tab3"><a href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">全職業四轉技能</a></label>
+			<div class="tab_content card border-0">
+				第 3 個頁籤內容區塊<br/>
+				第 3 個頁籤內容區塊<br/>
+			</div>
+			<!-- TAB3 打包區塊 end -->
+			
+	
+			<!-- TAB4 困難拉圖斯 start -->
+			<input id="tab4" type="radio" name="tab"/>
+			<label for="tab4" style="background-color:#6f42c1;">困難拉圖斯</label>
+			<div class="tab_content card border-0">
+				<div class="card-body">
+					<h4 class="card-title mb-2">⏰ 困難拉圖斯攻略（Hard Papulatus Guide）</h4>
+					<!-- Bootstrap 響應式比例盒，讓 iframe 自適應大小 -->
+					<div class="ratio ratio-16x9">
+					<iframe id="zakumDocFrame" src="https://docs.google.com/document/d/1UrV2RrEJwLZJ8X5t88GXRuxKbbxp9vq6W2Qeu1nqzV0/preview" title="Zakum Guide Doc" allowfullscreen style="border:0;"></iframe>
+					</div>
+					<small class="text-muted d-block mt-2">
+					若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
+					</small>
+				</div>
+			</div>
+			<!-- TAB4 困難拉圖斯 end -->
+	
+			<!-- TAB5 殘暴炎魔 start -->
+			<input id="tab5" type="radio" name="tab"/>
+			<label for="tab5" style="background-color:#6f42c1;">殘暴炎魔</label>
+			<div class="tab_content card border-0">
+				<div class="card-body">
+					<h4 class="card-title mb-2">🗿 殘暴炎魔攻略（Zakum Guide）</h4>
+					<!-- Bootstrap 響應式比例盒，讓 iframe 自適應大小 -->
+					<div class="ratio ratio-16x9">
+					<iframe id="zakumDocFrame" src="https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/preview" title="Zakum Guide Doc" allowfullscreen style="border:0;"></iframe>
+					</div>
+					<small class="text-muted d-block mt-2">
+					若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
+					</small>
+				</div>
+			</div>
+			<!-- TAB5 殘暴炎魔 end -->
+	
+			<!-- TAB6 打包區塊 start 198754 -->
+			<input id="tab6" type="button" name="tab"/>
+			<label for="tab6" style="background-color:#198754;"><a href="https://rvgin.github.io/tower-of-goddess/" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">女神400小工具</a></label>
+			<div class="tab_content card border-0">
+				第 6 個頁籤內容區塊<br/>
+				第 6 個頁籤內容區塊<br/>
+			</div>
+			<!-- TAB6 打包區塊 end -->
+	
+			<!-- TAB6 打包區塊 start -->
+			<input id="tab7" type="button" name="tab"/>
+			<label for="tab7" style="background-color:#198754;"><a href="https://philipc-1.github.io/MapleStory/HPsimulator.html" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">補品生存模擬器</a></label>
+			<div class="tab_content card border-0 shadow-sm mb-3">
+				第 7 個頁籤內容區塊<br/>
+				第 7 個頁籤內容區塊<br/>
+			</div>
+			<!-- TAB7 打包區塊 end -->
+			
+			</div>
+	
+		
+			</div>
+		
+		</div>
+		
+	</div>
 
 <script>
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
@@ -281,29 +422,54 @@ const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm
 /* =========================
    夜間模式切換
 ========================= */
-$('#toggleTheme').on('click', function () {
+$('#toggleTheme').on('click', function () 
+{
   const html = document.documentElement;
   const isDark = html.getAttribute('data-bs-theme') === 'dark';
   html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
   $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
 });
 
+
+/* ==== 返回角色清單：擴充既有處理，讓兩個攻略頁都能返回 ==== */
+// 將你原本的 backToList 事件「替換」成下面這段（或直接覆寫）
+$(document).off('click', '#backToList').on('click', '#backToList', function () 
+{
+  $('#zakumPage').addClass('d-none');
+  $('#latusPage').addClass('d-none');
+  $('#GuidePage').addClass('d-none');   // 隱藏清單
+  $('#homePage').removeClass('d-none');
+});
+
+$('#Guide').on('click', function () 
+{
+  $('#homePage').addClass('d-none');   // 隱藏清單
+  $('#latusPage').addClass('d-none');   // 隱藏清單
+  $('#zakumPage').addClass('d-none');   // 隱藏清單
+  $('#latusPage').addClass('d-none');   // 隱藏清單
+  $('#GuidePage').removeClass('d-none'); // 顯示攻略
+});
+
 /* =========================
    殘暴炎魔攻略：單頁切換
 ========================= */
-$('#Zakum').on('click', function () {
-  $('#homePage').addClass('d-none');   // 隱藏清單
-  $('#zakumPage').removeClass('d-none'); // 顯示攻略
-});
-$(document).on('click', '#backToList', function () {
-  $('#zakumPage').addClass('d-none');
-  $('#homePage').removeClass('d-none');
-});
-// 只在第一次或每次切換時設定/重設 src（避免重複載入也可以加判斷）
-  const $frame = $('#zakumDocFrame');
-  if ($frame.attr('src') !== ZAKUM_DOC_EMBED) {
-    $frame.attr('src', ZAKUM_DOC_EMBED);
-  }
+//$('#Zakum').on('click', function () 
+//{
+//  $('#homePage').addClass('d-none');   // 隱藏清單
+//  $('#zakumPage').removeClass('d-none'); // 顯示攻略
+//});
+//$(document).on('click', '#backToList', function () 
+//{
+//  $('#zakumPage').addClass('d-none');
+//  $('#homePage').removeClass('d-none');
+//});
+//// 只在第一次或每次切換時設定/重設 src（避免重複載入也可以加判斷）
+//const $frame = $('#zakumDocFrame');
+//if ($frame.attr('src') !== ZAKUM_DOC_EMBED) 
+//{
+//  $frame.attr('src', ZAKUM_DOC_EMBED);
+//}
+  
 
 /* =========================
    公用：解析 URL 參數
@@ -931,22 +1097,15 @@ $('#LatusGuide').on('click', function () {
 });
 
 /* ==== 拉圖斯攻略：子按鈕行為 ==== */
-$('#btnLatusNormal').on('click', function(){
-  const $f = $('#latusDocFrame');
-  if ($f.attr('src') !== LATUS_WIP_DATAURL) $f.attr('src', LATUS_WIP_DATAURL);
-});
-
-$('#btnLatusHard').on('click', function(){
-  const $f = $('#latusDocFrame');
-  if ($f.attr('src') !== LATUS_HARD_DOC_EMBED) $f.attr('src', LATUS_HARD_DOC_EMBED);
-});
-
-/* ==== 返回角色清單：擴充既有處理，讓兩個攻略頁都能返回 ==== */
-// 將你原本的 backToList 事件「替換」成下面這段（或直接覆寫）
-$(document).off('click', '#backToList').on('click', '#backToList', function () {
-  $('#zakumPage, #latusPage').addClass('d-none');
-  $('#homePage').removeClass('d-none');
-});
+//$('#btnLatusNormal').on('click', function(){
+//  const $f = $('#latusDocFrame');
+//  if ($f.attr('src') !== LATUS_WIP_DATAURL) $f.attr('src', LATUS_WIP_DATAURL);
+//});
+//
+//$('#btnLatusHard').on('click', function(){
+//  const $f = $('#latusDocFrame');
+//  if ($f.attr('src') !== LATUS_HARD_DOC_EMBED) $f.attr('src', LATUS_HARD_DOC_EMBED);
+//});
 
 
 // 叔叔版一圖流攻略（Google Sheets 嵌入）
@@ -954,7 +1113,8 @@ const UNCLE_GUIDE_SHEET_ID = '1a3nRjzvfelHg1zeKyJpUfddRO9A1v68SnS4VnPp2K1s';
 const UNCLE_GUIDE_EMBED = `https://docs.google.com/spreadsheets/d/${UNCLE_GUIDE_SHEET_ID}/preview`;
 const UNCLE_GUIDE_LINK  = `https://docs.google.com/spreadsheets/d/${UNCLE_GUIDE_SHEET_ID}/edit?usp=sharing`;
 
-$(document).on('click', '#btnUncleGuide', function () {
+$(document).on('click', '#btnUncleGuide', function () 
+{
   // 設定 iframe 與「在新頁面開啟」超連結
   const $frame = $('#uncleGuideFrame');
   if ($frame.attr('src') !== UNCLE_GUIDE_EMBED) {
