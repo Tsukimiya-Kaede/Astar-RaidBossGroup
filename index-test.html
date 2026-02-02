@@ -109,13 +109,13 @@
 		background:#198754;
 		}
 		
-		.tab_css{display:flex;flex-wrap:wrap;justify-content:flex-start;}
+<!--		.tab_css{display:flex;flex-wrap:wrap;justify-content:flex-start;}
 		.tab_css input{display:none}
 		.tab_css label{margin: 0 5px 5px 0; padding: 10px 16px; cursor: pointer; border-radius: 5px; background: #0d6efd; color: #fff; opacity: 0.638;}
 		.tab_content{order:1; display: none; width:100%; border-bottom: 3px solid #ddd; line-height: 1.6; font-size: 0.85rem; padding: 0px; margin-top: 8px; border: 1px solid #ddd; border-radius: 5px;}
 		.tab_css input:checked + label, .tab_css label:hover{opacity: 1; font-weight:bold;}
 		.tab_css input:checked + label + .tab_content{display: initial;}
-		
+-->		
 		.title{font-weight:bold; font-size:1.0rem;}
 		
 		<!-- /* 針對標籤內的內容進行重製 */ -->
@@ -137,6 +137,19 @@
 			border-collapse: collapse;
 		}
 
+		// Guide 分頁按鈕切換：只切換「button.nav-link」對應的面板
+		$('#guideTabs').on('click', 'button.nav-link', function () {
+		  const $btn = $(this);
+		  const targetSel = $btn.data('target'); // e.g. "#pane-onep"
+
+		  // 切 active
+		  $('#guideTabs .nav-link').removeClass('active');
+		  $btn.addClass('active');
+
+		  // 切面板
+		  $('.tab-pane').addClass('d-none');
+		  $(targetSel).removeClass('d-none');
+		});
 	</style>
 </head>
 
@@ -248,112 +261,116 @@
 
 		<div class="card shadow-sm">
 			<div class="card-body">
-			<div class="tab_css nav-link">
-			
-			<!-- TAB1 叔叔一圖流 start -->
-			<input id="tab1" type="radio" name="tab" checked="checked"/>
-			<label for="tab1" style="background-color:#fd7e14;">叔叔一圖流</label>
-			
-			<div class="tab_content card border-0">
-				<div class="d-flex justify-content-between align-items-center mb-2">
-					<h4 class="card-title mb-2">🌟 叔叔一圖流</h4>
-					<div class="d-flex align-items-center gap-2">
-						<input type="text" name="txt_Search" style="min-width: 200px !important; display: block !important;" placeholder="輸入搜尋內容">
-						<button id="btn_SearchOneP" class="btn btn-outline-secondary btn-sm">搜尋</button>
-						<button id="btn_ResetOneP" class="btn btn-outline-secondary btn-sm">重置</button>
-						<button id="reloadBtn_OneP" class="btn btn-outline-secondary btn-sm">重新整理</button>
-					</div>
-				</div>
-				
-				<div class="table-responsive">
-					<table class="table table-striped table-hover align-middle reset-content">
-						<thead class="table-secondary">
-						<tr>
-							<th style="width: 20%;">分類</th>
-							<th style="width: 20%;">名稱</th>
-							<th style="width: 25%;">關鍵字</th>
-							<th style="width: 35%;">圖片 (點擊開啟大圖)</th>
-						</tr>
-						</thead>
-						<tbody id="tableBody_OneP">
-						<tr>
-							<td colspan="4" class="text-center text-muted">尚未讀取資料</td>
-						</tr>
-						</tbody>
-					</table>
-				</div>
-			</div>
-			<!-- TAB1 叔叔一圖流 end -->
-	
-			<!-- TAB2 全職業攻略 start -->
-			<input id="tab2" type="button" name="tab"/>
-			<label for="tab2" ><a href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">全職業攻略</a></label>
-			<div class="tab_content card border-0">
-				第 2 個頁籤內容區塊<br/>
-				第 2 個頁籤內容區塊<br/>
-			</div>
-			<!-- TAB2 全職業攻略 end -->
-	
-			<!-- TAB3 全職業四轉技能 start -->
-			<input id="tab3" type="button" name="tab"/>
-			<label for="tab3"><a href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">全職業四轉技能</a></label>
-			<div class="tab_content card border-0">
-				第 3 個頁籤內容區塊<br/>
-				第 3 個頁籤內容區塊<br/>
-			</div>
-			<!-- TAB3 全職業四轉技能 end -->
-			
-			<!-- TAB4 困難拉圖斯 start -->
-			<input id="tab4" type="radio" name="tab"/>
-			<label for="tab4" style="background-color:#6f42c1;">困難拉圖斯</label>
-			<div class="tab_content card border-0">
-				<h4 class="card-title mb-2">⏰ 困難拉圖斯攻略（Hard Papulatus Guide）</h4>
-				<!-- Bootstrap 響應式比例盒，讓 iframe 自適應大小 -->
-				<div class="ratio ratio-16x9">
-				<iframe id="zakumDocFrame" src="https://docs.google.com/document/d/1UrV2RrEJwLZJ8X5t88GXRuxKbbxp9vq6W2Qeu1nqzV0/preview" title="Zakum Guide Doc" allowfullscreen style="border:0;"></iframe>
-				</div>
-				<small class="text-muted d-block mt-2">
-				若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
-				</small>
-			</div>
-			<!-- TAB4 困難拉圖斯 end -->
-	
-			<!-- TAB5 殘暴炎魔 start -->
-			<input id="tab5" type="radio" name="tab"/>
-			<label for="tab5" style="background-color:#6f42c1;">殘暴炎魔</label>
-			<div class="tab_content card border-0">
-				<h4 class="card-title mb-2">🗿 殘暴炎魔攻略（Zakum Guide）</h4>
-				<!-- Bootstrap 響應式比例盒，讓 iframe 自適應大小 -->
-				<div class="ratio ratio-16x9">
-				<iframe id="zakumDocFrame" src="https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/preview" title="Zakum Guide Doc" allowfullscreen style="border:0;"></iframe>
-				</div>
-				<small class="text-muted d-block mt-2">
-				若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
-				</small>
-			</div>
-			<!-- TAB5 殘暴炎魔 end -->
-	
-			<!-- TAB6 女神400小工具 start 198754 -->
-			<input id="tab6" type="button" name="tab"/>
-			<label for="tab6" style="background-color:#198754;"><a href="https://rvgin.github.io/tower-of-goddess/" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">女神400小工具</a></label>
-			<div class="tab_content card border-0">
-				第 6 個頁籤內容區塊<br/>
-				第 6 個頁籤內容區塊<br/>
-			</div>
-			<!-- TAB6 女神400小工具 end -->
-	
-			<!-- TAB7 補品生存模擬器 start -->
-			<input id="tab7" type="button" name="tab"/>
-			<label for="tab7" style="background-color:#198754;"><a href="https://philipc-1.github.io/MapleStory/HPsimulator.html" style="color:#FFF;text-decoration:none;" target="_blank" rel="noopener noreferrer">補品生存模擬器</a></label>
-			<div class="tab_content card border-0 shadow-sm mb-3">
-				第 7 個頁籤內容區塊<br/>
-				第 7 個頁籤內容區塊<br/>
-			</div>
-			<!-- TAB7 補品生存模擬器 end -->
-			
-			</div>
-	
-		
+			<!-- 導覽按鈕列（用 button.nav-link 取代 label） -->
+<ul class="nav nav-pills nav-tabs-custom mb-3" id="guideTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <!-- 叔叔一圖流：沿用橘色風格 -->
+    <button id="tabOneP" class="nav-link active" type="button" role="tab"
+            data-target="#pane-onep"
+            style="background:#fd7e14;color:#fff;border-color:#fd7e14">
+      叔叔一圖流
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <!-- 外部連結可用 <a> 仍保留 nav-link 視覺 -->
+    <a class="nav-link tab-latus" role="tab" target="_blank" rel="noopener noreferrer"
+       href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0">
+      全職業攻略 ↗
+    </a>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
+       href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic">
+      全職業四轉技能 ↗
+    </a>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button id="tabLatusHardGuide" class="nav-link tab-latushard" type="button" role="tab"
+            data-target="#pane-latus-hard">
+      困難拉圖斯
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
+       href="https://rvgin.github.io/tower-of-goddess/">
+      女神400小工具 ↗
+    </a>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
+       href="https://philipc-1.github.io/MapleStory/HPsimulator.html">
+      補品生存模擬器 ↗
+    </a>
+  </li>
+
+  <li class="nav-item" role="presentation">
+    <button id="tabZakumGuide" class="nav-link tab-zakum" type="button" role="tab"
+            data-target="#pane-zakum">
+      殘暴炎魔
+    </button>
+  </li>
+</ul>
+
+<!-- 內容面板：用 div.pane 搭配 d-none 切換 -->
+<div id="pane-onep" class="tab-pane">
+  <!-- 這裡放你原本「叔叔一圖流」面板（搜尋、表格）內容 -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="card-title mb-2">🌟 叔叔一圖流</h4>
+    <div class="d-flex align-items-center gap-2">
+      <input type="text" name="txt_Search" style="min-width: 200px !important; display: block !important;" placeholder="輸入搜尋內容">
+      <button id="btn_SearchOneP" class="btn btn-outline-secondary btn-sm">搜尋</button>
+      <button id="btn_ResetOneP" class="btn btn-outline-secondary btn-sm">重置</button>
+      <button id="reloadBtn_OneP" class="btn btn-outline-secondary btn-sm">重新整理</button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle reset-content">
+      <thead class="table-secondary">
+        <tr>
+          <th style="width: 20%;">分類</th>
+          <th style="width: 20%;">名稱</th>
+          <th style="width: 25%;">關鍵字</th>
+          <th style="width: 35%;">圖片 (點擊開啟大圖)</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody_OneP">
+        <tr>
+          <td colspan="4" class="text-center text-muted">尚未讀取資料</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="pane-latus-hard" class="tab-pane d-none">
+  <h4 class="card-title mb-2">⏰ 困難拉圖斯攻略（Hard Papulatus Guide）</h4>
+  <div class="ratio ratio-16x9">
+    <iframe id="latusHardFrame"
+            src="https://docs.google.com/document/d/1UrV2RrEJwLZJ8X5t88GXRuxKbbxp9vq6W2Qeu1nqzV0/preview"
+            title="Latus Hard Doc" allowfullscreen style="border:0;"></iframe>
+  </div>
+  <small class="text-muted d-block mt-2">
+    若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
+  </small>
+</div>
+
+<div id="pane-zakum" class="tab-pane d-none">
+  <h4 class="card-title mb-2">🗿 殘暴炎魔攻略（Zakum Guide）</h4>
+  <div class="ratio ratio-16x9">
+    <iframe id="zakumFrame"
+            src="https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/preview"
+            title="Zakum Doc" allowfullscreen style="border:0;"></iframe>
+  </div>
+  <small class="text-muted d-block mt-2">
+    若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
+  </small>
+</div>
 			</div>
 		
 		</div>
