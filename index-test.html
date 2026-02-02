@@ -136,25 +136,11 @@
 			width: 100%;
 			border-collapse: collapse;
 		}
-
-		// Guide 分頁按鈕切換：只切換「button.nav-link」對應的面板
-		$('#guideTabs').on('click', 'button.nav-link', function () {
-		  const $btn = $(this);
-		  const targetSel = $btn.data('target'); // e.g. "#pane-onep"
-
-		  // 切 active
-		  $('#guideTabs .nav-link').removeClass('active');
-		  $btn.addClass('active');
-
-		  // 切面板
-		  $('.tab-pane').addClass('d-none');
-		  $(targetSel).removeClass('d-none');
-		});
 	</style>
 </head>
 
 <body class="bg-body">
-	<nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top style="padding:3px">
+	<nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
 		<div class="container-fluid">
 		<span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1423</span>
 		<div class="ms-auto d-flex align-items-center gap-2">
@@ -276,42 +262,42 @@
     <!-- 外部連結可用 <a> 仍保留 nav-link 視覺 -->
     <a class="nav-link tab-latus" role="tab" target="_blank" rel="noopener noreferrer"
        href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0">
-      全職業攻略 ↗
+      全職業攻略
     </a>
   </li>
 
   <li class="nav-item" role="presentation">
     <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
        href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic">
-      全職業四轉技能 ↗
+      全職業四轉技能
     </a>
-  </li>
-
-  <li class="nav-item" role="presentation">
-    <button id="tabLatusHardGuide" class="nav-link tab-latushard" type="button" role="tab"
-            data-target="#pane-latus-hard">
-      困難拉圖斯
-    </button>
   </li>
 
   <li class="nav-item" role="presentation">
     <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
        href="https://rvgin.github.io/tower-of-goddess/">
-      女神400小工具 ↗
+      女神400小工具
     </a>
   </li>
 
   <li class="nav-item" role="presentation">
     <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
        href="https://philipc-1.github.io/MapleStory/HPsimulator.html">
-      補品生存模擬器 ↗
+      補品生存模擬器
     </a>
   </li>
-
+  
+  <li class="nav-item" role="presentation">
+    <button id="tabLatusHardGuide" class="nav-link tab-latushard" type="button" role="tab"
+            data-target="#pane-latus-hard">
+      ⏰困難拉圖斯
+    </button>
+  </li>
+  
   <li class="nav-item" role="presentation">
     <button id="tabZakumGuide" class="nav-link tab-zakum" type="button" role="tab"
             data-target="#pane-zakum">
-      殘暴炎魔
+      🗿殘暴炎魔
     </button>
   </li>
 </ul>
@@ -1277,8 +1263,19 @@ $('#LatusGuide').on('click', function () {
 });
 
 -->
+// Guide 分頁按鈕切換：只切換「button.nav-link」對應的面板
+$('#guideTabs').on('click', 'button.nav-link', function () {
+  const $btn = $(this);
+  const targetSel = $btn.data('target'); // e.g. "#pane-onep"
 
+  // 切 active 樣式（只改同一列的 nav-link）
+  $('#guideTabs .nav-link').removeClass('active');
+  $btn.addClass('active');
 
+  // 顯示對應面板
+  $('.tab-pane').addClass('d-none');
+  $(targetSel).removeClass('d-none');
+});
 </script>
 </body>
 </html>
