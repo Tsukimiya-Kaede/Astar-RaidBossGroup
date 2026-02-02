@@ -108,6 +108,15 @@
 		color:#fff;
 		background:#198754;
 		}
+		/* 叔叔一圖流（橘） */
+		.nav-tabs-custom .tab-onep{
+		  color:#fd7e14;
+		  border-color:#fd7e14;
+		}
+		.nav-tabs-custom .tab-onep.active{
+		  color:#fff;
+		  background:#fd7e14;
+		}
 		
 <!--		.tab_css{display:flex;flex-wrap:wrap;justify-content:flex-start;}
 		.tab_css input{display:none}
@@ -251,11 +260,10 @@
 <ul class="nav nav-pills nav-tabs-custom mb-3" id="guideTabs" role="tablist">
   <li class="nav-item" role="presentation">
     <!-- 叔叔一圖流：沿用橘色風格 -->
-    <button id="tabOneP" class="nav-link active" type="button" role="tab"
-            data-target="#pane-onep"
-            style="background:#fd7e14;color:#fff;border-color:#fd7e14">
-      叔叔一圖流
-    </button>
+    <button id="tabOneP" class="nav-link tab-onep active" type="button" role="tab" data-target="#pane-onep">
+	  叔叔一圖流
+	</button>
+
   </li>
 
   <li class="nav-item" role="presentation">
@@ -295,10 +303,11 @@
   </li>
   
   <li class="nav-item" role="presentation">
-    <button id="tabZakumGuide" class="nav-link tab-zakum" type="button" role="tab"
-            data-target="#pane-zakum">
-      🗿殘暴炎魔
-    </button>
+    <button id="tabZakumGuide" class="nav-link tab-latushard" type="button" role="tab"
+        data-target="#pane-zakum">
+	  🗿殘暴炎魔
+	</button>
+
   </li>
 </ul>
 
