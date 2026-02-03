@@ -19,42 +19,6 @@
 	<!-- Chart.js -->
 	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 	
-	<!---->
-	<!-- 職業分佈統計 Modal -->
-	<div class="modal fade" id="jobStatsModal" tabindex="-1" aria-labelledby="jobStatsLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg modal-dialog-scrollable">
-		<div class="modal-content">
-		<div class="modal-header">
-			<h5 class="modal-title" id="jobStatsLabel">公會職業分佈統計（不含外援大大）</h5>
-			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		</div>
-		<div class="modal-body">
-		  <div class="row g-3">
-			<div class="col-12 col-lg-7">
-			  <canvas id="jobStatsCanvas" height="220"></canvas>
-			</div>
-			<div class="col-12 col-lg-5">
-			  <div class="border rounded p-3 h-100" style="background: rgba(0,0,0,.02);">
-				<h6 class="mb-2">被統計到的角色</h6>
-				<div id="jobHitList" class="small text-muted">（點一下左邊的統計圖切片，這裡會列出角色名稱）</div>
-			  </div>
-			</div>
-		  </div>
-		  <small class="text-muted d-block mt-2">
-			說明：統計來源為列表讀入的 Google Sheet；同義職業會自動合併（如「十字軍=英雄」）。
-		  </small>
-		</div>
-
-		<div class="modal-footer">
-			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
-		</div>
-		</div>
-	</div>
-	</div>
-
-	<!---->
-
-
 	<style>
 		body 
 		{
@@ -1360,5 +1324,41 @@ $('#jobStatsModal').on('hidden.bs.modal', function () {
 });
 
 </script>
+
+	<!---->
+	<!-- 職業分佈統計 Modal -->
+	<div class="modal fade" id="jobStatsModal" tabindex="-1" aria-labelledby="jobStatsLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-scrollable">
+		<div class="modal-content">
+		<div class="modal-header">
+			<h5 class="modal-title" id="jobStatsLabel">公會職業分佈統計（不含外援大大）</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		</div>
+		<div class="modal-body">
+		  <div class="row g-3">
+			<div class="col-12 col-lg-7">
+			  <canvas id="jobStatsCanvas" height="220"></canvas>
+			</div>
+			<div class="col-12 col-lg-5">
+			  <div class="border rounded p-3 h-100" style="background: rgba(0,0,0,.02);">
+				<h6 class="mb-2">被統計到的角色</h6>
+				<div id="jobHitList" class="small text-muted">（點一下左邊的統計圖切片，這裡會列出角色名稱）</div>
+			  </div>
+			</div>
+		  </div>
+		  <small class="text-muted d-block mt-2">
+			說明：統計來源為列表讀入的 Google Sheet；同義職業會自動合併（如「十字軍=英雄」）。
+		  </small>
+		</div>
+
+		<div class="modal-footer">
+			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+		</div>
+		</div>
+	</div>
+	</div>
+
+	<!---->
+	
 </body>
 </html>
