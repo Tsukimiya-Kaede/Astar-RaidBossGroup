@@ -1,243 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-TW" data-bs-theme="light">
 <head>
-	<meta charset="UTF-8" />
-	<title>🍁MapleStory Astar公會專屬網站🍁</title>
-	
-	<!-- Bootstrap 5 -->
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-	
-	<!-- jQuery -->
-	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-	
-	<!-- Bootstrap JS (Modal 需要) -->
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-	
-	<!-- PapaParse -->
-	<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-	
-	<!-- Chart.js -->
-	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-	
-	<style>
-		body 
-		{
-			overflow-y: scroll;
-			margin: 0;
-			padding: 0;
-		}
-	
-		.status-badge { font-size: 0.85rem; }
-		.group-row { background: rgba(0,0,0,.03); font-weight: 600; }
-		button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-		#sourceBadge { display: none !important; }
-		
-		<!-- /* 分頁外框 + 顏色 */ -->
-		.nav-tabs-custom .nav-link
-		{
-			border:2px solid transparent;
-			font-weight:600;
-			margin-right:.5rem;
-		}
-		.nav-tabs-custom .nav-link:hover
-		{
-			opacity:.9;
-		}
-	
-		<!-- /* 普通拉圖斯（藍） */ -->
-		.nav-tabs-custom .tab-latus{
-		color:#0d6efd;
-		border-color:#0d6efd;
-		}
-		.nav-tabs-custom .tab-latus.active{
-		color:#fff;
-		background:#0d6efd;
-		}
-		
-		<!-- /* 困藍拉圖斯（紫） */ -->
-		.nav-tabs-custom .tab-latushard{
-		color:#6f42c1;
-		border-color:#6f42c1;
-		}
-		.nav-tabs-custom .tab-latushard.active{
-		color:#fff;
-		background:#6f42c1;
-		}	
-	
-		<!-- /* 殘暴炎魔（橘） */ -->
-		.nav-tabs-custom .tab-zakum{
-		color:#fd7e14;
-		border-color:#fd7e14;
-		}
-		.nav-tabs-custom .tab-zakum.active{
-		color:#fff;
-		background:#fd7e14;
-		}
-	
-		<!-- /* 訓練營&外援（綠） */ -->
-		.nav-tabs-custom .tab-misc{
-		color:#198754;
-		border-color:#198754;
-		}
-		.nav-tabs-custom .tab-misc.active{
-		color:#fff;
-		background:#198754;
-		}
-		/* 叔叔一圖流（橘） */
-		.nav-tabs-custom .tab-onep{
-		  color:#fd7e14;
-		  border-color:#fd7e14;
-		}
-		.nav-tabs-custom .tab-onep.active{
-		  color:#fff;
-		  background:#fd7e14;
-		}
-		
-<!--		.tab_css{display:flex;flex-wrap:wrap;justify-content:flex-start;}
-		.tab_css input{display:none}
-		.tab_css label{margin: 0 5px 5px 0; padding: 10px 16px; cursor: pointer; border-radius: 5px; background: #0d6efd; color: #fff; opacity: 0.638;}
-		.tab_content{order:1; display: none; width:100%; border-bottom: 3px solid #ddd; line-height: 1.6; font-size: 0.85rem; padding: 0px; margin-top: 8px; border: 1px solid #ddd; border-radius: 5px;}
-		.tab_css input:checked + label, .tab_css label:hover{opacity: 1; font-weight:bold;}
-		.tab_css input:checked + label + .tab_content{display: initial;}
--->		
-		.title{font-weight:bold; font-size:1.0rem;}
-		
-		<!-- /* 針對標籤內的內容進行重製 */ -->
-		.reset-content 
-		{
-			<!-- /* all: revert; */ -->   
-			display: table-cell;  
-			line-height: 1.5; 
-			font-size: 1rem;    
-			padding: 0.5;           
-			border: none;         
-		}
-	
-		<!-- /* 如果是針對整個表格，可以更簡單 */ -->
-		.clean-table 
-		{
-			all: revert;
-			width: 100%;
-			border-collapse: collapse;
-		}
-	</style>
+  <meta charset="UTF-8" />
+  <title>🍁MapleStory Astar公會專屬網站🍁</title>
+  
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <!-- Bootstrap JS (Modal 需要) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <style>
+    body 
+    {
+      overflow-y: scroll;
+      margin: 0;
+      padding: 0;
+    }
+  
+    .status-badge { font-size: 0.85rem; }
+    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
+    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    #sourceBadge { display: none !important; }
+    
+    <!-- /* 分頁外框 + 顏色 */ -->
+    .nav-tabs-custom .nav-link
+    {
+      border:2px solid transparent;
+      font-weight:600;
+      margin-right:.5rem;
+    }
+    .nav-tabs-custom .nav-link:hover
+    {
+      opacity:.9;
+    }
+  
+    <!-- /* 普通拉圖斯（藍） */ -->
+    .nav-tabs-custom .tab-latus{
+    color:#0d6efd;
+    border-color:#0d6efd;
+    }
+    .nav-tabs-custom .tab-latus.active{
+    color:#fff;
+    background:#0d6efd;
+    }
+    
+    <!-- /* 困藍拉圖斯（紫） */ -->
+    .nav-tabs-custom .tab-latushard{
+    color:#6f42c1;
+    border-color:#6f42c1;
+    }
+    .nav-tabs-custom .tab-latushard.active{
+    color:#fff;
+    background:#6f42c1;
+    } 
+  
+    <!-- /* 殘暴炎魔（橘） */ -->
+    .nav-tabs-custom .tab-zakum{
+    color:#fd7e14;
+    border-color:#fd7e14;
+    }
+    .nav-tabs-custom .tab-zakum.active{
+    color:#fff;
+    background:#fd7e14;
+    }
+  
+    <!-- /* 訓練營&外援（綠） */ -->
+    .nav-tabs-custom .tab-misc{
+    color:#198754;
+    border-color:#198754;
+    }
+    .nav-tabs-custom .tab-misc.active{
+    color:#fff;
+    background:#198754;
+    }
+    /* 叔叔一圖流（橘） */
+    .nav-tabs-custom .tab-onep{
+      color:#fd7e14;
+      border-color:#fd7e14;
+    }
+    .nav-tabs-custom .tab-onep.active{
+      color:#fff;
+      background:#fd7e14;
+    }
+        
+    .title{font-weight:bold; font-size:1.0rem;}
+    
+    <!-- /* 針對標籤內的內容進行重製 */ -->
+    .reset-content 
+    {
+      <!-- /* all: revert; */ -->   
+      display: table-cell;  
+      line-height: 1.5; 
+      font-size: 1rem;    
+      padding: 0.5;           
+      border: none;         
+    }
+  
+    <!-- /* 如果是針對整個表格，可以更簡單 */ -->
+    .clean-table 
+    {
+      all: revert;
+      width: 100%;
+      border-collapse: collapse;
+    }
+  </style>
 </head>
 
 <body class="bg-body">
-	<nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
-		<div class="container-fluid">
-		<span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1423</span>
-		<div class="ms-auto d-flex align-items-center gap-2">
-			<span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
-			<!-- 小夥伴清單 -->
-			<button id="backToList" class="btn btn-outline-light btn-sm title">👨‍👩‍👧‍👦 公會小夥伴</button>
-			<!-- 遊戲攻略 -->
-			<button id="Guide" class="btn btn-outline-light btn-sm title">🚀 遊戲攻略</button>
-			<!-- 楓之谷圖鑑  -->
-			<a href="https://www.artalemaplestory.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="楓之谷圖鑑">🍁 楓之谷圖鑑</a>
-			<!-- 第三方交易平台 -->
-			<a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="第三方交易平台">🏪 第三方交易平台</a>
-			<!-- 怪物掉落物查詢工具按鈕（怪物圖案） -->
-			<a href="https://a2983456456.github.io/artale-drop/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="怪物掉落物查詢工具">👾 怪物掉落物查詢工具</a>
-			<!-- 夜間模式 -->
-			<button id="toggleTheme" class="btn btn-outline-light btn-sm title"">🌙 夜間模式</button>
-		</div>
-		</div>
-	</nav>
+  <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
+    <div class="container-fluid">
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0846</span>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
+      <!-- 小夥伴清單 -->
+      <button id="backToList" class="btn btn-outline-light btn-sm title">👨‍👩‍👧‍👦 公會小夥伴</button>
+      <!-- 遊戲攻略 -->
+      <button id="Guide" class="btn btn-outline-light btn-sm title">🚀 遊戲攻略</button>
+      <!-- 楓之谷圖鑑  -->
+      <a href="https://www.artalemaplestory.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="楓之谷圖鑑">🍁 楓之谷圖鑑</a>
+      <!-- 第三方交易平台 -->
+      <a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="第三方交易平台">🏪 第三方交易平台</a>
+      <!-- 怪物掉落物查詢工具按鈕（怪物圖案） -->
+      <a href="https://a2983456456.github.io/artale-drop/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="怪物掉落物查詢工具">👾 怪物掉落物查詢工具</a>
+      <!-- 夜間模式 -->
+      <button id="toggleTheme" class="btn btn-outline-light btn-sm title"">🌙 夜間模式</button>
+    </div>
+    </div>
+  </nav>
 
-	<!-- 公會小夥伴 -->
-	<div id="homePage" class="container py-4">
-		<div class="d-flex align-items-center justify-content-between mb-2">
-			<h3 class="mb-0"><b>👩‍👩‍👧‍👦 公會小夥伴</b></h3>
-		</div>
-		
-		<!-- 提示卡片 -->
-		<div class="card shadow-sm mb-4">
-		<div class="card-body">
-			<div class="d-flex justify-content-between align-items-center mb-0">
-				<h4 class="card-title mb-2">➡️ 資料來源</h4>
-			</div>
-			<p class="mb-0 text-muted">請各位檢視一下自己的資料是否須更新，若要更新請點擊【修改】按鈕進行更新。若遇無法更新情形請進以下網址進入Excel表找到自己的欄位更新資料 　～感恩的心～</p>
-			<small class="text-muted">
-			<a href="https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer">
-				https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0
-			</a>
-			</small>
-			<div id="msg" class="text-danger mt-2"></div>
-		</div>
-		</div>
+  <!-- 公會小夥伴 -->
+  <div id="homePage" class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h3 class="mb-0"><b>👩‍👩‍👧‍👦 公會小夥伴</b></h3>
+    </div>
+    
+    <!-- 提示卡片 -->
+    <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-0">
+        <h4 class="card-title mb-2">➡️ 資料來源</h4>
+      </div>
+      <p class="mb-0 text-muted">請各位檢視一下自己的資料是否須更新，若要更新請點擊【修改】按鈕進行更新。若遇無法更新情形請進以下網址進入Excel表找到自己的欄位更新資料 　～感恩的心～</p>
+      <small class="text-muted">
+      <a href="https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer">
+        https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0
+      </a>
+      </small>
+      <div id="msg" class="text-danger mt-2"></div>
+    </div>
+    </div>
 
-		<div class="card shadow-sm">
-			<div class="card-body">
-				<div class="d-flex justify-content-between align-items-center mb-2">
-					<h4 class="card-title mb-2">🏋️ 角色清單</h4>
-					<div class="d-flex align-items-center gap-2">
-						<button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
-						<button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
-						<button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
-					</div>
-				</div>
-	
-			<!-- ★ 新增：分頁切換（僅切換顯示營區） -->
-			<ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
-				<li class="nav-item" role="presentation">
-					<button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯(普通)</button>
-				</li>
-				<!-- 放在 id="tabLatus" 之後、id="tabZakumList" 之前 -->
-				<li class="nav-item" role="presentation">
-					<button id="tabLatusHard" class="nav-link tab-latushard" type="button" role="tab">拉圖斯(困難)</button>
-				</li>
-				<li class="nav-item" role="presentation">
-					<button id="tabZakumList" class="nav-link tab-zakum" type="button" role="tab">殘暴炎魔</button>
-				</li>
-				<li class="nav-item" role="presentation">
-					<button id="tabTrainExt" class="nav-link tab-misc" type="button" role="tab">訓練營&外援專區</button>
-				</li>
-			</ul>
-	
-			<!-- 腳色表格 -->
-			<div class="table-responsive">
-			<table class="table table-striped table-hover align-middle reset-content">
-				<thead class="table-secondary">
-				<tr>
-					<th style="width: 20%;">角色名稱</th>
-					<th style="width: 10%;">角色代碼</th>
-					<th style="width: 20%;">角色職業</th>
-					<th style="width: 10%;">角色等級</th>
-					<th style="width: 10%;">角色乾表</th>
-					<th style="width: 20%;">所在營區</th>
-					<th style="width: 10%;">修改資料</th>
-				</tr>
-				</thead>
-				<tbody id="tableBody">
-				<tr>
-					<td colspan="7" class="text-center text-muted">尚未讀取資料</td>
-				</tr>
-				</tbody>
-			</table>
-			</div>
-		</div>
-		</div>
-	</div>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h4 class="card-title mb-2">🏋️ 角色清單</h4>
+          <div class="d-flex align-items-center gap-2">
+            <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+            <button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
+            <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
+          </div>
+        </div>
+  
+      <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
+      <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯(普通)</button>
+        </li>
+        <!-- 放在 id="tabLatus" 之後、id="tabZakumList" 之前 -->
+        <li class="nav-item" role="presentation">
+          <button id="tabLatusHard" class="nav-link tab-latushard" type="button" role="tab">拉圖斯(困難)</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button id="tabZakumList" class="nav-link tab-zakum" type="button" role="tab">殘暴炎魔</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button id="tabTrainExt" class="nav-link tab-misc" type="button" role="tab">訓練營&外援專區</button>
+        </li>
+      </ul>
+  
+      <!-- 腳色表格 -->
+      <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle reset-content">
+        <thead class="table-secondary">
+        <tr>
+          <th style="width: 20%;">角色名稱</th>
+          <th style="width: 10%;">角色代碼</th>
+          <th style="width: 20%;">角色職業</th>
+          <th style="width: 10%;">角色等級</th>
+          <th style="width: 10%;">角色乾表</th>
+          <th style="width: 20%;">所在營區</th>
+          <th style="width: 10%;">修改資料</th>
+        </tr>
+        </thead>
+        <tbody id="tableBody">
+        <tr>
+          <td colspan="7" class="text-center text-muted">尚未讀取資料</td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    </div>
+  </div>
 
-	<!-- 遊戲攻略 -->
-	<div id="GuidePage" class="container py-4 d-none">
-		<div class="d-flex align-items-center justify-content-between mb-3">
-			<h3 class="mb-0"><b>🚀 遊戲攻略（Game Guide）<b></h3>
-			<div class="d-flex align-items-center gap-2">
-				<button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
-			</div>
-		</div>
+  <!-- 遊戲攻略 -->
+  <div id="GuidePage" class="container py-4 d-none">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="mb-0"><b>🚀 遊戲攻略（Game Guide）<b></h3>
+      <div class="d-flex align-items-center gap-2">
+        <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
+      </div>
+    </div>
 
-		<div class="card shadow-sm">
-			<div class="card-body">
-			<!-- 導覽按鈕列（用 button.nav-link 取代 label） -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+      <!-- 導覽按鈕列（用 button.nav-link 取代 label） -->
 <ul class="nav nav-pills nav-tabs-custom mb-3" id="guideTabs" role="tablist">
   <li class="nav-item" role="presentation">
     <!-- 叔叔一圖流：沿用橘色風格 -->
     <button id="tabOneP" class="nav-link tab-onep active" type="button" role="tab" data-target="#pane-onep">
-	  叔叔一圖流
-	</button>
+    叔叔一圖流
+  </button>
 
   </li>
 
@@ -280,8 +273,8 @@
   <li class="nav-item" role="presentation">
     <button id="tabZakumGuide" class="nav-link tab-latushard" type="button" role="tab"
         data-target="#pane-zakum">
-	  🗿殘暴炎魔
-	</button>
+    🗿殘暴炎魔
+  </button>
 
   </li>
 </ul>
@@ -341,13 +334,43 @@
     若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
   </small>
 </div>
-			</div>
-		
-		</div>
-		
-	</div>
+      </div>
+    
+    </div>
+    
+  </div>
 
 <script>
+// 放在全域（或 $(function(){ ... }) 裡面最上面一點）
+// ====== 修正 1：建立單一 Modal 實例 ======
+const jobModalEl = document.getElementById('jobStatsModal');
+const jobModal   = new bootstrap.Modal(jobModalEl, {
+  backdrop: true,
+  keyboard: true
+});
+
+// 開啟按鈕：只呼叫 show()，不要每次 new
+$(document).on('click', '#btnJobStats', function () {
+  if (!Array.isArray(lastData) || lastData.length === 0) {
+    alert('尚未讀取到資料，請先等待列表載入或點擊重新整理後再試。');
+    return;
+  }
+  jobModal.show();
+  setTimeout(renderJobChart, 150);
+});
+
+// ====== 修正 2：關閉時不手動清理 backdrop/body（交由 Bootstrap） ======
+$('#jobStatsModal').on('hidden.bs.modal', function () {
+  // 清空右側清單（保留你原本的需求）
+  const box = document.getElementById('jobHitList');
+  if (box) box.innerHTML = '（點一下左邊的統計圖切片，這裡會列出角色名稱）';
+
+  // ⚠️移除以下兩行造成灰色透明底殘留的語句（改為交由 Bootstrap 自己收拾）
+  // $('.modal-backdrop').remove();
+  // $('body').removeClass('modal-open').css('padding-right', '');
+});
+
+
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
 //const ZAKUM_DOC_EMBED = "https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/pub?embedded=true";
 // 若未發佈、但分享權限開放，也可暫用 preview（可能會被 X-Frame-Options 擋）
@@ -363,10 +386,10 @@ const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm
 ========================= */
 $('#toggleTheme').on('click', function () 
 {
-	const html = document.documentElement;
-	const isDark = html.getAttribute('data-bs-theme') === 'dark';
-	html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
-	$(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-bs-theme') === 'dark';
+  html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+  $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
 });
 
 
@@ -374,54 +397,38 @@ $('#toggleTheme').on('click', function ()
 // 將你原本的 backToList 事件「替換」成下面這段（或直接覆寫）
 $(document).off('click', '#backToList').on('click', '#backToList', function () 
 {
-	$('#GuidePage').addClass('d-none');   	// 隱藏清單
-	$('#homePage').removeClass('d-none');
+  $('#GuidePage').addClass('d-none');     // 隱藏清單
+  $('#homePage').removeClass('d-none');
 });
 
 $('#Guide').on('click', function () 
 {
-	$('#homePage').addClass('d-none');   		// 隱藏清單
-	$('#GuidePage').removeClass('d-none'); 	// 顯示攻略
+  $('#homePage').addClass('d-none');       // 隱藏清單
+  $('#GuidePage').removeClass('d-none');   // 顯示攻略
 });
 
 /* =========================
    殘暴炎魔攻略：單頁切換
 ========================= */
-//$('#Zakum').on('click', function () 
-//{
-//  $('#homePage').addClass('d-none');   // 隱藏清單
-//  $('#zakumPage').removeClass('d-none'); // 顯示攻略
-//});
-//$(document).on('click', '#backToList', function () 
-//{
-//  $('#zakumPage').addClass('d-none');
-//  $('#homePage').removeClass('d-none');
-//});
-//// 只在第一次或每次切換時設定/重設 src（避免重複載入也可以加判斷）
-//const $frame = $('#zakumDocFrame');
-//if ($frame.attr('src') !== ZAKUM_DOC_EMBED) 
-//{
-//  $frame.attr('src', ZAKUM_DOC_EMBED);
-//}
-  
+//（保留你的註解與未使用的程式碼）
 
 /* =========================
    公用：解析 URL 參數
 ========================= */
 function getQueryParams() 
 {
-	const params = new URLSearchParams(window.location.search);
-	return Object.fromEntries(params.entries());
+  const params = new URLSearchParams(window.location.search);
+  return Object.fromEntries(params.entries());
 }
 function parseSheetFromUrl(url) 
 {
-	if (!url) return null;
-	const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-	if (!idMatch) return null;
-	const sheetId = idMatch[1];
-	const urlObj = new URL(url);
-	const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
-	return { sheetId, gid };
+  if (!url) return null;
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!idMatch) return null;
+  const sheetId = idMatch[1];
+  const urlObj = new URL(url);
+  const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
+  return { sheetId, gid };
 }
 
 /* =========================
@@ -436,55 +443,55 @@ let lastData_OneP   = [];        // 讀取後保存，切分頁時重繪使用
 ========================= */
 function loadFromSheet(sheetId, gid = '0') 
 {
-	$('#msg').text('');
-	$('#tableBody').html(`
-		<tr>
-		<td colspan="7" class="text-center text-muted">讀取中...</td>
-		</tr>
-	`);
-	
-	const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-	
-	Papa.parse(csvUrl, {
-		download: true,
-		skipEmptyLines: true,
-		complete: function (result) {
-		try {
-			if (!result.data || result.data.length < 2) {
-			$('#msg').text('沒有資料可顯示');
-			lastData = [];
-			renderTable(lastData);
-			return;
-			}
-	
-			const rows = result.data.slice(1);
-			lastData = rows
-			.map((r, i) => ({
-				name:  r[1], // B
-				code:  r[2], // C（主鍵）
-				job:   r[3], // D
-				level: r[4], // E
-				attack:r[6], // F 乾表
-				camp:  r[9], // G 營區
-				rowIndex: i + 2
-			}))
-			.filter(r => r && r.name);
-	
-			renderTable(lastData);
-		} catch (e) {
-			console.error(e);
-			$('#msg').text('解析資料時發生錯誤');
-			lastData = [];
-			renderTable(lastData);
-		}
-		},
-		error: function (err) {
-		console.error(err);
-		$('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
-		lastData = [];
-		renderTable(lastData);
-		}
-	});
+  $('#msg').text('');
+  $('#tableBody').html(`
+    <tr>
+    <td colspan="7" class="text-center text-muted">讀取中...</td>
+    </tr>
+  `);
+  
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  
+  Papa.parse(csvUrl, {
+    download: true,
+    skipEmptyLines: true,
+    complete: function (result) {
+    try {
+      if (!result.data || result.data.length < 2) {
+      $('#msg').text('沒有資料可顯示');
+      lastData = [];
+      renderTable(lastData);
+      return;
+      }
+  
+      const rows = result.data.slice(1);
+      lastData = rows
+      .map((r, i) => ({
+        name:  r[1], // B
+        code:  r[2], // C（主鍵）
+        job:   r[3], // D
+        level: r[4], // E
+        attack:r[6], // F 乾表
+        camp:  r[9], // G 營區
+        rowIndex: i + 2
+      }))
+      .filter(r => r && r.name);
+  
+      renderTable(lastData);
+    } catch (e) {
+      console.error(e);
+      $('#msg').text('解析資料時發生錯誤');
+      lastData = [];
+      renderTable(lastData);
+    }
+    },
+    error: function (err) {
+    console.error(err);
+    $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
+    lastData = [];
+    renderTable(lastData);
+    }
+  });
 }
 
 /* =========================
@@ -492,138 +499,135 @@ function loadFromSheet(sheetId, gid = '0')
 ========================= */
 function renderTable(data) 
 {
-	// 依目前分頁過濾營區
-	const zhNums = '一二三四五六七八九十';
-	const reLatus = new RegExp(`^普拉[${zhNums}]營$`);
-	const reLatushard = new RegExp(`^困拉[${zhNums}]營$`);
-	const reZakum = new RegExp(`^炎魔[${zhNums}]營$`);
-	
-	const groupNotes = 
-	{
-		'普拉一營': '🔰歐皇指定席🎗️',
-		'普拉二營': '🔰瑞氣千條團💎',
-		'普拉三營': '🔰馬到成功團🐎',
-		'普拉四營': '🔰傳奇空殼團🥥',
-		'普拉五營': '🔰祖宗保佑我⛩️',
-		'普拉六營': '🔰拉圖娛樂城🎰',
-		'普拉七營': '🔰非洲畢業班🗿',
-	};
-	
-	const filtered = (data || []).filter(r => 
-	{
-		const camp = (r.camp || '').trim();
-		if (currentTab === 'latus')   return reLatus.test(camp);
-		if (currentTab === 'latushard')  return reLatushard.test(camp);
-		if (currentTab === 'zakum')   return reZakum.test(camp);
-		if (currentTab === 'trainext')return (camp === '訓練營' || camp === '外援大大');
-		return true;
-	});
-	
-	// ...（你原本 renderTable 後續的分組/排序/輸出保持不變）
-	
-	
-	if (!filtered.length) 
-	{
-		$('#tableBody').html(`
-		<tr>
-			<td colspan="7" class="text-center text-muted">此分頁下沒有符合的資料</td>
-		</tr>
-		`);
-		return;
-	}
-	
-	// 依營區分組
-	const groups = {};
-	for (const r of filtered) 
-	{
-		const key = (r.camp || '未填寫').toString().trim();
-		if (!groups[key]) groups[key] = [];
-		groups[key].push(r);
-	}
-	
-	// 依「一二三…十」排序
-	const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
-	function chineseNumToInt(txt) 
-	{
-		if (!txt) return NaN;
-		const m = txt.match(/[零〇一二兩三四五六七八九十]/g);
-		if (!m) return NaN;
-		const s = m.join('');
-		if (s === '十') return 10;
-		const tenIdx = s.indexOf('十');
-		if (tenIdx === -1) return mapCN[s] ?? NaN;
-		const left = tenIdx === 0 ? 1 : (mapCN[s[0]] ?? 0);
-		const right = tenIdx === s.length - 1 ? 0 : (mapCN[s[tenIdx+1]] ?? 0);
-		return left * 10 + right;
-	}
-	
-	const orderedKeys = Object.keys(groups).sort((a,b) => {
-		const na = chineseNumToInt(a);
-		const nb = chineseNumToInt(b);
-		if (!isNaN(na) && !isNaN(nb)) return na - nb;
-		return a.localeCompare(b, 'zh-Hant');
-	});
-	
-	let html = '';
-	for (const k of orderedKeys) {
-		const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
-		html += `
-		<tr class="group-row">
-			<td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
-		</tr>`;
-		html += groups[k].map(r => `
-		<tr>
-			<td>${r.name ?? ''}</td>
-			<td>${r.code ?? ''}</td>
-			<td>${r.job ?? ''}</td>
-			<td>${r.level ?? ''}</td>
-			<td>${r.attack ?? ''}</td>
-			<td>${r.camp ?? ''}</td>
-			<td>
-			<button class="btn btn-outline-secondary btn-edit"
-				data-row="${r.rowIndex || ''}"
-				data-name="${r.name ?? ''}"
-				data-code="${r.code ?? ''}"
-				data-job="${r.job ?? ''}"
-				data-level="${r.level ?? ''}"
-				data-attack="${r.attack ?? ''}"
-				data-camp="${r.camp ?? ''}">修改</button>
-			</td>
-		</tr>`).join('');
-	}
-	
-	$('#tableBody').html(html);
-	
-	// 綁定「修改」
-	$('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
-		const $btn = $(this);
-		openEditor({
-		name:  $btn.data('name'),
-		code:  $btn.data('code'),
-		job:   $btn.data('job'),
-		level: $btn.data('level'),
-		attack:$btn.data('attack'),
-		camp:  $btn.data('camp'),
-		rowIndex: Number($btn.data('row') || 0)
-		}, (updated) => {
-		// 更新前端當列
-		const tr = $btn.closest('tr')[0];
-		const tds = tr.querySelectorAll('td');
-		tds[0].textContent = updated.name;
-		tds[1].textContent = updated.code;
-		tds[2].textContent = updated.job;
-		tds[3].textContent = updated.level;
-		tds[4].textContent = updated.attack;
-		tds[5].textContent = updated.camp;
-	
-		$btn.data('name',  updated.name);
-		$btn.data('code',  updated.code);
-		$btn.data('job',   updated.job);
-		$btn.data('level', updated.level);
-		$btn.data('attack',updated.attack);
-		$btn.data('camp',  updated.camp);
-		});
-	});
+  // 依目前分頁過濾營區
+  const zhNums = '一二三四五六七八九十';
+  const reLatus = new RegExp(`^普拉[${zhNums}]營$`);
+  const reLatushard = new RegExp(`^困拉[${zhNums}]營$`);
+  const reZakum = new RegExp(`^炎魔[${zhNums}]營$`);
+  
+  const groupNotes = 
+  {
+    '普拉一營': '🔰歐皇指定席🎗️',
+    '普拉二營': '🔰瑞氣千條團💎',
+    '普拉三營': '🔰馬到成功團🐎',
+    '普拉四營': '🔰傳奇空殼團🥥',
+    '普拉五營': '🔰祖宗保佑我⛩️',
+    '普拉六營': '🔰拉圖娛樂城🎰',
+    '普拉七營': '🔰非洲畢業班🗿',
+  };
+  
+  const filtered = (data || []).filter(r => 
+  {
+    const camp = (r.camp || '').trim();
+    if (currentTab === 'latus')   return reLatus.test(camp);
+    if (currentTab === 'latushard')  return reLatushard.test(camp);
+    if (currentTab === 'zakum')   return reZakum.test(camp);
+    if (currentTab === 'trainext')return (camp === '訓練營' || camp === '外援大大');
+    return true;
+  });
+  
+  if (!filtered.length) 
+  {
+    $('#tableBody').html(`
+    <tr>
+      <td colspan="7" class="text-center text-muted">此分頁下沒有符合的資料</td>
+    </tr>
+    `);
+    return;
+  }
+  
+  // 依營區分組
+  const groups = {};
+  for (const r of filtered) 
+  {
+    const key = (r.camp || '未填寫').toString().trim();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
+  
+  // 依「一二三…十」排序
+  const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
+  function chineseNumToInt(txt) 
+  {
+    if (!txt) return NaN;
+    const m = txt.match(/[零〇一二兩三四五六七八九十]/g);
+    if (!m) return NaN;
+    const s = m.join('');
+    if (s === '十') return 10;
+    const tenIdx = s.indexOf('十');
+    if (tenIdx === -1) return mapCN[s] ?? NaN;
+    const left = tenIdx === 0 ? 1 : (mapCN[s[0]] ?? 0);
+    const right = tenIdx === s.length - 1 ? 0 : (mapCN[s[tenIdx+1]] ?? 0);
+    return left * 10 + right;
+  }
+  
+  const orderedKeys = Object.keys(groups).sort((a,b) => {
+    const na = chineseNumToInt(a);
+    const nb = chineseNumToInt(b);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b, 'zh-Hant');
+  });
+  
+  let html = '';
+  for (const k of orderedKeys) {
+    const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
+    html += `
+    <tr class="group-row">
+      <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
+    </tr>`;
+    html += groups[k].map(r => `
+    <tr>
+      <td>${r.name ?? ''}</td>
+      <td>${r.code ?? ''}</td>
+      <td>${r.job ?? ''}</td>
+      <td>${r.level ?? ''}</td>
+      <td>${r.attack ?? ''}</td>
+      <td>${r.camp ?? ''}</td>
+      <td>
+      <button class="btn btn-outline-secondary btn-edit"
+        data-row="${r.rowIndex || ''}"
+        data-name="${r.name ?? ''}"
+        data-code="${r.code ?? ''}"
+        data-job="${r.job ?? ''}"
+        data-level="${r.level ?? ''}"
+        data-attack="${r.attack ?? ''}"
+        data-camp="${r.camp ?? ''}">修改</button>
+      </td>
+    </tr>`).join('');
+  }
+  
+  $('#tableBody').html(html);
+  
+  // 綁定「修改」
+  $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
+    const $btn = $(this);
+    openEditor({
+    name:  $btn.data('name'),
+    code:  $btn.data('code'),
+    job:   $btn.data('job'),
+    level: $btn.data('level'),
+    attack:$btn.data('attack'),
+    camp:  $btn.data('camp'),
+    rowIndex: Number($btn.data('row') || 0)
+    }, (updated) => {
+    // 更新前端當列
+    const tr = $btn.closest('tr')[0];
+    const tds = tr.querySelectorAll('td');
+    tds[0].textContent = updated.name;
+    tds[1].textContent = updated.code;
+    tds[2].textContent = updated.job;
+    tds[3].textContent = updated.level;
+    tds[4].textContent = updated.attack;
+    tds[5].textContent = updated.camp;
+  
+    $btn.data('name',  updated.name);
+    $btn.data('code',  updated.code);
+    $btn.data('job',   updated.job);
+    $btn.data('level', updated.level);
+    $btn.data('attack',updated.attack);
+    $btn.data('camp',  updated.camp);
+    });
+  });
 }
 
 /* =========================
@@ -631,161 +635,161 @@ function renderTable(data)
 ========================= */
 function setTab(tab) 
 {
-	currentTab = tab; // 'latus' | 'zakum' | 'trainext'
-	// 切換樣式
-	$('#tabLatus').toggleClass('active', tab === 'latus');
-	$('#tabLatusHard').toggleClass('active', tab === 'latushard');
-	$('#tabZakumList').toggleClass('active', tab === 'zakum');
-	$('#tabTrainExt').toggleClass('active', tab === 'trainext');
-	// 依目前分頁重繪
-	renderTable(lastData);
+  currentTab = tab; // 'latus' | 'zakum' | 'trainext'
+  // 切換樣式
+  $('#tabLatus').toggleClass('active', tab === 'latus');
+  $('#tabLatusHard').toggleClass('active', tab === 'latushard');
+  $('#tabZakumList').toggleClass('active', tab === 'zakum');
+  $('#tabTrainExt').toggleClass('active', tab === 'trainext');
+  // 依目前分頁重繪
+  renderTable(lastData);
 }
 
-	$('#tabLatus').on('click',     () => setTab('latus'));
-	$('#tabLatusHard').on('click', () => setTab('latushard'));
-	$('#tabZakumList').on('click', () => setTab('zakum'));
-	$('#tabTrainExt').on('click',  () => setTab('trainext'));
+  $('#tabLatus').on('click',     () => setTab('latus'));
+  $('#tabLatusHard').on('click', () => setTab('latushard'));
+  $('#tabZakumList').on('click', () => setTab('zakum'));
+  $('#tabTrainExt').on('click',  () => setTab('trainext'));
 
 
 function loadFromSheet_OneP(sheetId, gid = '0', searchWord = "") 
 {
-	$('#msg').text('');
-	$('#tableBody').html(`
-		<tr>
-		<td colspan="4" class="text-center text-muted">讀取中...</td>
-		</tr>
-	`);
-	
-	const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-	
-	Papa.parse(csvUrl, {
-		download: true,
-		skipEmptyLines: true,
-		complete: function (result) {
-		try {
-			if (!result.data || result.data.length < 2) 
-			{
-				$('#msg').text('沒有資料可顯示');
-				lastData_OneP = [];
-				renderTable_OneP(lastData_OneP);
-				return;
-			}
-	
-			const rows = result.data.slice(1);
-			lastData_OneP = rows
-			.map((r, i) => ({
-				category:  	r[0], // A
-				name:  		r[1], // B
-				keyword:	r[2], // C
-				link: 		r[3], // D
-				rowIndex: 	i + 2
-			}))
-			.filter(r => r && r.name);
-	
-			renderTable_OneP(lastData_OneP);
-		} 
-		catch (e) 
-		{
-			console.error(e);
-			$('#msg').text('解析資料時發生錯誤');
-			lastData_OneP = [];
-			renderTable_OneP(lastData_OneP);
-		}
-		},
-		error: function (err) 
-		{
-			console.error(err);
-			$('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
-			lastData_OneP = [];
-			renderTable_OneP(lastData_OneP);
-		}
-	});
+  $('#msg').text('');
+  $('#tableBody').html(`
+    <tr>
+    <td colspan="4" class="text-center text-muted">讀取中...</td>
+    </tr>
+  `);
+  
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  
+  Papa.parse(csvUrl, {
+    download: true,
+    skipEmptyLines: true,
+    complete: function (result) {
+    try {
+      if (!result.data || result.data.length < 2) 
+      {
+        $('#msg').text('沒有資料可顯示');
+        lastData_OneP = [];
+        renderTable_OneP(lastData_OneP);
+        return;
+      }
+  
+      const rows = result.data.slice(1);
+      lastData_OneP = rows
+      .map((r, i) => ({
+        category:   r[0], // A
+        name:     r[1], // B
+        keyword:  r[2], // C
+        link:     r[3], // D
+        rowIndex:   i + 2
+      }))
+      .filter(r => r && r.name);
+  
+      renderTable_OneP(lastData_OneP);
+    } 
+    catch (e) 
+    {
+      console.error(e);
+      $('#msg').text('解析資料時發生錯誤');
+      lastData_OneP = [];
+      renderTable_OneP(lastData_OneP);
+    }
+    },
+    error: function (err) 
+    {
+      console.error(err);
+      $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
+      lastData_OneP = [];
+      renderTable_OneP(lastData_OneP);
+    }
+  });
 }
 
 
 
 function renderTable_OneP(data, searchWord = "") 
 {
-	const groupNotes = 
-	{
-		'遊戲知識': '',
-		'BOO攻略': '',
-	};
-	
-	const filtered = data;  
-	// ...（你原本 renderTable 後續的分組/排序/輸出保持不變）
-	
-	if (!filtered.length) 
-	{
-		$('#tableBody_OneP').html(`
-		<tr>
-			<td colspan="4" class="text-center text-muted">此分頁下沒有符合的資料</td>
-		</tr>
-		`);
-		return;
-	}
-	
-	// 分類分組
-	const groups = {};
-	for (const r of filtered) 
-	{
-		const key = (r.category || '未填寫').toString().trim();
-		if (!groups[key]) groups[key] = [];
-		groups[key].push(r);
-	}
-	
-	const orderedKeys = Object.keys(groups);
-	
-	let html = '';
-	for (const k of orderedKeys) 
-	{
-		const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
-		if (searchWord == "")
-		{
-			html += `
-			<tr class="group-row">
-				<td colspan="4">一圖流分類：${k}${note}（${groups[k].length}）</td>
-			</tr>`;
-			
-			html += groups[k].map(r => `
-			<tr>
-				<td>${r.category ?? ''}</td>
-				<td>${r.name ?? ''}</td>
-				<td>${r.keyword ?? ''}</td>
-				<td>
-				${r.link ? `
-				<a href="https://drive.google.com/file/d/${r.link}/" target="_blank">
-				<img src="https://lh3.googleusercontent.com/d/${r.link}=h800?authuser=0" alt=${r.name} title=${r.name} height="200px;">
-				</a>
-				` : '無圖片'}
-				</td>
-			</tr>`).join('');
-		}
-		else
-		{
-			for (const p of groups[k]) 
-			{
-				if (p.category.indexOf(searchWord) != -1 || p.name.indexOf(searchWord) != -1 || p.keyword.indexOf(searchWord) != -1)
-				{
-					html += `
-					<tr>
-						<td>${p.category ?? ''}</td>
-						<td>${p.name ?? ''}</td>
-						<td>${p.keyword ?? ''}</td>
-						<td>
-						${p.link ? `
-						<a href="https://drive.google.com/file/d/${p.link}/" target="_blank">
-						<img src="https://lh3.googleusercontent.com/d/${p.link}=h800?authuser=0" alt=${p.name} title=${p.name} height="200px;">
-						</a>
-						` : '無圖片'}
-						</td>
-					</tr>`;	
-				}
-			}
-		}
-	}
-	
-	$('#tableBody_OneP').html(html);
+  const groupNotes = 
+  {
+    '遊戲知識': '',
+    'BOO攻略': '',
+  };
+  
+  const filtered = data;  
+  // ...（你原本 renderTable 後續的分組/排序/輸出保持不變）
+  
+  if (!filtered.length) 
+  {
+    $('#tableBody_OneP').html(`
+    <tr>
+      <td colspan="4" class="text-center text-muted">此分頁下沒有符合的資料</td>
+    </tr>
+    `);
+    return;
+  }
+  
+  // 分類分組
+  const groups = {};
+  for (const r of filtered) 
+  {
+    const key = (r.category || '未填寫').toString().trim();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
+  
+  const orderedKeys = Object.keys(groups);
+  
+  let html = '';
+  for (const k of orderedKeys) 
+  {
+    const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
+    if (searchWord == "")
+    {
+      html += `
+      <tr class="group-row">
+        <td colspan="4">一圖流分類：${k}${note}（${groups[k].length}）</td>
+      </tr>`;
+      
+      html += groups[k].map(r => `
+      <tr>
+        <td>${r.category ?? ''}</td>
+        <td>${r.name ?? ''}</td>
+        <td>${r.keyword ?? ''}</td>
+        <td>
+        ${r.link ? `
+        <a href="https://drive.google.com/file/d/${r.link}/" target="_blank">
+        <img src="https://lh3.googleusercontent.com/d/${r.link}=h800?authuser=0" alt=${r.name} title=${r.name} height="200px;">
+        </a>
+        ` : '無圖片'}
+        </td>
+      </tr>`).join('');
+    }
+    else
+    {
+      for (const p of groups[k]) 
+      {
+        if (p.category.indexOf(searchWord) != -1 || p.name.indexOf(searchWord) != -1 || p.keyword.indexOf(searchWord) != -1)
+        {
+          html += `
+          <tr>
+            <td>${p.category ?? ''}</td>
+            <td>${p.name ?? ''}</td>
+            <td>${p.keyword ?? ''}</td>
+            <td>
+            ${p.link ? `
+            <a href="https://drive.google.com/file/d/${p.link}/" target="_blank">
+            <img src="https://lh3.googleusercontent.com/d/${p.link}=h800?authuser=0" alt=${p.name} title=${p.name} height="200px;">
+            </a>
+            ` : '無圖片'}
+            </td>
+          </tr>`;  
+        }
+      }
+    }
+  }
+  
+  $('#tableBody_OneP').html(html);
 
 }
 
@@ -798,89 +802,89 @@ const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZ
 const OnePicture_URL = 'https://docs.google.com/spreadsheets/d/1ZFHkpsHKc0LWQDNPrP8Y5NS27aee0mOniK2uB8C2zD4/edit?gid=0#gid=0';
 function resolveSheetTarget(resolveURL) 
 {
-	const qp = getQueryParams();
-	if (qp.sheetUrl) {
-		const parsed = parseSheetFromUrl(qp.sheetUrl);
-		if (parsed) return parsed;
-	}
-	if (qp.sheetId) {
-		return { sheetId: qp.sheetId, gid: qp.gid || '0' };
-	}
-	const parsedDefault = parseSheetFromUrl(resolveURL);
-	return parsedDefault || { sheetId: '', gid: '0' };
+  const qp = getQueryParams();
+  if (qp.sheetUrl) {
+    const parsed = parseSheetFromUrl(qp.sheetUrl);
+    if (parsed) return parsed;
+  }
+  if (qp.sheetId) {
+    return { sheetId: qp.sheetId, gid: qp.gid || '0' };
+  }
+  const parsedDefault = parseSheetFromUrl(resolveURL);
+  return parsedDefault || { sheetId: '', gid: '0' };
 }
 function updateSourceBadge(sheetId, gid) 
 {
-	if (!sheetId) return;
-	const badge = $('#sourceBadge');
-	badge.text(`sheetId=${sheetId} | gid=${gid}`);
-	badge.removeClass('d-none');
+  if (!sheetId) return;
+  const badge = $('#sourceBadge');
+  badge.text(`sheetId=${sheetId} | gid=${gid}`);
+  badge.removeClass('d-none');
 }
 
 $(function () 
 {
-	// 載入小夥伴清單
-	const target = resolveSheetTarget(DEFAULT_SHEET_URL);
-	if (!target.sheetId) {
-		$('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
-		return;
-	}
-	updateSourceBadge(target.sheetId, target.gid);
-	loadFromSheet(target.sheetId, target.gid);
-	
-	// Event 小夥伴清單：重新整理
-	$('#reloadBtn').on('click', function () 
-	{
-		loadFromSheet(target.sheetId, target.gid);
-	});
-	
-	// Event 小夥伴清單：新增角色
-	$('#addBtn').on('click', function () 
-	{
-		openEditor({
-		name: '', code: '', job: '', level: '', attack: '', camp: '',
-		rowIndex: 0, __isNew: true
-		}, () => { alert('已新增'); });
-	});
-	
-	
-	// 載入叔叔一圖流
-	const target_OneP = resolveSheetTarget(OnePicture_URL);
-	if (!target_OneP.sheetId) {
-		$('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
-		return;
-	}
-	updateSourceBadge(target_OneP.sheetId, target_OneP.gid);
-	loadFromSheet_OneP(target_OneP.sheetId, target_OneP.gid);
-	
-	// Event 叔叔一圖流：重新整理
-	$('#reloadBtn_OneP').on('click', function () 
-	{
-		loadFromSheet_OneP(target_OneP.sheetId, target_OneP.gid);
-	});
-	
-	// Event 叔叔一圖流：搜尋
-	$('#btn_SearchOneP').on('click', function () 
-	{
-		const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
-		renderTable_OneP(lastData_OneP, m_SearchWord);
-	});
-	
-	$('input[name="txt_Search"]').on('keypress', function (e) 
-	{
-		if (e.which === 13) 
-		{ // 13 是 Enter 鍵的代碼
-			const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
-			renderTable_OneP(lastData_OneP, m_SearchWord);
-		}
-	});
-	
-	// Event 叔叔一圖流：重置
-	$('#btn_ResetOneP').on('click', function () 
-	{
-		const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
-		renderTable_OneP(lastData_OneP);
-	});
+  // 載入小夥伴清單
+  const target = resolveSheetTarget(DEFAULT_SHEET_URL);
+  if (!target.sheetId) {
+    $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
+    return;
+  }
+  updateSourceBadge(target.sheetId, target.gid);
+  loadFromSheet(target.sheetId, target.gid);
+  
+  // Event 小夥伴清單：重新整理
+  $('#reloadBtn').on('click', function () 
+  {
+    loadFromSheet(target.sheetId, target.gid);
+  });
+  
+  // Event 小夥伴清單：新增角色
+  $('#addBtn').on('click', function () 
+  {
+    openEditor({
+    name: '', code: '', job: '', level: '', attack: '', camp: '',
+    rowIndex: 0, __isNew: true
+    }, () => { alert('已新增'); });
+  });
+  
+  
+  // 載入叔叔一圖流
+  const target_OneP = resolveSheetTarget(OnePicture_URL);
+  if (!target_OneP.sheetId) {
+    $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
+    return;
+  }
+  updateSourceBadge(target_OneP.sheetId, target_OneP.gid);
+  loadFromSheet_OneP(target_OneP.sheetId, target_OneP.gid);
+  
+  // Event 叔叔一圖流：重新整理
+  $('#reloadBtn_OneP').on('click', function () 
+  {
+    loadFromSheet_OneP(target_OneP.sheetId, target_OneP.gid);
+  });
+  
+  // Event 叔叔一圖流：搜尋
+  $('#btn_SearchOneP').on('click', function () 
+  {
+    const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
+    renderTable_OneP(lastData_OneP, m_SearchWord);
+  });
+  
+  $('input[name="txt_Search"]').on('keypress', function (e) 
+  {
+    if (e.which === 13) 
+    { // 13 是 Enter 鍵的代碼
+      const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
+      renderTable_OneP(lastData_OneP, m_SearchWord);
+    }
+  });
+  
+  // Event 叔叔一圖流：重置
+  $('#btn_ResetOneP').on('click', function () 
+  {
+    const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
+    renderTable_OneP(lastData_OneP);
+  });
   
 }
 );
@@ -890,153 +894,153 @@ $(function ()
 ========================= */
 function createEditor() 
 {
-	const overlay = document.createElement('div');
-	overlay.id = 'editOverlay';
-	Object.assign(overlay.style, {
-		position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
-		display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-	});
-	
-	const card = document.createElement('div');
-	Object.assign(card.style, {
-		background: '#fff', borderRadius: '12px', padding: '18px', width: 'min(520px, 92vw)',
-		boxShadow: '0 10px 30px rgba(0,0,0,.2)', color: '#222', fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont'
-	});
-	card.innerHTML = `
-		<h3 style="margin:0 0 12px;font-size:18px;">修改資料</h3>
-		<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-		<label style="display:flex;flex-direction:column;gap:6px;">
-			<span>角色名稱（B）</span>
-			<input id="edit_name" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-		</label>
-		<label style="display:flex;flex-direction:column;gap:6px;">
-			<span>角色代碼（C）</span>
-			<input id="edit_code" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-		</label>
-		<label style="display:flex;flex-direction:column;gap:6px;">
-			<span>角色職業（D）</span>
-			<input id="edit_job" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-		</label>
-		<label style="display:flex;flex-direction:column;gap:6px;">
-			<span>角色等級（E）</span>
-			<input id="edit_level" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-		</label>
-		<label style="display:flex;flex-direction:column;gap:6px;">
-			<span>角色乾表（F）</span>
-			<input id="edit_attack" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-		</label>
-		<label style="display:flex;flex-direction:column;gap:6px;">
-			<span>所在營區（G）</span>
-			<select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-			<option value="">（請選擇）</option>
-			<!-- 依你實際使用的營區字樣維持即可 -->
-			<option>普拉一營</option><option>普拉二營</option><option>普拉三營</option><option>普拉四營</option><option>普拉五營</option>
-			<option>普拉六營</option><option>普拉七營</option><option>普拉八營</option><option>普拉九營</option><option>普拉十營</option>
-			<option>困拉一營</option><option>困拉二營</option><option>困拉三營</option><option>困拉四營</option><option>困拉五營</option>
-			<option>困拉六營</option><option>困拉七營</option><option>困拉八營</option><option>困拉九營</option><option>困拉十營</option>
-			<option>炎魔一營</option><option>炎魔二營</option><option>炎魔三營</option><option>炎魔四營</option><option>炎魔五營</option>
-			<option>炎魔六營</option><option>炎魔七營</option><option>炎魔八營</option><option>炎魔九營</option><option>炎魔十營</option>
-			<option>訓練營</option><option>外援大大</option>
-			</select>
-		</label>
-		</div>
-		<div class="d-flex gap-2 justify-content-end mt-3">
-		<button id="btn_cancel" class="btn btn-light border">取消</button>
-		<button id="btn_save" class="btn btn-primary">儲存</button>
-		</div>
-	`;
-	overlay.appendChild(card);
-	document.body.appendChild(overlay);
-	return overlay;
+  const overlay = document.createElement('div');
+  overlay.id = 'editOverlay';
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+  });
+  
+  const card = document.createElement('div');
+  Object.assign(card.style, {
+    background: '#fff', borderRadius: '12px', padding: '18px', width: 'min(520px, 92vw)',
+    boxShadow: '0 10px 30px rgba(0,0,0,.2)', color: '#222', fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont'
+  });
+  card.innerHTML = `
+    <h3 style="margin:0 0 12px;font-size:18px;">修改資料</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色名稱（B）</span>
+      <input id="edit_name" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色代碼（C）</span>
+      <input id="edit_code" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色職業（D）</span>
+      <input id="edit_job" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色等級（E）</span>
+      <input id="edit_level" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色乾表（F）</span>
+      <input id="edit_attack" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>所在營區（G）</span>
+      <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
+      <option value="">（請選擇）</option>
+      <!-- 依你實際使用的營區字樣維持即可 -->
+      <option>普拉一營</option><option>普拉二營</option><option>普拉三營</option><option>普拉四營</option><option>普拉五營</option>
+      <option>普拉六營</option><option>普拉七營</option><option>普拉八營</option><option>普拉九營</option><option>普拉十營</option>
+      <option>困拉一營</option><option>困拉二營</option><option>困拉三營</option><option>困拉四營</option><option>困拉五營</option>
+      <option>困拉六營</option><option>困拉七營</option><option>困拉八營</option><option>困拉九營</option><option>困拉十營</option>
+      <option>炎魔一營</option><option>炎魔二營</option><option>炎魔三營</option><option>炎魔四營</option><option>炎魔五營</option>
+      <option>炎魔六營</option><option>炎魔七營</option><option>炎魔八營</option><option>炎魔九營</option><option>炎魔十營</option>
+      <option>訓練營</option><option>外援大大</option>
+      </select>
+    </label>
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-3">
+    <button id="btn_cancel" class="btn btn-light border">取消</button>
+    <button id="btn_save" class="btn btn-primary">儲存</button>
+    </div>
+  `;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  return overlay;
 }
 
 function openEditor(values, onSave) 
 {
-	let overlay = document.getElementById('editOverlay');
-	if (!overlay) overlay = createEditor();
-	
-	overlay.querySelector('#edit_name').value   = values.name  ?? '';
-	overlay.querySelector('#edit_code').value   = values.code  ?? '';
-	overlay.querySelector('#edit_job').value    = values.job   ?? '';
-	overlay.querySelector('#edit_level').value  = values.level ?? '';
-	overlay.querySelector('#edit_attack').value = values.attack?? '';
-	
-	const campSelect = overlay.querySelector('#edit_camp');
-	const campValue  = values.camp ?? '';
-	if (campValue) {
-		const exists = Array.from(campSelect.options).some(o => o.value === campValue || o.text === campValue);
-		if (!exists) campSelect.add(new Option(campValue, campValue));
-		campSelect.value = campValue;
-	} else {
-		campSelect.value = '';
-	}
-	
-	const btnCancel = overlay.querySelector('#btn_cancel');
-	const btnSave   = overlay.querySelector('#btn_save');
-	const close = () => overlay.remove();
-	btnCancel.onclick = close;
-	
-	btnSave.onclick = async () => 
-	{
-		const updated = {
-		name:   overlay.querySelector('#edit_name').value.trim(),
-		code:   overlay.querySelector('#edit_code').value.trim(),
-		job:    overlay.querySelector('#edit_job').value.trim(),
-		level:  overlay.querySelector('#edit_level').value.trim(),
-		attack: overlay.querySelector('#edit_attack').value.trim(),
-		camp:   overlay.querySelector('#edit_camp').value.trim(),
-		};
-		const isNew = !!values.__isNew;
-	
-		if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
-		alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
-		return;
-		}
-		if (!updated.code) {
-		alert('角色代碼不可為空（用來定位要更新的列）');
-		return;
-		}
-	
-		try {
-		const form = new URLSearchParams();
-		form.set('action', 'upsertByCode');
-		form.set('code',   updated.code);
-		form.set('name',   updated.name);
-		form.set('job',    updated.job);
-		form.set('level',  updated.level);
-		form.set('attack', updated.attack);
-		form.set('camp',   updated.camp);
-	
-		const resp = await fetch(GAS_UPDATE_URL, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-			body: form.toString(),
-			cache: 'no-store',
-			redirect: 'follow'
-		});
-	
-		const text = await resp.text();
-		let result;
-		try { result = JSON.parse(text); } catch {
-			throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
-		}
-		if (!resp.ok || result.status !== 'ok') {
-			throw new Error(result.message || '更新/新增失敗');
-		}
-	
-		if (isNew) {
-			const t = resolveSheetTarget(resolveSheetTarget);
-			loadFromSheet(t.sheetId, t.gid);
-		} else {
-			onSave?.(updated);
-		}
-		alert(isNew ? '新增成功！' : '更新成功！');
-		close();
-		} catch (e) {
-		console.error(e);
-		alert('送出失敗：' + e.message);
-		}
-	};
+  let overlay = document.getElementById('editOverlay');
+  if (!overlay) overlay = createEditor();
+  
+  overlay.querySelector('#edit_name').value   = values.name  ?? '';
+  overlay.querySelector('#edit_code').value   = values.code  ?? '';
+  overlay.querySelector('#edit_job').value    = values.job   ?? '';
+  overlay.querySelector('#edit_level').value  = values.level ?? '';
+  overlay.querySelector('#edit_attack').value = values.attack?? '';
+  
+  const campSelect = overlay.querySelector('#edit_camp');
+  const campValue  = values.camp ?? '';
+  if (campValue) {
+    const exists = Array.from(campSelect.options).some(o => o.value === campValue || o.text === campValue);
+    if (!exists) campSelect.add(new Option(campValue, campValue));
+    campSelect.value = campValue;
+  } else {
+    campSelect.value = '';
+  }
+  
+  const btnCancel = overlay.querySelector('#btn_cancel');
+  const btnSave   = overlay.querySelector('#btn_save');
+  const close = () => overlay.remove();
+  btnCancel.onclick = close;
+  
+  btnSave.onclick = async () => 
+  {
+    const updated = {
+    name:   overlay.querySelector('#edit_name').value.trim(),
+    code:   overlay.querySelector('#edit_code').value.trim(),
+    job:    overlay.querySelector('#edit_job').value.trim(),
+    level:  overlay.querySelector('#edit_level').value.trim(),
+    attack: overlay.querySelector('#edit_attack').value.trim(),
+    camp:   overlay.querySelector('#edit_camp').value.trim(),
+    };
+    const isNew = !!values.__isNew;
+  
+    if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
+    alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
+    return;
+    }
+    if (!updated.code) {
+    alert('角色代碼不可為空（用來定位要更新的列）');
+    return;
+    }
+  
+    try {
+    const form = new URLSearchParams();
+    form.set('action', 'upsertByCode');
+    form.set('code',   updated.code);
+    form.set('name',   updated.name);
+    form.set('job',    updated.job);
+    form.set('level',  updated.level);
+    form.set('attack', updated.attack);
+    form.set('camp',   updated.camp);
+  
+    const resp = await fetch(GAS_UPDATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: form.toString(),
+      cache: 'no-store',
+      redirect: 'follow'
+    });
+  
+    const text = await resp.text();
+    let result;
+    try { result = JSON.parse(text); } catch {
+      throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
+    }
+    if (!resp.ok || result.status !== 'ok') {
+      throw new Error(result.message || '更新/新增失敗');
+    }
+  
+    if (isNew) {
+      const t = resolveSheetTarget(resolveSheetTarget);
+      loadFromSheet(t.sheetId, t.gid);
+    } else {
+      onSave?.(updated);
+    }
+    alert(isNew ? '新增成功！' : '更新成功！');
+    close();
+    } catch (e) {
+    console.error(e);
+    alert('送出失敗：' + e.message);
+    }
+  };
 }
 
 /* =========================
@@ -1045,76 +1049,76 @@ function openEditor(values, onSave)
 // 職業名稱正規化（同義合併）
 function normalizeJob(raw) 
 {
-	if (!raw) return '（未填寫）';
-	let s = String(raw).trim();
-	
-	// 統一標點
-	s = s.replace(/，/g, '、');
-	
-	// 對照表（左邊是條件，右邊是最終歸戶名稱）
-	const map = [
-		{ test: /^(十字軍|英雄)$/ , to: '英雄' },
-		{ test: /^(騎士|聖騎士)$/ , to: '聖騎士' },
-		{ test: /^(龍騎士|黑騎士)$/ , to: '黑騎士' },
-	
-		{ test: /^(火魔導士|大魔導士\(火、毒\))$/ , to: '大魔導士(火、毒)' },
-		{ test: /^(冰魔導士|大魔導士\(冰、雷\))$/ , to: '大魔導士(冰、雷)' },
-	
-		{ test: /^(祭司|主教)$/ , to: '主教' },
-		{ test: /^(遊俠|箭神)$/ , to: '箭神' },
-		{ test: /^(狙擊手|神射手)$/ , to: '神射手' },
-	
-		{ test: /^(暗殺者|夜使者)$/ , to: '夜使者' },
-		{ test: /^(神偷|暗影神偷)$/ , to: '暗影神偷' },
-	
-		{ test: /^(格鬥家|拳霸)$/ , to: '拳霸' },
-		{ test: /^(神槍手|槍神)$/ , to: '槍神' },
-	
-		{ test: /^初新者$/, to: '初新者' } // 依你提供的字樣
-	];
-	
-	for (const rule of map) {
-		if (rule.test.test(s)) return rule.to;
-	}
-	return s; // 其他職業維持原名
+  if (!raw) return '（未填寫）';
+  let s = String(raw).trim();
+  
+  // 統一標點
+  s = s.replace(/，/g, '、');
+  
+  // 對照表（左邊是條件，右邊是最終歸戶名稱）
+  const map = [
+    { test: /^(十字軍|英雄)$/ , to: '英雄' },
+    { test: /^(騎士|聖騎士)$/ , to: '聖騎士' },
+    { test: /^(龍騎士|黑騎士)$/ , to: '黑騎士' },
+  
+    { test: /^(火魔導士|大魔導士\(火、毒\))$/ , to: '大魔導士(火、毒)' },
+    { test: /^(冰魔導士|大魔導士\(冰、雷\))$/ , to: '大魔導士(冰、雷)' },
+  
+    { test: /^(祭司|主教)$/ , to: '主教' },
+    { test: /^(遊俠|箭神)$/ , to: '箭神' },
+    { test: /^(狙擊手|神射手)$/ , to: '神射手' },
+  
+    { test: /^(暗殺者|夜使者)$/ , to: '夜使者' },
+    { test: /^(神偷|暗影神偷)$/ , to: '暗影神偷' },
+  
+    { test: /^(格鬥家|拳霸)$/ , to: '拳霸' },
+    { test: /^(神槍手|槍神)$/ , to: '槍神' },
+  
+    { test: /^初新者$/, to: '初新者' } // 依你提供的字樣
+  ];
+  
+  for (const rule of map) {
+    if (rule.test.test(s)) return rule.to;
+  }
+  return s; // 其他職業維持原名
 }
 
 /* ===== 顏色對照（依你指定的色系） ===== */
 const JOB_COLOR = {
-	'英雄':            '#FFD24D', // 黃色
-	'聖騎士':          '#F5F5F0', // 奶白色
-	'黑騎士':          '#1F1F1F', // 黑色
-	
-	'大魔導士(火、毒)': '#FF9999', // 淺紅色
-	'大魔導士(冰、雷)': '#99CCFF', // 淺藍色
-	'主教':            '#FFF3B0', // 淡黃色
-	'箭神':            '#4CAF50', // 綠色
-	'神射手':          '#26A69A', // 藍綠色
-	
-	'夜使者':          '#5E35B1', // 深紫色
-	'暗影神偷':        '#4A4A4A', // 黑灰色
-	'拳霸':            '#D4AF37', // 金色
-	'槍神':            '#E0E0E0', // 白灰色
-	'初新者':          '#FFFFFF'  // 白色
+  '英雄':            '#FFD24D', // 黃色
+  '聖騎士':          '#F5F5F0', // 奶白色
+  '黑騎士':          '#1F1F1F', // 黑色
+  
+  '大魔導士(火、毒)': '#FF9999', // 淺紅色
+  '大魔導士(冰、雷)': '#99CCFF', // 淺藍色
+  '主教':            '#FFF3B0', // 淡黃色
+  '箭神':            '#4CAF50', // 綠色
+  '神射手':          '#26A69A', // 藍綠色
+  
+  '夜使者':          '#5E35B1', // 深紫色
+  '暗影神偷':        '#4A4A4A', // 黑灰色
+  '拳霸':            '#D4AF37', // 金色
+  '槍神':            '#E0E0E0', // 白灰色
+  '初新者':          '#FFFFFF'  // 白色
 };
 
 // 取得顏色（未知職業給中性灰）
 function getJobColor(name) 
 {
-	return JOB_COLOR[name] || '#9E9E9E';
+  return JOB_COLOR[name] || '#9E9E9E';
 }
 
 // 白/奶白等很淺的顏色加深邊框，其他統一深邊框，讓切片有界線
 function getJobBorderColor(name) 
 {
-	const c = (JOB_COLOR[name] || '').toLowerCase();
-	if (c === '#ffffff' || c === '#f5f5f0' || c === '#fff3b0' || c === '#ff9999' || c === '#99ccff') {
-		return '#333333';
-	}
-	return '#222222';
+  const c = (JOB_COLOR[name] || '').toLowerCase();
+  if (c === '#ffffff' || c === '#f5f5f0' || c === '#fff3b0' || c === '#ff9999' || c === '#99ccff') {
+    return '#333333';
+  }
+  return '#222222';
 }
 
-// 生成統計資料（不含外援大大）
+// 生成統計資料（不含外援大大）＋ 名單
 function buildJobStatsData() {
   const source = Array.isArray(lastData) ? lastData : [];
   const rows = source.filter(r => (r?.camp || '').trim() !== '外援大大');
@@ -1146,7 +1150,6 @@ function buildJobStatsData() {
     namesByJob
   };
 }
-
 
 let _jobChartInstance = null;
 let _jobStatsCache = null; // 暫存 namesByJob 等
@@ -1235,63 +1238,6 @@ function renderJobChart() {
 }
 
 
-// 綁定按鈕：點擊時開啟 Modal 並渲染
-$(document).on('click', '#btnJobStats', function(){
-  // 若清單尚未載入，提示一下
-  if (!Array.isArray(lastData) || lastData.length === 0) {
-    alert('尚未讀取到資料，請先等待列表載入或點擊重新整理後再試。');
-    return;
-  }
-  // 先打開 Modal，再渲染（可確保 canvas 尺寸正確）
-  const modal = new bootstrap.Modal(document.getElementById('jobStatsModal'));
-  modal.show();
-  // 等 Modal 動畫跑起來再渲染，避免初始寬度 0
-  setTimeout(renderJobChart, 150);
-});
-
-// 若你希望每次關閉都銷毀圖表（避免記憶體累積），可啟用以下：
-// $('#jobStatsModal').on('hidden.bs.modal', function() {
-//   if (_jobChartInstance) {
-//     _jobChartInstance.destroy();
-//     _jobChartInstance = null;
-//   }
-// });
-
-/* ==== 拉圖斯攻略：常數 ==== */
-// 困難拉圖斯（Google Doc 頁面）
-const LATUS_HARD_DOC_EMBED = "https://docs.google.com/document/d/1UrV2RrEJwLZJ8X5t88GXRuxKbbxp9vq6W2Qeu1nqzV0/preview";
-
-// 普通拉圖斯：顯示「施工中」
-<!--
-const LATUS_WIP_HTML = `
-<!doctype html><html lang="zh-TW"><meta charset="utf-8">
-<title>施工中</title>
-<style>
-  html,body{height:100%;margin:0}
-  body{display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,BlinkMacSystemFont;
-       background:#f8f9fa}
-  .box{text-align:center}
-  h1{font-size:28px;margin:0 0 8px}
-  p{margin:0;color:#6c757d}
-</style>
-<div class="box">
-  <h1>🛠️ 施工中</h1>
-  <p>普通拉圖斯攻略內容建置中，敬請期待！</p>
-</div>`;
-const LATUS_WIP_DATAURL = "data:text/html;charset=UTF-8," + encodeURIComponent(LATUS_WIP_HTML);
-
-/* ==== 導覽列：拉圖斯攻略 按鈕切頁 ==== */
-$('#LatusGuide').on('click', function () {
-	$('#homePage').addClass('d-none');
-	$('#zakumPage').addClass('d-none');
-	$('#latusPage').removeClass('d-none');
-	
-	// 預設顯示「施工中」
-	const $f = $('#latusDocFrame');
-	if ($f.attr('src') !== LATUS_WIP_DATAURL) $f.attr('src', LATUS_WIP_DATAURL);
-});
-
--->
 // Guide 分頁按鈕切換：只切換「button.nav-link」對應的面板
 $('#guideTabs').on('click', 'button.nav-link', function () {
   const $btn = $(this);
@@ -1306,59 +1252,45 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
   $(targetSel).removeClass('d-none');
 });
 
-// 先有這段開啟與 render 的 click 綁定
-$(document).on('click', '#btnJobStats', function(){
-  if (!Array.isArray(lastData) || lastData.length === 0) {
-    alert('尚未讀取到資料，請先等待列表載入或點擊重新整理後再試。');
-    return;
-  }
-  const modal = new bootstrap.Modal(document.getElementById('jobStatsModal'));
-  modal.show();
-  setTimeout(renderJobChart, 150);
-});
-
-// 再接著清空的綁定
-$('#jobStatsModal').on('hidden.bs.modal', function () {
-  const box = document.getElementById('jobHitList');
-  if (box) box.innerHTML = '（點一下左邊的統計圖切片，這裡會列出角色名稱）';
-});
+// ====== （重要）刪除你原本在底部重複的兩個事件綁定，避免再次 new 與重複綁定 ======
+// （已在前面統一綁定 #btnJobStats 與 #jobStatsModal hidden 事件）
 
 </script>
 
-	<!---->
-	<!-- 職業分佈統計 Modal -->
-	<div class="modal fade" id="jobStatsModal" tabindex="-1" aria-labelledby="jobStatsLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg modal-dialog-scrollable">
-		<div class="modal-content">
-		<div class="modal-header">
-			<h5 class="modal-title" id="jobStatsLabel">公會職業分佈統計（不含外援大大）</h5>
-			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		</div>
-		<div class="modal-body">
-		  <div class="row g-3">
-			<div class="col-12 col-lg-7">
-			  <canvas id="jobStatsCanvas" height="220"></canvas>
-			</div>
-			<div class="col-12 col-lg-5">
-			  <div class="border rounded p-3 h-100" style="background: rgba(0,0,0,.02);">
-				<h6 class="mb-2">被統計到的角色</h6>
-				<div id="jobHitList" class="small text-muted">（點一下左邊的統計圖切片，這裡會列出角色名稱）</div>
-			  </div>
-			</div>
-		  </div>
-		  <small class="text-muted d-block mt-2">
-			說明：統計來源為列表讀入的 Google Sheet；同義職業會自動合併（如「十字軍=英雄」）。
-		  </small>
-		</div>
+  <!---->
+  <!-- 職業分佈統計 Modal -->
+  <div class="modal fade" id="jobStatsModal" tabindex="-1" aria-labelledby="jobStatsLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" id="jobStatsLabel">公會職業分佈統計（不含外援大大）</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+      <div class="col-12 col-lg-7">
+        <canvas id="jobStatsCanvas" height="220"></canvas>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="border rounded p-3 h-100" style="background: rgba(0,0,0,.02);">
+        <h6 class="mb-2">被統計到的角色</h6>
+        <div id="jobHitList" class="small text-muted">（點一下左邊的統計圖切片，這裡會列出角色名稱）</div>
+        </div>
+      </div>
+      </div>
+      <small class="text-muted d-block mt-2">
+      說明：統計來源為列表讀入的 Google Sheet；同義職業會自動合併（如「十字軍=英雄」）。
+      </small>
+    </div>
 
-		<div class="modal-footer">
-			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
-		</div>
-		</div>
-	</div>
-	</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+    </div>
+    </div>
+  </div>
+  </div>
 
-	<!---->
-	
+  <!---->
+  
 </body>
 </html>
