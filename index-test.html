@@ -899,6 +899,7 @@ function createEditor()
   
   const card = document.createElement('div');
   Object.assign(card.style, {
+    position: 'relative',
     background: '#fff', borderRadius: '12px', padding: '18px', width: 'min(520px, 92vw)',
     boxShadow: '0 10px 30px rgba(0,0,0,.2)', color: '#222', fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont'
   });
@@ -944,6 +945,17 @@ function createEditor()
     <button id="btn_cancel" class="btn btn-light border">取消</button>
     <button id="btn_save" class="btn btn-primary">儲存</button>
     </div>
+
+    <!-- Loading 遮罩（預設隱藏） -->
+    <div id="editLoadingMask" style="
+      display:none; position:absolute; inset:0; background:rgba(255,255,255,.75);
+      border-radius:12px; z-index:10; backdrop-filter:saturate(180%) blur(2px);
+      align-items:center; justify-content:center;">
+      <div class="text-center">
+        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+        <div class="mt-2 fw-semibold">處理中，請稍候…</div>
+      </div>
+    </div>
   `;
   overlay.appendChild(card);
   document.body.appendChild(overlay);
@@ -973,68 +985,93 @@ function openEditor(values, onSave)
   
   const btnCancel = overlay.querySelector('#btn_cancel');
   const btnSave   = overlay.querySelector('#btn_save');
+  const mask      = overlay.querySelector('#editLoadingMask');
+
+  const setBusy = (busy) => {
+    // 遮罩顯示/隱藏
+    mask.style.display = busy ? 'flex' : 'none';
+    // 鎖定/解鎖按鈕與表單
+    btnSave.disabled = busy;
+    btnCancel.disabled = busy;
+    overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
+    // 變更儲存按鈕內容（加上 spinner）
+    if (busy) {
+      btnSave.dataset._orig = btnSave.innerHTML;
+      btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
+    } else if (btnSave.dataset._orig) {
+      btnSave.innerHTML = btnSave.dataset._orig;
+      delete btnSave.dataset._orig;
+    }
+  };
+
   const close = () => overlay.remove();
-  btnCancel.onclick = close;
+  btnCancel.onclick = () => { if (!btnCancel.disabled) close(); };
   
   btnSave.onclick = async () => 
   {
+    // 防重複觸發（極短時間連點）
+    if (btnSave.disabled) return;
+
     const updated = {
-    name:   overlay.querySelector('#edit_name').value.trim(),
-    code:   overlay.querySelector('#edit_code').value.trim(),
-    job:    overlay.querySelector('#edit_job').value.trim(),
-    level:  overlay.querySelector('#edit_level').value.trim(),
-    attack: overlay.querySelector('#edit_attack').value.trim(),
-    camp:   overlay.querySelector('#edit_camp').value.trim(),
+      name:   overlay.querySelector('#edit_name').value.trim(),
+      code:   overlay.querySelector('#edit_code').value.trim(),
+      job:    overlay.querySelector('#edit_job').value.trim(),
+      level:  overlay.querySelector('#edit_level').value.trim(),
+      attack: overlay.querySelector('#edit_attack').value.trim(),
+      camp:   overlay.querySelector('#edit_camp').value.trim(),
     };
     const isNew = !!values.__isNew;
-  
+
     if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
-    alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
-    return;
+      alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
+      return;
     }
     if (!updated.code) {
-    alert('角色代碼不可為空（用來定位要更新的列）');
-    return;
+      alert('角色代碼不可為空（用來定位要更新的列）');
+      return;
     }
-  
+
     try {
-    const form = new URLSearchParams();
-    form.set('action', 'upsertByCode');
-    form.set('code',   updated.code);
-    form.set('name',   updated.name);
-    form.set('job',    updated.job);
-    form.set('level',  updated.level);
-    form.set('attack', updated.attack);
-    form.set('camp',   updated.camp);
-  
-    const resp = await fetch(GAS_UPDATE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: form.toString(),
-      cache: 'no-store',
-      redirect: 'follow'
-    });
-  
-    const text = await resp.text();
-    let result;
-    try { result = JSON.parse(text); } catch {
-      throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
-    }
-    if (!resp.ok || result.status !== 'ok') {
-      throw new Error(result.message || '更新/新增失敗');
-    }
-  
-    if (isNew) {
-      const t = resolveSheetTarget(resolveSheetTarget);
-      loadFromSheet(t.sheetId, t.gid);
-    } else {
-      onSave?.(updated);
-    }
-    alert(isNew ? '新增成功！' : '更新成功！');
-    close();
+      setBusy(true); // 🔒 顯示載入、鎖住按鈕
+
+      const form = new URLSearchParams();
+      form.set('action', 'upsertByCode');
+      form.set('code',   updated.code);
+      form.set('name',   updated.name);
+      form.set('job',    updated.job);
+      form.set('level',  updated.level);
+      form.set('attack', updated.attack);
+      form.set('camp',   updated.camp);
+
+      const resp = await fetch(GAS_UPDATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString(),
+        cache: 'no-store',
+        redirect: 'follow'
+      });
+
+      const text = await resp.text();
+      let result;
+      try { result = JSON.parse(text); } catch {
+        throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
+      }
+      if (!resp.ok || result.status !== 'ok') {
+        throw new Error(result.message || '更新/新增失敗');
+      }
+
+      if (isNew) {
+        const t = resolveSheetTarget(resolveSheetTarget);
+        loadFromSheet(t.sheetId, t.gid);
+      } else {
+        onSave?.(updated);
+      }
+      alert(isNew ? '新增成功！' : '更新成功！');
+      close(); // ✅ 成功就關閉；不必還原按鈕
     } catch (e) {
-    console.error(e);
-    alert('送出失敗：' + e.message);
+      console.error(e);
+      alert('送出失敗：' + e.message);
+      setBusy(false); // ❌ 失敗才恢復，允許重試
     }
   };
 }
