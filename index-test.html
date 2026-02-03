@@ -343,11 +343,11 @@
 <script>
 // 放在全域（或 $(function(){ ... }) 裡面最上面一點）
 // ====== 修正 1：建立單一 Modal 實例 ======
-const jobModalEl = document.getElementById('jobStatsModal');
-const jobModal   = new bootstrap.Modal(jobModalEl, {
-  backdrop: true,
-  keyboard: true
-});
+function getJobModal() {
+  const el = document.getElementById('jobStatsModal');
+  // getOrCreateInstance 會在沒有實例時自動 new，一定要等到 el 存在時才呼叫
+  return bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
+}
 
 // 開啟按鈕：只呼叫 show()，不要每次 new
 $(document).on('click', '#btnJobStats', function () {
@@ -355,20 +355,16 @@ $(document).on('click', '#btnJobStats', function () {
     alert('尚未讀取到資料，請先等待列表載入或點擊重新整理後再試。');
     return;
   }
-  jobModal.show();
+  getJobModal().show();
   setTimeout(renderJobChart, 150);
 });
 
 // ====== 修正 2：關閉時不手動清理 backdrop/body（交由 Bootstrap） ======
-$('#jobStatsModal').on('hidden.bs.modal', function () {
-  // 清空右側清單（保留你原本的需求）
+$(document).on('hidden.bs.modal', '#jobStatsModal', function () {
   const box = document.getElementById('jobHitList');
   if (box) box.innerHTML = '（點一下左邊的統計圖切片，這裡會列出角色名稱）';
-
-  // ⚠️移除以下兩行造成灰色透明底殘留的語句（改為交由 Bootstrap 自己收拾）
-  // $('.modal-backdrop').remove();
-  // $('body').removeClass('modal-open').css('padding-right', '');
 });
+
 
 
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
