@@ -1154,7 +1154,9 @@ function getJobBorderColor(name)
 // 生成統計資料（不含外援大大）＋ 名單
 function buildJobStatsData() {
   const source = Array.isArray(lastData) ? lastData : [];
-  const rows = source.filter(r => (r?.camp || '').trim() !== '外援大大');
+    // 同時排除 camp 為「外援大大」或「離營」
+  const EXCLUDE = new Set(['外援大大', '離營']);
+  const rows = source.filter(r => !EXCLUDE.has((r?.camp || '').trim()));
 
   const counter = Object.create(null);
   const namesByJob = Object.create(null);
