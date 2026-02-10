@@ -119,7 +119,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1355</span>
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1412</span>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
       <!-- 小夥伴清單 -->
@@ -507,9 +507,38 @@ function extractCodeFromWho(whoCell) {
   return m ? normalizeCode(m[1]) : '';
 }
 
+// 參加意願：code -> { hasZakum, hasLatus, raw }
+let intentByCode = Object.create(null);
+
+// 正規化角色代碼（去空白、轉大寫）
+function normalizeCode(x) {
+  return String(x || '').trim().toUpperCase();
+}
+
+// 從「您是哪位」欄位取出角色代碼（支援半形/全形 #）
+function extractCodeFromWho(whoCell) {
+  const s = String(whoCell || '').trim();
+  if (!s) return '';
+  const m = s.match(/角色代碼[#＃]([A-Za-z0-9]+)/);
+  return m ? normalizeCode(m[1]) : '';
+}
+
+// 解析 I 欄（未來想參加的RaidBoss團(可複選)）的字串：統一逗號/空白後抓關鍵字
+function parseIntentFlags(raw) {
+  let s = String(raw || '');
+  // 換成半形逗號，去掉多餘空白/換行
+  s = s.replace(/[，、；;]+/g, ',')
+       .replace(/\s+/g, ' ')
+       .trim();
+  // → 這裡只要包含關鍵字就視為有意願
+  const hasZakum = /殘暴炎魔/i.test(s);
+  const hasLatus = /拉圖斯/i.test(s);
+  return { hasZakum, hasLatus, raw: s };
+}
+
 function loadIntentMap() {
   const sheetId = '1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs';
-  const gid = '1351875739#gid=1351875739'; // 「表單回應 2」
+  const gid = '1351875739'; // 「表單回應 2」
   const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
   Papa.parse(csvUrl, {
@@ -522,37 +551,26 @@ function loadIntentMap() {
         const rows = result.data;
         const header = rows[0].map(h => String(h || '').trim());
 
-        // 自動找欄位（避免以後移欄）——找包含這些關鍵字的欄名
-        const idxWho = header.findIndex(h => h.includes('您是哪位'));
-        // 你的標題常寫成「未來想參加的RaidBosss團(可複選)」，這裡用「RaidBoss」做模糊包含即可
+        // 動態找欄位（避免未來移欄或改名）
+        const idxWho    = header.findIndex(h => h.includes('您是哪位'));
         const idxIntent = header.findIndex(h => h.includes('未來想參加') && h.includes('RaidBoss'));
-
-        // fallback：常見預設位置 H / I
-        const WHO = idxWho >= 0 ? idxWho : 7;
-        const INTENT = idxIntent >= 0 ? idxIntent : 8;
+        const WHO    = idxWho    >= 0 ? idxWho    : 7; // 常見 H 欄
+        const INTENT = idxIntent >= 0 ? idxIntent : 8; // 常見 I 欄
 
         const map = Object.create(null);
-
         for (let r = 1; r < rows.length; r++) {
           const row = rows[r];
-
-          // ★ 抓 H 欄裡的「角色代碼#XXXX」
           const code = extractCodeFromWho(row[WHO]);
           if (!code) continue;
 
-          // I 欄多選答案（可能用逗號、也可能中英混用逗號）
-          const ans = String(row[INTENT] || '').trim();
-
-          // 關鍵字包含即可（避免你未來改成「殘暴炎魔(Lv135+)」等）
-          const hasZakum = /殘暴炎魔/i.test(ans);
-          const hasLatus = /拉圖斯/i.test(ans);
-
-          map[code] = { hasZakum, hasLatus, raw: ans };
+          const flags = parseIntentFlags(row[INTENT]);
+          // 若兩者皆無，也可記錄 raw 以便除錯
+          map[code] = { ...flags };
         }
 
         intentByCode = map;
 
-        // 若角色清單已載入，重繪讓「參加意願」顯示出來
+        // 若角色清單已載入，重繪一次
         if (Array.isArray(lastData) && lastData.length) {
           renderTable(lastData);
         }
@@ -566,19 +584,13 @@ function loadIntentMap() {
   });
 }
 
-
 // 產生表格「參加意願」欄位內容
 function renderIntentCell(code) {
   const rec = intentByCode[ normalizeCode(code) ];
   if (!rec) return '';
-
   const bits = [];
-  if (rec.hasZakum) {
-    bits.push('<span style="color:#fd7e14;">參加殘暴炎魔有意願</span>');
-  }
-  if (rec.hasLatus) {
-    bits.push('<span style="color:#0d6efd;">參加拉圖斯有意願</span>');
-  }
+  if (rec.hasZakum) bits.push('<span style="color:#fd7e14;">參加殘暴炎魔有意願</span>');
+  if (rec.hasLatus) bits.push('<span style="color:#0d6efd;">參加拉圖斯有意願</span>');
   return bits.join('<br>');
 }
 /* =========================
