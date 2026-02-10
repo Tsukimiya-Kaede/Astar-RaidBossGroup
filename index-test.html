@@ -195,11 +195,11 @@
         <tr>
           <th style="width: 20%;">角色名稱</th>
           <th style="width: 10%;">角色代碼</th>
-          <th style="width: 20%;">角色職業</th>
+          <th style="width: 15%;">角色職業</th>
           <th style="width: 10%;">角色等級</th>
           <th style="width: 10%;">角色乾表</th>
-          <th style="width: 15%;">所在營區</th>
-		  <th style="width: 5%;">參加意願</th>
+          <th style="width: 10%;">所在營區</th>
+		  <th style="width: 15%;">參加意願</th>
           <th style="width: 10%;">修改資料</th>
         </tr>
         </thead>
@@ -509,7 +509,7 @@ function extractCodeFromWho(whoCell) {
 
 function loadIntentMap() {
   const sheetId = '1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs';
-  const gid = '1351875739'; // 「表單回應 2」
+  const gid = '1351875739#gid=1351875739'; // 「表單回應 2」
   const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
   Papa.parse(csvUrl, {
