@@ -119,7 +119,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1355</span>
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0905</span>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
       <!-- 小夥伴清單 -->
@@ -166,6 +166,8 @@
           <h4 class="card-title mb-2">🏋️ 角色清單</h4>
           <div class="d-flex align-items-center gap-2">
             <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+			<!-- ★ 新增按鈕：參加王團意願 -->
+			<a class="btn btn-outline-success btn-sm" href="https://docs.google.com/forms/d/e/1FAIpQLSf8cD32ZkhEh38MIL2bHP3Rypm1fWdmCDzlzuEKkxdQLlgkTg/viewform" target="_blank" rel="noopener noreferrer">參加王團意願填寫表</a>
             <button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
             <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
           </div>
@@ -195,17 +197,16 @@
         <tr>
           <th style="width: 20%;">角色名稱</th>
           <th style="width: 10%;">角色代碼</th>
-          <th style="width: 15%;">角色職業</th>
+          <th style="width: 20%;">角色職業</th>
           <th style="width: 10%;">角色等級</th>
           <th style="width: 10%;">角色乾表</th>
-          <th style="width: 10%;">所在營區</th>
-		  <th style="width: 15%;">參加意願</th>
+          <th style="width: 20%;">所在營區</th>
           <th style="width: 10%;">修改資料</th>
         </tr>
         </thead>
         <tbody id="tableBody">
         <tr>
-          <td colspan="8" class="text-center text-muted">尚未讀取資料</td>
+          <td colspan="7" class="text-center text-muted">尚未讀取資料</td>
         </tr>
         </tbody>
       </table>
@@ -443,7 +444,7 @@ function loadFromSheet(sheetId, gid = '0')
   $('#msg').text('');
   $('#tableBody').html(`
     <tr>
-    <td colspan="8" class="text-center text-muted">讀取中...</td>
+    <td colspan="7" class="text-center text-muted">讀取中...</td>
     </tr>
   `);
   
@@ -491,96 +492,6 @@ function loadFromSheet(sheetId, gid = '0')
   });
 }
 
-// 參加意願：code -> { hasZakum, hasLatus, raw }
-let intentByCode = Object.create(null);
-
-// 正規化角色代碼（去空白、轉大寫）
-function normalizeCode(x) {
-  return String(x || '').trim().toUpperCase();
-}
-
-// 從「您是哪位」欄位取出角色代碼（支援半形/全形 #）
-function extractCodeFromWho(whoCell) {
-  const s = String(whoCell || '').trim();
-  if (!s) return '';
-  const m = s.match(/角色代碼[#＃]([A-Za-z0-9]+)/);
-  return m ? normalizeCode(m[1]) : '';
-}
-
-function loadIntentMap() {
-  const sheetId = '1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs';
-  const gid = '1351875739#gid=1351875739'; // 「表單回應 2」
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-
-  Papa.parse(csvUrl, {
-    download: true,
-    skipEmptyLines: true,
-    complete: function (result) {
-      try {
-        if (!result.data || result.data.length < 2) return;
-
-        const rows = result.data;
-        const header = rows[0].map(h => String(h || '').trim());
-
-        // 自動找欄位（避免以後移欄）——找包含這些關鍵字的欄名
-        const idxWho = header.findIndex(h => h.includes('您是哪位'));
-        // 你的標題常寫成「未來想參加的RaidBosss團(可複選)」，這裡用「RaidBoss」做模糊包含即可
-        const idxIntent = header.findIndex(h => h.includes('未來想參加') && h.includes('RaidBoss'));
-
-        // fallback：常見預設位置 H / I
-        const WHO = idxWho >= 0 ? idxWho : 7;
-        const INTENT = idxIntent >= 0 ? idxIntent : 8;
-
-        const map = Object.create(null);
-
-        for (let r = 1; r < rows.length; r++) {
-          const row = rows[r];
-
-          // ★ 抓 H 欄裡的「角色代碼#XXXX」
-          const code = extractCodeFromWho(row[WHO]);
-          if (!code) continue;
-
-          // I 欄多選答案（可能用逗號、也可能中英混用逗號）
-          const ans = String(row[INTENT] || '').trim();
-
-          // 關鍵字包含即可（避免你未來改成「殘暴炎魔(Lv135+)」等）
-          const hasZakum = /殘暴炎魔/i.test(ans);
-          const hasLatus = /拉圖斯/i.test(ans);
-
-          map[code] = { hasZakum, hasLatus, raw: ans };
-        }
-
-        intentByCode = map;
-
-        // 若角色清單已載入，重繪讓「參加意願」顯示出來
-        if (Array.isArray(lastData) && lastData.length) {
-          renderTable(lastData);
-        }
-      } catch (e) {
-        console.error('解析參加意願失敗：', e);
-      }
-    },
-    error: function (err) {
-      console.error('載入參加意願失敗：', err);
-    }
-  });
-}
-
-
-// 產生表格「參加意願」欄位內容
-function renderIntentCell(code) {
-  const rec = intentByCode[ normalizeCode(code) ];
-  if (!rec) return '';
-
-  const bits = [];
-  if (rec.hasZakum) {
-    bits.push('<span style="color:#fd7e14;">參加殘暴炎魔有意願</span>');
-  }
-  if (rec.hasLatus) {
-    bits.push('<span style="color:#0d6efd;">參加拉圖斯有意願</span>');
-  }
-  return bits.join('<br>');
-}
 /* =========================
    依分頁過濾 + 分組顯示（★ 調整）
 ========================= */
@@ -617,7 +528,7 @@ function renderTable(data)
   {
     $('#tableBody').html(`
     <tr>
-      <td colspan="8" class="text-center text-muted">此分頁下沒有符合的資料</td>
+      <td colspan="7" class="text-center text-muted">此分頁下沒有符合的資料</td>
     </tr>
     `);
     return;
@@ -660,7 +571,7 @@ function renderTable(data)
     const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
     html += `
     <tr class="group-row">
-      <td colspan="8">所在營區：${k}${note}（${groups[k].length}）</td>
+      <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
     </tr>`;
     html += groups[k].map(r => `
     <tr>
@@ -670,7 +581,6 @@ function renderTable(data)
       <td>${r.level ?? ''}</td>
       <td>${r.attack ?? ''}</td>
       <td>${r.camp ?? ''}</td>
-	  <td>${renderIntentCell(r.code)}</td>   
       <td>
       <button class="btn btn-outline-secondary btn-edit"
         data-row="${r.rowIndex || ''}"
@@ -976,19 +886,6 @@ $(function ()
   
 }
 );
-
-$(function () {
-  // ...原本載入角色清單
-  const target = resolveSheetTarget(DEFAULT_SHEET_URL);
-  updateSourceBadge(target.sheetId, target.gid);
-  loadFromSheet(target.sheetId, target.gid);
-
-  // ★ 新增：載入「表單回應 2」的參加意願
-  loadIntentMap();
-
-  // ...其餘事件綁定與一圖流載入
-});
-
 
 /* =========================
    編輯視窗（含營區下拉）— 保留你原本的寫回 GAS 做法
