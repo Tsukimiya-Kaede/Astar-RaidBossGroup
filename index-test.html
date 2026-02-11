@@ -864,23 +864,19 @@ function renderTable(data)
     </tr>`;
     html += groups[k].map(r => `
     <tr>
-      <td>
-		<button type="button"
-		  class="name-history-btn"
-		  title="查看更名紀錄"
-		  data-name="${r.name ?? ''}"
-		  data-code="${r.code ?? ''}">?</button>
-		  ${r.name ?? ''}
-	  </td>
+      <td>${r.name ?? ''}</td>
 	  <td>
-		${r.code ?? ''}
+		<span style="float: left">
 		<button type="button"
 		  class="name-history-btn"
 		  title="查看更名紀錄"
 		  data-name="${r.name ?? ''}"
-		  data-code="${r.code ?? ''}">?</button> 
+		  data-code="${r.code ?? ''}">?
+		</button>
+		<span style="float: right">
+		  ${r.code ?? ''}
+		<div style="clear: both;"></div>
 	  </td>
-   <!--   <td>${r.code ?? ''}</td> -->
       <td>${r.job ?? ''}</td>
       <td>${r.level ?? ''}</td>
       <td>${r.attack ?? ''}</td>
