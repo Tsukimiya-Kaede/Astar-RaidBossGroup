@@ -686,6 +686,29 @@ $(document).on('click', '.name-history-btn', function () {
 ========================= */
 const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
 
+// 把「新增角色」事件記錄到 歷史更名LOG（gid=170886432）
+async function appendRenameLogToGAS({ code, name, when }) {
+  if (!code || !name) throw new Error('appendRenameLog 需要 code 與 name');
+  const form = new URLSearchParams();
+  form.set('action', 'appendRenameLog');   // 後端會用這個分流
+  form.set('code',   String(code).trim());
+  form.set('name',   String(name).trim());
+  // 送本地時間的 ISO 字串（後端會再依台北時區格式化）
+  form.set('when',   when || new Date().toISOString());
+
+  const resp = await fetch(GAS_UPDATE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+    body: form.toString(),
+    cache: 'no-store',
+    redirect: 'follow'
+  });
+  const text = await resp.text();
+  let json; try { json = JSON.parse(text); } catch(e) { throw new Error('GAS 回傳非 JSON'); }
+  if (!resp.ok || json.status !== 'ok') throw new Error(json.message || 'appendRenameLog 失敗');
+  return json;
+}
+
 /* =========================
    夜間模式切換
 ========================= */
@@ -1382,13 +1405,26 @@ function openEditor(values, onSave)
       }
 
       if (isNew) {
-        const t = resolveSheetTarget(DEFAULT_SHEET_URL);
-        loadFromSheet(t.sheetId, t.gid);
-      } else {
-        onSave?.(updated);
-      }
-      alert(isNew ? '新增成功！' : '更新成功！');
-      close(); // ✅ 成功就關閉；不必還原按鈕
+		  const t = resolveSheetTarget(DEFAULT_SHEET_URL);
+		  loadFromSheet(t.sheetId, t.gid);
+
+		  // ★ 新增：把新增事件記錄到「歷史更名LOG」
+		  try {
+			await appendRenameLogToGAS({
+			  code:   updated.code,
+			  name:   updated.name,
+			  // when 可省略，就會用現在時間
+			});
+		  } catch (logErr) {
+			console.warn('寫入更名LOG失敗（不影響新增本體）：', logErr);
+			// 可選：提示但不擋流程
+			// alert('角色已新增，但寫入更名LOG失敗：' + logErr.message);
+		  }
+		} else {
+		  onSave?.(updated);
+		}
+		alert(isNew ? '新增成功！' : '更新成功！');
+		close();
     } catch (e) {
       console.error(e);
       alert('送出失敗：' + e.message);
