@@ -1371,48 +1371,54 @@ $(document).on('click', '.btn-intent', function() {
 
   // 把觸發按鈕物件放在 modal dataset，存檔時好回寫 UI
   const modalEl = document.getElementById('intentModal');
-  modalEl.dataset._triggerBtnId = this; // 直接存 DOM 參考
+  modalEl._triggerBtnEl = this; // 存 DOM 物件，別用 dataset
 });
 
 // ====== 事件：儲存「參加意願」 ======
-$('#btnSaveIntent').on('click', async function() {
+$('#btnSaveIntent').on('click', async function () {
   const code = $('#intentRoleCode').text().trim();
   if (!code) { $('#intentMsg').text('找不到角色代碼'); return; }
 
-  // 收集勾選
+  // 收集勾選（假設 checkbox 的 id 是：intent-拉圖斯 / intent-殘暴炎魔 / ...）
   const set = new Set();
   for (const opt of INTENT_OPTIONS) {
     const el = document.getElementById('intent-' + opt);
     if (el && el.checked) set.add(opt);
   }
-  const value = intentSetToString(set); // e.g. "拉圖斯, 殘暴炎魔"
+  const value = intentSetToString(set); // "拉圖斯, 殘暴炎魔" 這種半形逗號字串
 
   try {
     $('#intentMsg').text('');
 
-    // ★ 與「修改」同一 API：upsertByCode，多帶 intent
+    // 1) 從 lastData 找到同一列，把其它欄位一起帶回（避免被後端覆蓋成空）
+    const row = (lastData || []).find(x => String(x.code || '').trim() === code) || {};
+
     const form = new URLSearchParams();
     form.set('action', 'upsertByCode');
-    form.set('code', code);
-    form.set('intent', value); // 後端請寫入 H 欄「參加意願」
+    form.set('code',   code);
+    form.set('name',   row.name   ?? '');
+    form.set('job',    row.job    ?? '');
+    form.set('level',  row.level  ?? '');
+    form.set('attack', row.attack ?? '');
+    form.set('camp',   row.camp   ?? '');
+    form.set('intent', value);            // ★ H 欄「參加意願」
 
-    const resp = await fetch(GAS_UPDATE_URL, {
+    const resp  = await fetch(GAS_UPDATE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
       body: form.toString(),
       cache: 'no-store'
     });
 
-    const text = await resp.text();
+    const text  = await resp.text();
     let result; try { result = JSON.parse(text); } catch { throw new Error('GAS 回傳非 JSON'); }
     if (!resp.ok || result.status !== 'ok') throw new Error(result.message || '儲存失敗');
 
-    // 前端 UI 即時更新：把列表上該列的小字與 data-intent 改掉
+    // 2) 即時更新列表的小字與 data-intent
     const modalEl = document.getElementById('intentModal');
-    const btn = modalEl.dataset._triggerBtnId; // 開啟對話框的那顆按鈕
+    const btn = modalEl._triggerBtnEl;    // ← 取回剛剛存的 DOM 參考
     if (btn) {
       btn.setAttribute('data-intent', value);
-      // 更新同格下方的小字
       const small = btn.parentElement?.querySelector('small');
       if (small) {
         small.textContent = value ? value.replace(/,/g, '、') : '（未設定）';
@@ -1426,6 +1432,7 @@ $('#btnSaveIntent').on('click', async function() {
     $('#intentMsg').text('儲存失敗：' + e.message);
   }
 });
+
 </script>
 
   <!---->
@@ -1482,26 +1489,27 @@ $('#btnSaveIntent').on('click', async function() {
             <span class="text-muted">（代碼：<span id="intentRoleCode"></span>）</span>
           </div>
 
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="拉圖斯(LV100↑)" id="intent-latus">
-            <label class="form-check-label" for="intent-latus">拉圖斯</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="困難拉圖斯" id="intent-latus-hard">
-            <label class="form-check-label" for="intent-latus-hard">困難拉圖斯</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="粉豆" id="intent-pinkbean">
-            <label class="form-check-label" for="intent-pinkbean">粉豆</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="殘暴炎魔(LV135↑)" id="intent-zakum">
-            <label class="form-check-label" for="intent-zakum">殘暴炎魔</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="闇黑龍王" id="intent-horntail">
-            <label class="form-check-label" for="intent-horntail">闇黑龍王</label>
-          </div>
+          <!-- 參加意願 Modal（僅替換 checkbox 區塊） -->
+		  <div class="form-check">
+		    <input class="form-check-input" type="checkbox" value="拉圖斯" id="intent-拉圖斯">
+		    <label class="form-check-label" for="intent-拉圖斯">拉圖斯（LV100↑）</label>
+		  </div>
+		  <div class="form-check">
+		    <input class="form-check-input" type="checkbox" value="困難拉圖斯" id="intent-困難拉圖斯">
+			<label class="form-check-label" for="intent-困難拉圖斯">困難拉圖斯</label>
+		  </div>
+		  <div class="form-check">
+		    <input class="form-check-input" type="checkbox" value="粉豆" id="intent-粉豆">
+		    <label class="form-check-label" for="intent-粉豆">粉豆</label>
+		  </div>
+		  <div class="form-check">
+			<input class="form-check-input" type="checkbox" value="殘暴炎魔" id="intent-殘暴炎魔">
+			<label class="form-check-label" for="intent-殘暴炎魔">殘暴炎魔（LV135↑）</label>
+		  </div>
+		  <div class="form-check">
+			<input class="form-check-input" type="checkbox" value="闇黑龍王" id="intent-闇黑龍王">
+			<label class="form-check-label" for="intent-闇黑龍王">闇黑龍王</label>
+		  </div>
 
           <div id="intentMsg" class="text-danger small mt-2"></div>
         </div>
