@@ -133,6 +133,15 @@
 	@media (max-width:576px){
 	  .toolbar-compact .search-group{ width:150px; }     /* 手機再小一點 */
 	}
+	/* 捲到列後的高亮動畫 */
+	.row-pulse {
+	  animation: rowPulse 2s ease-out 0s 1;
+	}
+	@keyframes rowPulse {
+	  0%   { background-color: #fff3cd; }   /* 淡黃 */
+	  50%  { background-color: #ffe8a1; }
+	  100% { background-color: transparent; }
+	}
   </style>
 </head>
 
@@ -576,7 +585,17 @@ function renderSearchResults(keyword, rows, codeSet) {
         <td>${r.level ?? ''}</td>
         <td>${r.attack ?? ''}</td>
         <td>${r.camp ?? ''}</td>
-        <td>${logHtml}</td>
+        <td>
+		  ${logHtml}
+		  <div class="mt-1">
+		    <button type="button"
+		  	  class="btn btn-sm btn-outline-primary btn-locate-row"
+			  data-code="${r.code ?? ''}"
+		  	  data-camp="${r.camp ?? ''}">
+		  	  🔎 定位此列
+		    </button>
+		  </div>
+		</td>
       </tr>
     `;
   }).join('');
@@ -862,7 +881,7 @@ function renderTable(data)
       <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
     </tr>`;
     html += groups[k].map(r => `
-    <tr>
+    <tr id="row-${(r.code||'').toString().trim().replace(/[^a-zA-Z0-9_-]/g,'_')}">
       <td>${r.name ?? ''}</td>
 	  <td>
 		<span style="float: left">
@@ -1591,6 +1610,68 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
 
 // ====== （重要）刪除你原本在底部重複的兩個事件綁定，避免再次 new 與重複綁定 ======
 // （已在前面統一綁定 #btnJobStats 與 #jobStatsModal hidden 事件）
+/* ========= 讓分頁自動切到該列所在營區（若有需要） ========= */
+function resolveTabByCamp(campText){
+  const t = (campText||'').trim();
+  if (/^普拉[一二三四五六七八九十]營$/.test(t)) return 'latus';
+  if (/^困拉[一二三四五六七八九十]營$/.test(t)) return 'latushard';
+  if (/^炎魔[一二三四五六七八九十]營$/.test(t)) return 'zakum';
+  if (t === '訓練營' || t === '外援大大') return 'trainext';
+  return currentTab; // 不變
+}
+
+/* ========= 捲動 + 高亮 ========= */
+function scrollToRowByCode(code, campOptional){
+  if (!code) return;
+
+  // 1) 若有提供營區，先切到正確分頁（避免找不到）
+  if (campOptional){
+    const tab = resolveTabByCamp(campOptional);
+    if (tab !== currentTab) setTab(tab);
+  }
+
+  // 2) 設個小延遲，等分頁重繪完再找元素
+  setTimeout(() => {
+    const safeId = String(code).trim().replace(/[^a-zA-Z0-9_-]/g,'_');
+    const tr = document.getElementById(`row-${safeId}`);
+    if (!tr) {
+      // 找不到就不處理
+      return;
+    }
+
+    // 捲到畫面中央
+    tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // 高亮動畫（加 class -> 等動畫完移除）
+    tr.classList.remove('row-pulse'); // 先移除一次，方便連續點
+    // 觸發 reflow 讓動畫可重播
+    void tr.offsetWidth;
+    tr.classList.add('row-pulse');
+
+    // 2 秒後移除 class（與動畫時間對齊）
+    setTimeout(() => tr.classList.remove('row-pulse'), 2000);
+  }, 80);
+}
+
+// 搜尋結果「定位此列」按鈕
+$(document).on('click', '.btn-locate-row', function(){
+  const code = $(this).data('code') || '';
+  const camp = $(this).data('camp') || '';
+  // 關掉搜尋結果 Modal
+  const modalEl = document.getElementById('searchResultModal');
+  if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+
+  // 捲動 + 高亮
+  scrollToRowByCode(code, camp);
+});
+
+$(document).on('click', '.name-history-btn', function () {
+  const name = $(this).data('name') || '';
+  const code = $(this).data('code') || '';
+  openRenameLogModal(name, code);
+  // 同步高亮目前這一列
+  scrollToRowByCode(code);
+});
 
 </script>
 
