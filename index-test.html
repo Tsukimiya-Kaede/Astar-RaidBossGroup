@@ -123,7 +123,16 @@
 	  cursor:pointer; margin-left:.25rem;
 	}
 	.name-history-btn:hover{ filter: brightness(0.95); }
-
+	/* 角色清單工具列：讓搜尋框不要把排版撐開 */
+	.toolbar-compact{ gap:.5rem; flex-wrap:wrap; }
+	.toolbar-compact .search-group{
+	  width:180px;          /* 固定窄寬 */
+	  flex:0 0 auto;        /* 不要伸展 */
+	}
+	.toolbar-compact .search-group input{ min-width:0; } /* 防止被內容撐大 */
+	@media (max-width:576px){
+	  .toolbar-compact .search-group{ width:150px; }     /* 手機再小一點 */
+	}
   </style>
 </head>
 
@@ -171,20 +180,22 @@
     </div>
     </div>
 
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center toolbar-compact">
 	  <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
-	  <!-- ★ 新增：搜尋角色 -->
-	  <div class="input-group input-group-sm" style="width:280px;">
-		<input id="charSearchInput" type="text" class="form-control" placeholder="搜尋角色（含歷史更名）">
+
+	  <!-- 精簡搜尋框（固定小寬度） -->
+	  <div class="input-group input-group-sm search-group">
+		<input id="charSearchInput" type="text" class="form-control" placeholder="搜尋角色">
 		<button id="charSearchBtn" class="btn btn-outline-secondary">搜尋</button>
 	  </div>
-	  <!-- ★ 既有 -->
-	  <a class="btn btn-outline-success btn-sm" href="https://docs.google.com/forms/d/e/1FAIpQLSf8cD32ZkhEh38MIL2bHP3Rypm1fWdmCDzlzuEKkxdQLlgkTg/viewform" target="_blank" rel="noopener noreferrer">參加王團意願填寫表</a>
+
+	  <a class="btn btn-outline-success btn-sm"
+		 href="https://docs.google.com/forms/d/e/1FAIpQLSf8cD32ZkhEh38MIL2bHP3Rypm1fWdmCDzlzuEKkxdQLlgkTg/viewform"
+		 target="_blank" rel="noopener noreferrer">參加王團意願填寫表</a>
+
 	  <button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
 	  <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
 	</div>
-
-  
       <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
       <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
         <li class="nav-item" role="presentation">
