@@ -643,6 +643,38 @@ function renderTable(data)
   });
 }
 
+$(document).on('click', '.btn-intent', function() {
+  const code = String($(this).data('code') || '').trim();
+  const name = String($(this).data('name') || '').trim();
+  const intent = String($(this).data('intent') || '');
+
+  if (!code) { alert('此列沒有角色代碼，無法設定意願'); return; }
+
+  // 帶入角色資訊
+  $('#intentRoleName').text(name || '(未填)');
+  $('#intentRoleCode').text(code);
+
+  // 先全部清空
+  for (const id of Object.values(INTENT_ID_MAP)) {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  }
+
+  // 解析目前意願 → 勾選
+  const set = parseIntentToSet(intent); // 會把「拉圖斯(LV100↑)」也辨識成「拉圖斯」
+  for (const opt of INTENT_OPTIONS) {
+    const id = INTENT_ID_MAP[opt];
+    const el = document.getElementById(id);
+    if (el) el.checked = set.has(opt);
+  }
+
+  $('#intentMsg').text('');
+  const modalEl = document.getElementById('intentModal');
+  // 記住觸發按鈕，存檔後好回填小字
+  modalEl.dataset._triggerBtnId = this;
+  getIntentModal().show();
+});
+
 /* =========================
    分頁切換（★ 新增）
 ========================= */
@@ -1312,10 +1344,22 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
    存取：沿用 GAS_UPDATE_URL，action=upsertByCode，多帶 intent
 ========================= */
 
-// 固定五個選項（與欄位選項一致）
-const INTENT_OPTIONS = [
-  '拉圖斯', '殘暴炎魔', '困難拉圖斯', '闇黑龍王', '粉豆'
-];
+// 固定五個選項（純中文標籤，寫入 H 欄用）
+const INTENT_OPTIONS = ['拉圖斯','殘暴炎魔','困難拉圖斯','闇黑龍王','粉豆'];
+
+// 中文 → checkbox實際ID
+const INTENT_ID_MAP = {
+  '拉圖斯':     'intent-latus',
+  '殘暴炎魔':   'intent-zakum',
+  '困難拉圖斯': 'intent-latus-hard',
+  '闇黑龍王':   'intent-horntail',
+  '粉豆':       'intent-pinkbean'
+};
+// 反向：ID → 中文
+const ID_INTENT_MAP = Object.fromEntries(
+  Object.entries(INTENT_ID_MAP).map(([k,v]) => [v, k])
+);
+
 
 // 建立（或取得）Modal 實例
 function getIntentModal() {
