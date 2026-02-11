@@ -113,13 +113,24 @@
       width: 100%;
       border-collapse: collapse;
     }
+	
+	/* 角色名稱右側的小問號按鈕 */
+	.name-history-btn{
+	  display:inline-flex; align-items:center; justify-content:center;
+	  width:22px; height:22px; line-height:22px;
+	  border-radius:50%; border:0;
+	  background:#ffc107; color:#212529; font-weight:700;
+	  cursor:pointer; margin-left:.25rem;
+	}
+	.name-history-btn:hover{ filter: brightness(0.95); }
+
   </style>
 </head>
 
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0958</span>
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0905</span>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
       <!-- 小夥伴清單 -->
@@ -200,14 +211,13 @@
           <th style="width: 20%;">角色職業</th>
           <th style="width: 10%;">角色等級</th>
           <th style="width: 10%;">角色乾表</th>
-          <th style="width: 10%;">所在營區</th>
-		  <th style="width: 10%;">參加意願</th>
+          <th style="width: 20%;">所在營區</th>
           <th style="width: 10%;">修改資料</th>
         </tr>
         </thead>
         <tbody id="tableBody">
         <tr>
-          <td colspan="8" class="text-center text-muted">尚未讀取資料</td>
+          <td colspan="7" class="text-center text-muted">尚未讀取資料</td>
         </tr>
         </tbody>
       </table>
@@ -368,6 +378,115 @@ $(document).on('hidden.bs.modal', '#jobStatsModal', function () {
   if (box) box.innerHTML = '（點一下左邊的統計圖切片，這裡會列出角色名稱）';
 });
 
+/* =========================
+   歷史角色更名：讀取 + 顯示
+========================= */
+// 你的 LOG 表：同一份 Sheet，改 gid 即可
+const RENAME_LOG_GID = '170886432';
+
+// 快取（依代碼、依新名）
+let renameLogByCode = new Map();
+let renameLogByName = new Map();
+
+/** 讀取更名 LOG（CSV） */
+function loadRenameLog(sheetId) {
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${RENAME_LOG_GID}`;
+  Papa.parse(csvUrl, {
+    download: true,
+    skipEmptyLines: true,
+    complete: (res) => {
+      try {
+        if (!res.data || res.data.length < 2) return;
+
+        // 嘗試從表頭判斷欄位（盡量容錯）
+        const header = res.data[0].map(h => String(h || '').trim());
+        const idx = {
+          time: header.findIndex(h => /^(時間|timestamp|time)$/i.test(h)),
+          code: header.findIndex(h => /^(角色代碼|代碼|code)$/i.test(h)),
+          old : header.findIndex(h => /^(舊名|old.*name)$/i.test(h)),
+          name: header.findIndex(h => /^(新名|名稱|name|new.*name)$/i.test(h))
+        };
+
+        // 若沒偵測到表頭，就用預設位置（0:時間 1:舊名 2:新名 3:代碼）可按照你表的實際順序調整
+        const safe = (arr, i) => (i >= 0 ? arr[i] : '');
+        renameLogByCode.clear();
+        renameLogByName.clear();
+
+        for (let i = 1; i < res.data.length; i++) {
+          const r = res.data[i];
+          const rec = {
+            time: safe(r, idx.time) || safe(r, 0),
+            old : safe(r, idx.old)  || safe(r, 1),
+            name: safe(r, idx.name) || safe(r, 2),
+            code: String(safe(r, idx.code) || safe(r, 3) || '').trim()
+          };
+
+          // 依代碼建索引
+          if (rec.code) {
+            if (!renameLogByCode.has(rec.code)) renameLogByCode.set(rec.code, []);
+            renameLogByCode.get(rec.code).push(rec);
+          }
+          // 也用「新名」建一份（避免代碼缺漏時也能查）
+          if (rec.name) {
+            if (!renameLogByName.has(rec.name)) renameLogByName.set(rec.name, []);
+            renameLogByName.get(rec.name).push(rec);
+          }
+        }
+
+        // 依時間字串做粗略排序（新→舊）；若不是可解析日期也沒關係
+        const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
+        [...renameLogByCode.values()].forEach(arr => arr.sort(sorter));
+        [...renameLogByName.values()].forEach(arr => arr.sort(sorter));
+      } catch (e) {
+        console.error('解析更名 LOG 失敗', e);
+      }
+    },
+    error: (err) => console.error('讀取更名 LOG 失敗', err)
+  });
+}
+
+/** 取得某角色的更名紀錄（優先用代碼匹配，否則用目前名稱） */
+function getRenameHistory(name, code) {
+  const byCode = (code && renameLogByCode.get(String(code).trim())) || [];
+  if (byCode.length) return byCode;
+  return (name && renameLogByName.get(String(name).trim())) || [];
+}
+
+/** 開啟 Modal 並渲染清單 */
+function openRenameLogModal(name, code) {
+  const list = getRenameHistory(name, code);
+  const box  = document.getElementById('renameLogList');
+  const who  = document.getElementById('renameLogTarget');
+
+  who.textContent = `查詢角色：${name || '(未填)'}${code ? `（代碼：${code}）` : ''}`;
+
+  if (!list.length) {
+    box.innerHTML = `<div class="text-muted">此角色目前沒有更名紀錄。</div>`;
+  } else {
+    // 顯示成簡單時間軸
+    const html = list.map(x => `
+      <div class="d-flex align-items-start gap-2 py-1">
+        <span class="badge text-bg-secondary">${x.time || ''}</span>
+        <div>
+          <div><b>${x.name || ''}</b></div>
+          ${x.old ? `<div class="small text-muted">由「${x.old}」更名為「${x.name}」</div>` : ''}
+          ${x.code ? `<div class="small text-muted">角色代碼：${x.code}</div>` : ''}
+        </div>
+      </div>
+      <hr class="my-1">
+    `).join('');
+    box.innerHTML = html;
+  }
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('renameLogModal')).show();
+}
+
+// 綁定：點問號開啟 Modal（事件委派）
+$(document).on('click', '.name-history-btn', function () {
+  const name = $(this).data('name') || '';
+  const code = $(this).data('code') || '';
+  openRenameLogModal(name, code);
+});
 
 
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
@@ -445,7 +564,7 @@ function loadFromSheet(sheetId, gid = '0')
   $('#msg').text('');
   $('#tableBody').html(`
     <tr>
-    <td colspan="8" class="text-center text-muted">讀取中...</td>
+    <td colspan="7" class="text-center text-muted">讀取中...</td>
     </tr>
   `);
   
@@ -471,7 +590,6 @@ function loadFromSheet(sheetId, gid = '0')
         job:   r[3], // D
         level: r[4], // E
         attack:r[6], // F 乾表
-		intent:r[7], // H 參加意願（複選字串，如：拉圖斯, 殘暴炎魔）
         camp:  r[9], // G 營區
         rowIndex: i + 2
       }))
@@ -573,29 +691,23 @@ function renderTable(data)
     const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
     html += `
     <tr class="group-row">
-      <td colspan="8">所在營區：${k}${note}（${groups[k].length}）</td>
+      <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
     </tr>`;
     html += groups[k].map(r => `
     <tr>
-      <td>${r.name ?? ''}</td>
+      <td>
+		${r.name ?? ''}
+		<button type="button"
+		  class="name-history-btn"
+		  title="查看更名紀錄"
+		  data-name="${r.name ?? ''}"
+		  data-code="${r.code ?? ''}">?</button>
+	  </td>
       <td>${r.code ?? ''}</td>
       <td>${r.job ?? ''}</td>
       <td>${r.level ?? ''}</td>
       <td>${r.attack ?? ''}</td>
       <td>${r.camp ?? ''}</td>
-	  <td>
-        <div class="d-grid gap-1">
-          <button
-            class="btn btn-outline-secondary btn-sm btn-intent"
-            data-code="${(r.code ?? '').trim()}"
-            data-name="${r.name ?? ''}"
-            data-intent="${(r.intent ?? '').replace(/"/g, '&quot;')}"
-          >選擇</button>
-          <small class="text-muted text-truncate" title="${r.intent ?? ''}">
-            ${(r.intent || '').replace(/,/g,'、') || '（未設定）'}
-          </small>
-        </div>
-	  </td>
       <td>
       <button class="btn btn-outline-secondary btn-edit"
         data-row="${r.rowIndex || ''}"
@@ -642,38 +754,6 @@ function renderTable(data)
     });
   });
 }
-
-$(document).on('click', '.btn-intent', function() {
-  const code = String($(this).data('code') || '').trim();
-  const name = String($(this).data('name') || '').trim();
-  const intent = String($(this).data('intent') || '');
-
-  if (!code) { alert('此列沒有角色代碼，無法設定意願'); return; }
-
-  // 帶入角色資訊
-  $('#intentRoleName').text(name || '(未填)');
-  $('#intentRoleCode').text(code);
-
-  // 先全部清空
-  for (const id of Object.values(INTENT_ID_MAP)) {
-    const el = document.getElementById(id);
-    if (el) el.checked = false;
-  }
-
-  // 解析目前意願 → 勾選
-  const set = parseIntentToSet(intent); // 會把「拉圖斯(LV100↑)」也辨識成「拉圖斯」
-  for (const opt of INTENT_OPTIONS) {
-    const id = INTENT_ID_MAP[opt];
-    const el = document.getElementById(id);
-    if (el) el.checked = set.has(opt);
-  }
-
-  $('#intentMsg').text('');
-  const modalEl = document.getElementById('intentModal');
-  // 記住觸發按鈕，存檔後好回填小字
-  modalEl.dataset._triggerBtnId = this;
-  getIntentModal().show();
-});
 
 /* =========================
    分頁切換（★ 新增）
@@ -876,6 +956,7 @@ $(function ()
   }
   updateSourceBadge(target.sheetId, target.gid);
   loadFromSheet(target.sheetId, target.gid);
+  loadRenameLog(target.sheetId); 	// ★ 新增：同時把更名 LOG 讀進來（gid=170886432）
   
   // Event 小夥伴清單：重新整理
   $('#reloadBtn').on('click', function () 
@@ -1339,144 +1420,6 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
 // ====== （重要）刪除你原本在底部重複的兩個事件綁定，避免再次 new 與重複綁定 ======
 // （已在前面統一綁定 #btnJobStats 與 #jobStatsModal hidden 事件）
 
-/* =========================
-   參加意願（H 欄）：UI + 事件
-   存取：沿用 GAS_UPDATE_URL，action=upsertByCode，多帶 intent
-========================= */
-
-// 固定五個選項（純中文標籤，寫入 H 欄用）
-const INTENT_OPTIONS = ['拉圖斯','殘暴炎魔','困難拉圖斯','闇黑龍王','粉豆'];
-
-// 中文 → checkbox實際ID
-const INTENT_ID_MAP = {
-  '拉圖斯':     'intent-latus',
-  '殘暴炎魔':   'intent-zakum',
-  '困難拉圖斯': 'intent-latus-hard',
-  '闇黑龍王':   'intent-horntail',
-  '粉豆':       'intent-pinkbean'
-};
-// 反向：ID → 中文
-const ID_INTENT_MAP = Object.fromEntries(
-  Object.entries(INTENT_ID_MAP).map(([k,v]) => [v, k])
-);
-
-
-// 建立（或取得）Modal 實例
-function getIntentModal() {
-  const el = document.getElementById('intentModal');
-  return bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
-}
-
-// 解析清單上的 intent 字串 -> Set
-function parseIntentToSet(raw) {
-  const s = String(raw || '')
-    .replace(/[，、；;]+/g, ',')
-    .replace(/\s+/g, '')
-    .trim();
-  if (!s) return new Set();
-  const parts = s.split(',').map(x => x.trim()).filter(Boolean);
-  // 容錯：含關鍵字就視為有勾
-  const has = new Set();
-  for (const opt of INTENT_OPTIONS) {
-    if (parts.some(p => p.includes(opt))) has.add(opt);
-  }
-  return has;
-}
-
-// 將 Set -> 顯示/儲存字串（用半形逗號分隔）
-function intentSetToString(set) {
-  const arr = INTENT_OPTIONS.filter(opt => set.has(opt));
-  return arr.join(', ');
-}
-
-// ====== 事件：開啟「參加意願」對話框 ======
-$(document).on('click', '.btn-intent', function() {
-  const code = String($(this).data('code') || '').trim();
-  const name = String($(this).data('name') || '').trim();
-  const intent = String($(this).data('intent') || '');
-
-  if (!code) { alert('此列沒有角色代碼，無法設定意願'); return; }
-
-  // 帶入角色資訊
-  $('#intentRoleName').text(name || '(未填)');
-  $('#intentRoleCode').text(code);
-
-  // 預選勾勾
-  const set = parseIntentToSet(intent);
-  for (const opt of INTENT_OPTIONS) {
-    const id = 'intent-' + opt;         // 例如 intent-拉圖斯
-    const el = document.getElementById(id);
-    if (el) el.checked = set.has(opt);
-  }
-
-  // 清空訊息並顯示
-  $('#intentMsg').text('');
-  getIntentModal().show();
-
-  // 把觸發按鈕物件放在 modal dataset，存檔時好回寫 UI
-  const modalEl = document.getElementById('intentModal');
-  modalEl._triggerBtnEl = this; // 存 DOM 物件，別用 dataset
-});
-
-// ====== 事件：儲存「參加意願」 ======
-$('#btnSaveIntent').on('click', async function () {
-  const code = $('#intentRoleCode').text().trim();
-  if (!code) { $('#intentMsg').text('找不到角色代碼'); return; }
-
-  // 收集勾選（假設 checkbox 的 id 是：intent-拉圖斯 / intent-殘暴炎魔 / ...）
-  const set = new Set();
-  for (const opt of INTENT_OPTIONS) {
-    const el = document.getElementById('intent-' + opt);
-    if (el && el.checked) set.add(opt);
-  }
-  const value = intentSetToString(set); // "拉圖斯, 殘暴炎魔" 這種半形逗號字串
-
-  try {
-    $('#intentMsg').text('');
-
-    // 1) 從 lastData 找到同一列，把其它欄位一起帶回（避免被後端覆蓋成空）
-    const row = (lastData || []).find(x => String(x.code || '').trim() === code) || {};
-
-    const form = new URLSearchParams();
-    form.set('action', 'upsertByCode');
-    form.set('code',   code);
-    form.set('name',   row.name   ?? '');
-    form.set('job',    row.job    ?? '');
-    form.set('level',  row.level  ?? '');
-    form.set('attack', row.attack ?? '');
-    form.set('camp',   row.camp   ?? '');
-    form.set('intent', value);            // ★ H 欄「參加意願」
-
-    const resp  = await fetch(GAS_UPDATE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: form.toString(),
-      cache: 'no-store'
-    });
-
-    const text  = await resp.text();
-    let result; try { result = JSON.parse(text); } catch { throw new Error('GAS 回傳非 JSON'); }
-    if (!resp.ok || result.status !== 'ok') throw new Error(result.message || '儲存失敗');
-
-    // 2) 即時更新列表的小字與 data-intent
-    const modalEl = document.getElementById('intentModal');
-    const btn = modalEl._triggerBtnEl;    // ← 取回剛剛存的 DOM 參考
-    if (btn) {
-      btn.setAttribute('data-intent', value);
-      const small = btn.parentElement?.querySelector('small');
-      if (small) {
-        small.textContent = value ? value.replace(/,/g, '、') : '（未設定）';
-        small.setAttribute('title', value);
-      }
-    }
-
-    getIntentModal().hide();
-  } catch (e) {
-    console.error(e);
-    $('#intentMsg').text('儲存失敗：' + e.message);
-  }
-});
-
 </script>
 
   <!---->
@@ -1511,58 +1454,27 @@ $('#btnSaveIntent').on('click', async function () {
     </div>
   </div>
   </div>
-
   <!---->
-  <!-- 參加意願 Modal -->
-  <div class="modal fade" id="intentModal" tabindex="-1" aria-labelledby="intentLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="intentLabel">參加王團意願</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p class="small text-muted mb-2">
-            請勾選您目前「有意願」參加的王團（僅作意願統計，不代表安排優先權）。
-          </p>
-
-          <!-- 角色資訊 -->
-          <div class="mb-2">
-            <span class="badge text-bg-light">角色</span>
-            <span id="intentRoleName" class="fw-semibold"></span>
-            <span class="text-muted">（代碼：<span id="intentRoleCode"></span>）</span>
-          </div>
-
-          <!-- 參加意願 Modal（僅替換 checkbox 區塊） -->
-		  <div class="form-check">
-		    <input class="form-check-input" type="checkbox" value="拉圖斯" id="intent-拉圖斯">
-		    <label class="form-check-label" for="intent-拉圖斯">拉圖斯（LV100↑）</label>
+	<!-- 歷史更名紀錄 Modal -->
+	<div class="modal fade" id="renameLogModal" tabindex="-1" aria-labelledby="renameLogLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="renameLogLabel">歷史角色更名紀錄</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 		  </div>
-		  <div class="form-check">
-		    <input class="form-check-input" type="checkbox" value="困難拉圖斯" id="intent-困難拉圖斯">
-			<label class="form-check-label" for="intent-困難拉圖斯">困難拉圖斯</label>
+		  <div class="modal-body">
+			<div class="small text-muted mb-2" id="renameLogTarget">查詢角色：—</div>
+			<div id="renameLogList" class="border rounded p-2" style="min-height:120px;">
+			  （尚無紀錄）
+			</div>
 		  </div>
-		  <div class="form-check">
-		    <input class="form-check-input" type="checkbox" value="粉豆" id="intent-粉豆">
-		    <label class="form-check-label" for="intent-粉豆">粉豆</label>
+		  <div class="modal-footer">
+			<button class="btn btn-primary btn-sm" data-bs-dismiss="modal">關閉</button>
 		  </div>
-		  <div class="form-check">
-			<input class="form-check-input" type="checkbox" value="殘暴炎魔" id="intent-殘暴炎魔">
-			<label class="form-check-label" for="intent-殘暴炎魔">殘暴炎魔（LV135↑）</label>
-		  </div>
-		  <div class="form-check">
-			<input class="form-check-input" type="checkbox" value="闇黑龍王" id="intent-闇黑龍王">
-			<label class="form-check-label" for="intent-闇黑龍王">闇黑龍王</label>
-		  </div>
-
-          <div id="intentMsg" class="text-danger small mt-2"></div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-light border" data-bs-dismiss="modal">取消</button>
-          <button id="btnSaveIntent" class="btn btn-primary">儲存</button>
-        </div>
-      </div>
-    </div>
-  </div>
+		</div>
+	  </div>
+	</div>
+  
 </body>
 </html>
