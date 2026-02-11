@@ -148,7 +148,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1424</span>
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-1249</span>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
       <!-- 小夥伴清單 -->
@@ -190,19 +190,23 @@
     </div>
 	<div class="card shadow-sm">
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h4 class="card-title mb-2">🏋️ 角色清單</h4>
-          <div class="d-flex align-items-center gap-2">
-            <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+        <div class="d-flex align-items-center mb-2">
+		  <h4 class="card-title mb-2 mb-sm-0">🏋️ 角色清單</h4>
+		  <!-- 右側工具列：推到最右、可自動換行；搜尋框不撐開 -->
+		  <div class="d-flex align-items-center gap-2 flex-wrap ms-auto" style="min-width:0;">
+			<button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+
 			<!-- 搜尋框（固定寬度、不伸展） -->
 			<div class="input-group input-group-sm" style="width: 200px; flex: 0 0 auto;">
-			  <input id="charSearchInput" type="text" class="form-control" placeholder="搜尋角色" style="min-width:0;">
+			  <input id="charSearchInput" type="text" class="form-control w-auto" placeholder="搜尋角色" style="min-width:0;">
 			  <button id="charSearchBtn" class="btn btn-outline-secondary">搜尋</button>
 			</div>
+
 			<a class="btn btn-outline-success btn-sm" href="https://docs.google.com/forms/d/e/1FAIpQLSf8cD32ZkhEh38MIL2bHP3Rypm1fWdmCDzlzuEKkxdQLlgkTg/viewform" target="_blank" rel="noopener noreferrer">參加王團意願填寫表</a>
-          <button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
-        <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
-      </div>
+			<button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
+			<button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
+		  </div>
+		</div>
     </div>
       <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
       <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
@@ -907,16 +911,14 @@ function renderTable(data)
     <tr id="row-${(r.code||'').toString().trim().replace(/[^a-zA-Z0-9_-]/g,'_')}">
       <td>${r.name ?? ''}</td>
 	  <td>
-		<span style="float: left">
-		<button type="button"
-		  class="name-history-btn"
-		  title="查看更名紀錄"
-		  data-name="${r.name ?? ''}"
-		  data-code="${r.code ?? ''}">?
-		</button>
-		<span class="font-monospace">
-		  ${r.code ?? ''}
-		<div style="clear: both;"></div>
+		<div class="d-inline-flex align-items-center" style="gap:.5rem;">
+		  <button type="button"
+		    class="name-history-btn"
+		    title="查看更名紀錄"
+		    data-name="${r.name ?? ''}"
+		    data-code="${r.code ?? ''}">?</button>
+	      <span class="font-monospace">${r.code ?? ''}</span>
+	    </div>
 	  </td>
       <td>${r.job ?? ''}</td>
       <td>${r.level ?? ''}</td>
@@ -1415,6 +1417,8 @@ function openEditor(values, onSave)
 			  name:   updated.name,
 			  // when 可省略，就會用現在時間
 			});
+			// ⬇ 這行很關鍵：把快取重新讀進來
+			loadRenameLog(t.sheetId);
 		  } catch (logErr) {
 			console.warn('寫入更名LOG失敗（不影響新增本體）：', logErr);
 			// 可選：提示但不擋流程
