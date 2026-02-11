@@ -445,7 +445,7 @@ function loadFromSheet(sheetId, gid = '0')
   $('#msg').text('');
   $('#tableBody').html(`
     <tr>
-    <td colspan="7" class="text-center text-muted">讀取中...</td>
+    <td colspan="8" class="text-center text-muted">讀取中...</td>
     </tr>
   `);
   
@@ -471,6 +471,7 @@ function loadFromSheet(sheetId, gid = '0')
         job:   r[3], // D
         level: r[4], // E
         attack:r[6], // F 乾表
+		intent:r[7], // H 參加意願（複選字串，如：拉圖斯, 殘暴炎魔）
         camp:  r[9], // G 營區
         rowIndex: i + 2
       }))
@@ -583,12 +584,18 @@ function renderTable(data)
       <td>${r.attack ?? ''}</td>
       <td>${r.camp ?? ''}</td>
 	  <td>
-		<button class="btn btn-outline-secondary btn-sm btn-intent"
-		　data-code="${(r.code ?? '').trim()}"
-		　data-name="${r.name ?? ''}">
-		　選擇
-		</button>
-	　</td>
+        <div class="d-grid gap-1">
+          <button
+            class="btn btn-outline-secondary btn-sm btn-intent"
+            data-code="${(r.code ?? '').trim()}"
+            data-name="${r.name ?? ''}"
+            data-intent="${(r.intent ?? '').replace(/"/g, '&quot;')}"
+          >選擇</button>
+          <small class="text-muted text-truncate" title="${r.intent ?? ''}">
+            ${(r.intent || '').replace(/,/g,'、') || '（未設定）'}
+          </small>
+        </div>
+	  </td>
       <td>
       <button class="btn btn-outline-secondary btn-edit"
         data-row="${r.rowIndex || ''}"
@@ -1300,6 +1307,125 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
 // ====== （重要）刪除你原本在底部重複的兩個事件綁定，避免再次 new 與重複綁定 ======
 // （已在前面統一綁定 #btnJobStats 與 #jobStatsModal hidden 事件）
 
+/* =========================
+   參加意願（H 欄）：UI + 事件
+   存取：沿用 GAS_UPDATE_URL，action=upsertByCode，多帶 intent
+========================= */
+
+// 固定五個選項（與欄位選項一致）
+const INTENT_OPTIONS = [
+  '拉圖斯', '殘暴炎魔', '困難拉圖斯', '闇黑龍王', '粉豆'
+];
+
+// 建立（或取得）Modal 實例
+function getIntentModal() {
+  const el = document.getElementById('intentModal');
+  return bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
+}
+
+// 解析清單上的 intent 字串 -> Set
+function parseIntentToSet(raw) {
+  const s = String(raw || '')
+    .replace(/[，、；;]+/g, ',')
+    .replace(/\s+/g, '')
+    .trim();
+  if (!s) return new Set();
+  const parts = s.split(',').map(x => x.trim()).filter(Boolean);
+  // 容錯：含關鍵字就視為有勾
+  const has = new Set();
+  for (const opt of INTENT_OPTIONS) {
+    if (parts.some(p => p.includes(opt))) has.add(opt);
+  }
+  return has;
+}
+
+// 將 Set -> 顯示/儲存字串（用半形逗號分隔）
+function intentSetToString(set) {
+  const arr = INTENT_OPTIONS.filter(opt => set.has(opt));
+  return arr.join(', ');
+}
+
+// ====== 事件：開啟「參加意願」對話框 ======
+$(document).on('click', '.btn-intent', function() {
+  const code = String($(this).data('code') || '').trim();
+  const name = String($(this).data('name') || '').trim();
+  const intent = String($(this).data('intent') || '');
+
+  if (!code) { alert('此列沒有角色代碼，無法設定意願'); return; }
+
+  // 帶入角色資訊
+  $('#intentRoleName').text(name || '(未填)');
+  $('#intentRoleCode').text(code);
+
+  // 預選勾勾
+  const set = parseIntentToSet(intent);
+  for (const opt of INTENT_OPTIONS) {
+    const id = 'intent-' + opt;         // 例如 intent-拉圖斯
+    const el = document.getElementById(id);
+    if (el) el.checked = set.has(opt);
+  }
+
+  // 清空訊息並顯示
+  $('#intentMsg').text('');
+  getIntentModal().show();
+
+  // 把觸發按鈕物件放在 modal dataset，存檔時好回寫 UI
+  const modalEl = document.getElementById('intentModal');
+  modalEl.dataset._triggerBtnId = this; // 直接存 DOM 參考
+});
+
+// ====== 事件：儲存「參加意願」 ======
+$('#btnSaveIntent').on('click', async function() {
+  const code = $('#intentRoleCode').text().trim();
+  if (!code) { $('#intentMsg').text('找不到角色代碼'); return; }
+
+  // 收集勾選
+  const set = new Set();
+  for (const opt of INTENT_OPTIONS) {
+    const el = document.getElementById('intent-' + opt);
+    if (el && el.checked) set.add(opt);
+  }
+  const value = intentSetToString(set); // e.g. "拉圖斯, 殘暴炎魔"
+
+  try {
+    $('#intentMsg').text('');
+
+    // ★ 與「修改」同一 API：upsertByCode，多帶 intent
+    const form = new URLSearchParams();
+    form.set('action', 'upsertByCode');
+    form.set('code', code);
+    form.set('intent', value); // 後端請寫入 H 欄「參加意願」
+
+    const resp = await fetch(GAS_UPDATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: form.toString(),
+      cache: 'no-store'
+    });
+
+    const text = await resp.text();
+    let result; try { result = JSON.parse(text); } catch { throw new Error('GAS 回傳非 JSON'); }
+    if (!resp.ok || result.status !== 'ok') throw new Error(result.message || '儲存失敗');
+
+    // 前端 UI 即時更新：把列表上該列的小字與 data-intent 改掉
+    const modalEl = document.getElementById('intentModal');
+    const btn = modalEl.dataset._triggerBtnId; // 開啟對話框的那顆按鈕
+    if (btn) {
+      btn.setAttribute('data-intent', value);
+      // 更新同格下方的小字
+      const small = btn.parentElement?.querySelector('small');
+      if (small) {
+        small.textContent = value ? value.replace(/,/g, '、') : '（未設定）';
+        small.setAttribute('title', value);
+      }
+    }
+
+    getIntentModal().hide();
+  } catch (e) {
+    console.error(e);
+    $('#intentMsg').text('儲存失敗：' + e.message);
+  }
+});
 </script>
 
   <!---->
