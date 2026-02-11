@@ -200,13 +200,14 @@
           <th style="width: 20%;">角色職業</th>
           <th style="width: 10%;">角色等級</th>
           <th style="width: 10%;">角色乾表</th>
-          <th style="width: 20%;">所在營區</th>
+          <th style="width: 10%;">所在營區</th>
+		  <th style="width: 10%;">參加意願</th>
           <th style="width: 10%;">修改資料</th>
         </tr>
         </thead>
         <tbody id="tableBody">
         <tr>
-          <td colspan="7" class="text-center text-muted">尚未讀取資料</td>
+          <td colspan="8" class="text-center text-muted">尚未讀取資料</td>
         </tr>
         </tbody>
       </table>
@@ -571,7 +572,7 @@ function renderTable(data)
     const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
     html += `
     <tr class="group-row">
-      <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
+      <td colspan="8">所在營區：${k}${note}（${groups[k].length}）</td>
     </tr>`;
     html += groups[k].map(r => `
     <tr>
@@ -581,6 +582,13 @@ function renderTable(data)
       <td>${r.level ?? ''}</td>
       <td>${r.attack ?? ''}</td>
       <td>${r.camp ?? ''}</td>
+	  <td>
+		<button class="btn btn-outline-secondary btn-sm btn-intent"
+		　data-code="${(r.code ?? '').trim()}"
+		　data-name="${r.name ?? ''}">
+		　選擇
+		</button>
+	　</td>
       <td>
       <button class="btn btn-outline-secondary btn-edit"
         data-row="${r.rowIndex || ''}"
@@ -1328,6 +1336,55 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
   </div>
 
   <!---->
-  
+  <!-- 參加意願 Modal -->
+  <div class="modal fade" id="intentModal" tabindex="-1" aria-labelledby="intentLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="intentLabel">參加王團意願</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="small text-muted mb-2">
+            請勾選您目前「有意願」參加的王團（僅作意願統計，不代表安排優先權）。
+          </p>
+
+          <!-- 角色資訊 -->
+          <div class="mb-2">
+            <span class="badge text-bg-light">角色</span>
+            <span id="intentRoleName" class="fw-semibold"></span>
+            <span class="text-muted">（代碼：<span id="intentRoleCode"></span>）</span>
+          </div>
+
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="拉圖斯(LV100↑)" id="intent-latus">
+            <label class="form-check-label" for="intent-latus">拉圖斯</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="困難拉圖斯" id="intent-latus-hard">
+            <label class="form-check-label" for="intent-latus-hard">困難拉圖斯</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="粉豆" id="intent-pinkbean">
+            <label class="form-check-label" for="intent-pinkbean">粉豆</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="殘暴炎魔(LV135↑)" id="intent-zakum">
+            <label class="form-check-label" for="intent-zakum">殘暴炎魔</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="闇黑龍王" id="intent-horntail">
+            <label class="form-check-label" for="intent-horntail">闇黑龍王</label>
+          </div>
+
+          <div id="intentMsg" class="text-danger small mt-2"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-light border" data-bs-dismiss="modal">取消</button>
+          <button id="btnSaveIntent" class="btn btn-primary">儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
