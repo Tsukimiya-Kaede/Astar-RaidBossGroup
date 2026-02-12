@@ -113,13 +113,42 @@
       width: 100%;
       border-collapse: collapse;
     }
+	
+	/* 角色名稱右側的小問號按鈕 */
+	.name-history-btn{
+	  display:inline-flex; align-items:center; justify-content:center;
+	  width:22px; height:22px; line-height:22px;
+	  border-radius:50%; border:0;
+	  background:#ffc107; color:#212529; font-weight:700;
+	  cursor:pointer; margin-left:.25rem;
+	}
+	.name-history-btn:hover{ filter: brightness(0.95); }
+	/* 角色清單工具列：讓搜尋框不要把排版撐開 */
+	.toolbar-compact{ gap:.5rem; flex-wrap:wrap; }
+	.toolbar-compact .search-group{
+	  width:180px;          /* 固定窄寬 */
+	  flex:0 0 auto;        /* 不要伸展 */
+	}
+	.toolbar-compact .search-group input{ min-width:0; } /* 防止被內容撐大 */
+	@media (max-width:576px){
+	  .toolbar-compact .search-group{ width:150px; }     /* 手機再小一點 */
+	}
+	/* 捲到列後的高亮動畫 */
+	.row-pulse {
+	  animation: rowPulse 2s ease-out 0s 1;
+	}
+	@keyframes rowPulse {
+	  0%   { background-color: #fff3cd; }   /* 淡黃 */
+	  50%  { background-color: #ffe8a1; }
+	  100% { background-color: transparent; }
+	}
   </style>
 </head>
 
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0905</span>
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0945</span>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
       <!-- 小夥伴清單 -->
@@ -159,20 +188,23 @@
       <div id="msg" class="text-danger mt-2"></div>
     </div>
     </div>
-
-    <div class="card shadow-sm">
+	<div class="card shadow-sm">
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h4 class="card-title mb-2">🏋️ 角色清單</h4>
-          <div class="d-flex align-items-center gap-2">
-            <button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
-			<!-- ★ 新增按鈕：參加王團意願 -->
+        <div class="d-flex align-items-center mb-2">
+		  <h4 class="card-title mb-2 mb-sm-0">🏋️ 角色清單</h4>
+		  <!-- 右側工具列：推到最右、可自動換行；搜尋框不撐開 -->
+		  <div class="d-flex align-items-center gap-2 flex-wrap ms-auto" style="min-width:0;">
+			<button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
+
+			<!-- 搜尋框（固定寬度、不伸展） -->
+			<input id="charSearchInput" type="text" class="form-control w-auto" placeholder="搜尋角色" style="min-width:0;">
+			<button id="charSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
 			<a class="btn btn-outline-success btn-sm" href="https://docs.google.com/forms/d/e/1FAIpQLSf8cD32ZkhEh38MIL2bHP3Rypm1fWdmCDzlzuEKkxdQLlgkTg/viewform" target="_blank" rel="noopener noreferrer">參加王團意願填寫表</a>
-            <button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
-            <button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
-          </div>
-        </div>
-  
+			<button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
+			<button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
+		  </div>
+		</div>
+    </div>
       <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
       <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -367,6 +399,282 @@ $(document).on('hidden.bs.modal', '#jobStatsModal', function () {
   if (box) box.innerHTML = '（點一下左邊的統計圖切片，這裡會列出角色名稱）';
 });
 
+/* =========================
+   歷史角色更名：讀取 + 顯示
+========================= */
+// 你的 LOG 表：同一份 Sheet，改 gid 即可
+const RENAME_LOG_GID = '170886432';
+
+// 快取（依代碼、依新名）
+let renameLogByCode = new Map();
+let renameLogByName = new Map();
+
+/** 讀取更名 LOG（CSV） */
+function loadRenameLog(sheetId) {
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${RENAME_LOG_GID}`;
+  Papa.parse(csvUrl, {
+    download: true,
+    skipEmptyLines: true,
+    complete: (res) => {
+      try {
+        if (!res.data || res.data.length < 2) return;
+
+        // 嘗試從表頭判斷欄位（盡量容錯）
+        const header = res.data[0].map(h => String(h || '').trim());
+        const idx = {
+          time: header.findIndex(h => /^(時間|timestamp|time)$/i.test(h)),
+          code: header.findIndex(h => /^(角色代碼|代碼|code)$/i.test(h)),
+          old : header.findIndex(h => /^(舊名|old.*name)$/i.test(h)),
+          name: header.findIndex(h => /^(新名|名稱|name|new.*name)$/i.test(h))
+        };
+
+        // 若沒偵測到表頭，就用預設位置（0:時間 1:舊名 2:新名 3:代碼）可按照你表的實際順序調整
+        const safe = (arr, i) => (i >= 0 ? arr[i] : '');
+        renameLogByCode.clear();
+        renameLogByName.clear();
+
+        for (let i = 1; i < res.data.length; i++) {
+          const r = res.data[i];
+          const rec = {
+            time: safe(r, idx.time) || safe(r, 0),
+            old : safe(r, idx.old)  || safe(r, 1),
+            name: safe(r, idx.name) || safe(r, 2),
+            code: String(safe(r, idx.code) || safe(r, 3) || '').trim()
+          };
+
+          // 依代碼建索引
+          if (rec.code) {
+            if (!renameLogByCode.has(rec.code)) renameLogByCode.set(rec.code, []);
+            renameLogByCode.get(rec.code).push(rec);
+          }
+          // 也用「新名」建一份（避免代碼缺漏時也能查）
+          if (rec.name) {
+            if (!renameLogByName.has(rec.name)) renameLogByName.set(rec.name, []);
+            renameLogByName.get(rec.name).push(rec);
+          }
+        }
+
+        // 依時間字串做粗略排序（新→舊）；若不是可解析日期也沒關係
+        const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
+        [...renameLogByCode.values()].forEach(arr => arr.sort(sorter));
+        [...renameLogByName.values()].forEach(arr => arr.sort(sorter));
+      } catch (e) {
+        console.error('解析更名 LOG 失敗', e);
+      }
+    },
+    error: (err) => console.error('讀取更名 LOG 失敗', err)
+  });
+}
+/* =========================
+   搜尋：同時比對清單與更名 LOG
+========================= */
+
+// ★ 補充：也以「舊名」建一份索引，讓舊名能被搜尋到
+let renameLogByOldName = new Map();
+
+// ⬇︎ 把這段「補建舊名索引」加到你現有的 loadRenameLog(...) 內部、for 迴圈 push 完之後
+// ----（說明：若你不想改 loadRenameLog，本段也可在它 complete 結束後另外跑一遍 map，但直接寫在原函式最省事）----
+//   if (rec.old) {
+//     if (!renameLogByOldName.has(rec.old)) renameLogByOldName.set(rec.old, []);
+//     renameLogByOldName.get(rec.old).push(rec);
+//   }
+//   // 完整度：讓舊名/新名 map 都依時間新→舊排序（保險）
+/*
+const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
+[...renameLogByOldName.values()].forEach(arr => arr.sort(sorter));
+*/
+
+//
+// 若你不方便回頭改 loadRenameLog，可以在這裡做一次同步（保險寫法）：
+function rebuildOldNameIndexFromCaches() {
+  renameLogByOldName = new Map();
+  if (renameLogByCode.size === 0 && renameLogByName.size === 0) return;
+  // 由 code cache 重建（最完整）
+  for (const arr of renameLogByCode.values()) {
+    for (const rec of arr) {
+      const old = (rec?.old || '').trim();
+      if (!old) continue;
+      if (!renameLogByOldName.has(old)) renameLogByOldName.set(old, []);
+      renameLogByOldName.get(old).push(rec);
+    }
+  }
+  const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
+  [...renameLogByOldName.values()].forEach(a => a.sort(sorter));
+}
+
+// ★ 工具：大小寫不敏感 + 去空白 的「包含」判斷
+function includesLike(haystack, needle) {
+  if (!needle) return false;
+  const a = String(haystack || '').toLowerCase().trim();
+  const b = String(needle || '').toLowerCase().trim();
+  return a.includes(b);
+}
+
+// 回傳：符合條件的「角色代碼」集合（從當前清單名字 or LOG 舊名/新名）
+function findCodesByNameKeyword(keyword) {
+  const codes = new Set();
+
+  // 1) 直接掃當前清單的名字
+  for (const r of (lastData || [])) {
+    if (includesLike(r?.name, keyword)) {
+      if (r?.code) codes.add(String(r.code).trim());
+    }
+  }
+
+  // 2) 掃 LOG：新名
+  for (const [newName, arr] of renameLogByName.entries()) {
+    if (!includesLike(newName, keyword)) continue;
+    arr.forEach(rec => rec?.code && codes.add(String(rec.code).trim()));
+  }
+
+  // 3) 掃 LOG：舊名
+  for (const [oldName, arr] of renameLogByOldName.entries()) {
+    if (!includesLike(oldName, keyword)) continue;
+    arr.forEach(rec => rec?.code && codes.add(String(rec.code).trim()));
+  }
+
+  return codes;
+}
+
+// 依代碼拿當前清單資料
+function getCurrentRowsByCodes(codeSet) {
+  const out = [];
+  const want = new Set(Array.from(codeSet).map(c => String(c).trim()));
+  for (const r of (lastData || [])) {
+    const c = String(r?.code || '').trim();
+    if (c && want.has(c)) out.push(r);
+  }
+  return out;
+}
+
+// 取某代碼的完整更名紀錄（新→舊）
+function getSortedLogByCode(code) {
+  const arr = renameLogByCode.get(String(code).trim()) || [];
+  // 這裡的排序在 loadRenameLog 已做；再保險一次
+  return [...arr].sort((a,b)=> String(b.time).localeCompare(String(a.time)));
+}
+
+// 渲染搜尋結果
+function renderSearchResults(keyword, rows, codeSet) {
+  // Echo 關鍵字
+  $('#searchQueryEcho').text(`關鍵字：${keyword || '（空）'}`);
+
+  const tbody = $('#searchResultBody');
+  if (!rows || rows.length === 0) {
+    tbody.html(`<tr><td colspan="7" class="text-center text-muted">無符合項目</td></tr>`);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('searchResultModal')).show();
+    return;
+  }
+
+  const html = rows.map(r => {
+    const logs = getSortedLogByCode(r.code);
+    // 將更名紀錄做成小列表
+    const logHtml = logs.length
+      ? logs.map(x => `
+          <div class="small">
+            <span class="badge text-bg-secondary">${x.time || ''}</span>
+            ${x.old ? `「${x.old}」→` : ''}「${x.name || ''}」
+          </div>
+        `).join('')
+      : `<span class="text-muted small">（無紀錄）</span>`;
+
+    return `
+      <tr>
+        <td>${r.name ?? ''}</td>
+        <td>${r.code ?? ''}</td>
+        <td>${r.job ?? ''}</td>
+        <td>${r.level ?? ''}</td>
+        <td>${r.attack ?? ''}</td>
+        <td>${r.camp ?? ''}</td>
+        <td>
+		  ${logHtml}
+		  <div class="mt-1">
+		    <button type="button"
+		  	  class="btn btn-sm btn-outline-primary btn-locate-row"
+			  data-code="${r.code ?? ''}"
+		  	  data-camp="${r.camp ?? ''}">
+		  	  🔎 定位此列
+		    </button>
+		  </div>
+		</td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.html(html);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('searchResultModal')).show();
+}
+
+// 綁定搜尋框（按鈕 + Enter）
+function doCharacterSearch() {
+  const kw = $('#charSearchInput').val().trim();
+  if (!kw) {
+    // 空字串：直接提示
+    $('#searchQueryEcho').text('關鍵字：（空）');
+    $('#searchResultBody').html(`<tr><td colspan="7" class="text-center text-muted">請輸入關鍵字</td></tr>`);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('searchResultModal')).show();
+    return;
+  }
+
+  // 確保舊名索引存在
+  if (!renameLogByOldName || renameLogByOldName.size === 0) {
+    rebuildOldNameIndexFromCaches();
+  }
+
+  const codes = findCodesByNameKeyword(kw);
+  const rows  = getCurrentRowsByCodes(codes);
+
+  renderSearchResults(kw, rows, codes);
+}
+
+// 事件綁定（放在 $(function(){ ... }) 內或外皆可；若放外層建議保險用委派）：
+$(document).on('click', '#charSearchBtn', doCharacterSearch);
+$(document).on('keypress', '#charSearchInput', function(e){
+  if (e.which === 13) doCharacterSearch();
+});
+
+/** 取得某角色的更名紀錄（優先用代碼匹配，否則用目前名稱） */
+function getRenameHistory(name, code) {
+  const byCode = (code && renameLogByCode.get(String(code).trim())) || [];
+  if (byCode.length) return byCode;
+  return (name && renameLogByName.get(String(name).trim())) || [];
+}
+
+/** 開啟 Modal 並渲染清單 */
+function openRenameLogModal(name, code) {
+  const list = getRenameHistory(name, code);
+  const box  = document.getElementById('renameLogList');
+  const who  = document.getElementById('renameLogTarget');
+
+  who.textContent = `查詢角色：${name || '(未填)'}${code ? `（代碼：${code}）` : ''}`;
+
+  if (!list.length) {
+    box.innerHTML = `<div class="text-muted">此角色目前沒有更名紀錄。</div>`;
+  } else {
+    // 顯示成簡單時間軸
+    const html = list.map(x => `
+      <div class="d-flex align-items-start gap-2 py-1">
+        <span class="badge text-bg-secondary">${x.time || ''}</span>
+        <div>
+          <div><b>${x.name || ''}</b></div>
+          ${x.old ? `<div class="small text-muted">由「${x.old}」更名為「${x.name}」</div>` : ''}
+          ${x.code ? `<div class="small text-muted">角色代碼：${x.code}</div>` : ''}
+        </div>
+      </div>
+      <hr class="my-1">
+    `).join('');
+    box.innerHTML = html;
+  }
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('renameLogModal')).show();
+}
+
+// 綁定：點問號開啟 Modal（事件委派）
+$(document).on('click', '.name-history-btn', function () {
+  const name = $(this).data('name') || '';
+  const code = $(this).data('code') || '';
+  openRenameLogModal(name, code);
+});
 
 
 // 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
@@ -377,7 +685,30 @@ $(document).on('hidden.bs.modal', '#jobStatsModal', function () {
 /* =========================
    設定：請填你的 Apps Script Web App（exec）URL
 ========================= */
-const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
+const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwAAMocuEMv_Q1xbEqP7yykZ61Wvo-8v_aMDvzyDjrxHtBFtS2MDYr1rTXZfRUaAfL8/exec';
+//'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
+// 把「新增角色」事件記錄到 歷史更名LOG（gid=170886432）
+async function appendRenameLogToGAS({ code, name, when }) {
+  if (!code || !name) throw new Error('appendRenameLog 需要 code 與 name');
+  const form = new URLSearchParams();
+  form.set('action', 'appendRenameLog');   // 後端會用這個分流
+  form.set('code',   String(code).trim());
+  form.set('name',   String(name).trim());
+  // 送本地時間的 ISO 字串（後端會再依台北時區格式化）
+  form.set('when',   when || new Date().toISOString());
+
+  const resp = await fetch(GAS_UPDATE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+    body: form.toString(),
+    cache: 'no-store',
+    redirect: 'follow'
+  });
+  const text = await resp.text();
+  let json; try { json = JSON.parse(text); } catch(e) { throw new Error('GAS 回傳非 JSON'); }
+  if (!resp.ok || json.status !== 'ok') throw new Error(json.message || 'appendRenameLog 失敗');
+  return json;
+}
 
 /* =========================
    夜間模式切換
@@ -574,9 +905,18 @@ function renderTable(data)
       <td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td>
     </tr>`;
     html += groups[k].map(r => `
-    <tr>
+    <tr id="row-${(r.code||'').toString().trim().replace(/[^a-zA-Z0-9_-]/g,'_')}">
       <td>${r.name ?? ''}</td>
-      <td>${r.code ?? ''}</td>
+	  <td>
+		<div class="d-inline-flex align-items-center" style="gap:.5rem;">
+		  <button type="button"
+		    class="name-history-btn"
+		    title="查看更名紀錄"
+		    data-name="${r.name ?? ''}"
+		    data-code="${r.code ?? ''}">?</button>
+	      <span class="font-monospace">${r.code ?? ''}</span>
+	    </div>
+	  </td>
       <td>${r.job ?? ''}</td>
       <td>${r.level ?? ''}</td>
       <td>${r.attack ?? ''}</td>
@@ -829,6 +1169,7 @@ $(function ()
   }
   updateSourceBadge(target.sheetId, target.gid);
   loadFromSheet(target.sheetId, target.gid);
+  loadRenameLog(target.sheetId); 	// ★ 新增：同時把更名 LOG 讀進來（gid=170886432）
   
   // Event 小夥伴清單：重新整理
   $('#reloadBtn').on('click', function () 
@@ -1063,13 +1404,14 @@ function openEditor(values, onSave)
       }
 
       if (isNew) {
-        const t = resolveSheetTarget(DEFAULT_SHEET_URL);
-        loadFromSheet(t.sheetId, t.gid);
-      } else {
-        onSave?.(updated);
-      }
-      alert(isNew ? '新增成功！' : '更新成功！');
-      close(); // ✅ 成功就關閉；不必還原按鈕
+		  const t = resolveSheetTarget(DEFAULT_SHEET_URL);
+		  loadFromSheet(t.sheetId, t.gid);
+		  loadRenameLog(t.sheetId);
+		} else {
+		  onSave?.(updated);
+		}
+		alert(isNew ? '新增成功！' : '更新成功！');
+		close();
     } catch (e) {
       console.error(e);
       alert('送出失敗：' + e.message);
@@ -1291,6 +1633,68 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
 
 // ====== （重要）刪除你原本在底部重複的兩個事件綁定，避免再次 new 與重複綁定 ======
 // （已在前面統一綁定 #btnJobStats 與 #jobStatsModal hidden 事件）
+/* ========= 讓分頁自動切到該列所在營區（若有需要） ========= */
+function resolveTabByCamp(campText){
+  const t = (campText||'').trim();
+  if (/^普拉[一二三四五六七八九十]營$/.test(t)) return 'latus';
+  if (/^困拉[一二三四五六七八九十]營$/.test(t)) return 'latushard';
+  if (/^炎魔[一二三四五六七八九十]營$/.test(t)) return 'zakum';
+  if (t === '訓練營' || t === '外援大大') return 'trainext';
+  return currentTab; // 不變
+}
+
+/* ========= 捲動 + 高亮 ========= */
+function scrollToRowByCode(code, campOptional){
+  if (!code) return;
+
+  // 1) 若有提供營區，先切到正確分頁（避免找不到）
+  if (campOptional){
+    const tab = resolveTabByCamp(campOptional);
+    if (tab !== currentTab) setTab(tab);
+  }
+
+  // 2) 設個小延遲，等分頁重繪完再找元素
+  setTimeout(() => {
+    const safeId = String(code).trim().replace(/[^a-zA-Z0-9_-]/g,'_');
+    const tr = document.getElementById(`row-${safeId}`);
+    if (!tr) {
+      // 找不到就不處理
+      return;
+    }
+
+    // 捲到畫面中央
+    tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // 高亮動畫（加 class -> 等動畫完移除）
+    tr.classList.remove('row-pulse'); // 先移除一次，方便連續點
+    // 觸發 reflow 讓動畫可重播
+    void tr.offsetWidth;
+    tr.classList.add('row-pulse');
+
+    // 2 秒後移除 class（與動畫時間對齊）
+    setTimeout(() => tr.classList.remove('row-pulse'), 2000);
+  }, 80);
+}
+
+// 搜尋結果「定位此列」按鈕
+$(document).on('click', '.btn-locate-row', function(){
+  const code = $(this).data('code') || '';
+  const camp = $(this).data('camp') || '';
+  // 關掉搜尋結果 Modal
+  const modalEl = document.getElementById('searchResultModal');
+  if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+
+  // 捲動 + 高亮
+  scrollToRowByCode(code, camp);
+});
+
+$(document).on('click', '.name-history-btn', function () {
+  const name = $(this).data('name') || '';
+  const code = $(this).data('code') || '';
+  openRenameLogModal(name, code);
+  // 同步高亮目前這一列
+  scrollToRowByCode(code);
+});
 
 </script>
 
@@ -1326,8 +1730,61 @@ $('#guideTabs').on('click', 'button.nav-link', function () {
     </div>
   </div>
   </div>
-
   <!---->
-  
+	<!-- 歷史更名紀錄 Modal -->
+	<div class="modal fade" id="renameLogModal" tabindex="-1" aria-labelledby="renameLogLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="renameLogLabel">歷史角色更名紀錄</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		  </div>
+		  <div class="modal-body">
+			<div class="small text-muted mb-2" id="renameLogTarget">查詢角色：—</div>
+			<div id="renameLogList" class="border rounded p-2" style="min-height:120px;">
+			  （尚無紀錄）
+			</div>
+		  </div>
+		  <div class="modal-footer">
+			<button class="btn btn-primary btn-sm" data-bs-dismiss="modal">關閉</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
+  <!-- 搜尋結果 Modal -->
+	<div class="modal fade" id="searchResultModal" tabindex="-1" aria-labelledby="searchResultLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title" id="searchResultLabel">搜尋結果</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		  </div>
+		  <div class="modal-body">
+			<div class="small text-muted mb-2" id="searchQueryEcho">關鍵字：—</div>
+			<div class="table-responsive">
+			  <table class="table table-sm table-hover align-middle">
+				<thead class="table-secondary">
+				  <tr>
+					<th style="width:20%;">角色名稱</th>
+					<th style="width:12%;">角色代碼</th>
+					<th style="width:18%;">角色職業</th>
+					<th style="width:10%;">等級</th>
+					<th style="width:10%;">乾表</th>
+					<th style="width:15%;">所在營區</th>
+					<th style="width:15%;">更名紀錄</th>
+				  </tr>
+				</thead>
+				<tbody id="searchResultBody">
+				  <tr><td colspan="7" class="text-center text-muted">無符合項目</td></tr>
+				</tbody>
+			  </table>
+			</div>
+		  </div>
+		  <div class="modal-footer">
+			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
 </body>
 </html>
