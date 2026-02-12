@@ -148,7 +148,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0804</span>
+    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁-0911</span>
     <div class="ms-auto d-flex align-items-center gap-2">
       <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
       <!-- 小夥伴清單 -->
@@ -1409,21 +1409,7 @@ function openEditor(values, onSave)
       if (isNew) {
 		  const t = resolveSheetTarget(DEFAULT_SHEET_URL);
 		  loadFromSheet(t.sheetId, t.gid);
-
-		  // ★ 新增：把新增事件記錄到「歷史更名LOG」
-		  try {
-			await appendRenameLogToGAS({
-			  code:   updated.code,
-			  name:   updated.name,
-			  // when 可省略，就會用現在時間
-			});
-			// ⬇ 這行很關鍵：把快取重新讀進來
-			loadRenameLog(t.sheetId);
-		  } catch (logErr) {
-			console.warn('寫入更名LOG失敗（不影響新增本體）：', logErr);
-			// 可選：提示但不擋流程
-			// alert('角色已新增，但寫入更名LOG失敗：' + logErr.message);
-		  }
+		  loadRenameLog(t.sheetId);
 		} else {
 		  onSave?.(updated);
 		}
