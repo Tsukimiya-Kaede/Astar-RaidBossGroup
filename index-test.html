@@ -142,6 +142,12 @@
 	  50%  { background-color: #ffe8a1; }
 	  100% { background-color: transparent; }
 	}
+	/* 營區顏色 badge */
+	.badge-camp{ color:#fff; font-weight:600; }
+	.badge-camp.latus{      background:#0d6efd; } /* 普拉 = 藍 */
+	.badge-camp.latushard{  background:#6f42c1; } /* 困拉 = 紫 */
+	.badge-camp.zakum{      background:#fd7e14; } /* 炎魔 = 橘 */
+	.badge-camp.misc{       background:#198754; } /* 訓練營/外援 = 綠 */
   </style>
 </head>
 
@@ -893,10 +899,13 @@ function renderTable(data) {
 
   // 工具：把 row.camps 渲染成 badge
   const renderCampBadges = (row) => {
-    const camps = Array.isArray(row.camps) ? row.camps : extractCamps(row.camp);
-    if (!camps.length) return `<span class="text-muted">未填寫</span>`;
-    return camps.map(c => `<span class="badge rounded-pill text-bg-info me-1 mb-1">${c}</span>`).join('');
-  };
+  const camps = Array.isArray(row.camps) ? row.camps : extractCamps(row.camp);
+  if (!camps.length) return `<span class="text-muted">未填寫</span>`;
+  return camps.map(c => {
+    const cls = campColorClass(c);
+    return `<span class="badge badge-camp ${cls} me-1 mb-1">${c}</span>`;
+  }).join('');
+};
 
   let html = '';
   for (const k of orderedKeys) {
@@ -953,7 +962,11 @@ function renderTable(data) {
       tds[2].textContent = updated.job;
       tds[3].textContent = updated.level;
       tds[4].textContent = updated.attack;
-      tds[5].innerHTML = (extractCamps(updated.camp).map(c=>`<span class="badge rounded-pill text-bg-info me-1 mb-1">${c}</span>`).join('')) || '<span class="text-muted">未填寫</span>';
+      tds[5].innerHTML = (() => {
+	    const camps = extractCamps(updated.camp);
+	    if (!camps.length) return '<span class="text-muted">未填寫</span>';
+	    return camps.map(c => `<span class="badge badge-camp ${campColorClass(c)} me-1 mb-1">${c}</span>`).join('');
+	  })();
       $btn.data('name',  updated.name);
       $btn.data('code',  updated.code);
       $btn.data('job',   updated.job);
@@ -1697,20 +1710,26 @@ $(document).on('click', '.name-history-btn', function () {
 });
 
 // 把任意字串中的有效營區片段擷取出來（順序保留、去重）
+// 萃取多選營區
 function extractCamps(raw) {
   const txt = String(raw || '').replace(/\u3000/g, ' ').trim();
   if (!txt) return [];
   const re = /(普拉[一二三四五六七八九十]營|困拉[一二三四五六七八九十]營|炎魔[一二三四五六七八九十]營|訓練營|外援大大)/g;
-  const seen = new Set();
-  const out = [];
-  let m;
-  while ((m = re.exec(txt)) !== null) {
-    const v = m[1];
-    if (!seen.has(v)) { seen.add(v); out.push(v); }
+  const seen = new Set(), out = [];
+  let m; while ((m = re.exec(txt)) !== null) {
+    const v = m[1]; if (!seen.has(v)) { seen.add(v); out.push(v); }
   }
   return out;
 }
 
+// 依營區名稱回傳對應的顏色 class（藍/紫/橘/綠）
+function campColorClass(camp) {
+  if (/^普拉[一二三四五六七八九十]營$/.test(camp)) return 'latus';
+  if (/^困拉[一二三四五六七八九十]營$/.test(camp)) return 'latushard';
+  if (/^炎魔[一二三四五六七八九十]營$/.test(camp)) return 'zakum';
+  if (camp === '訓練營' || camp === '外援大大') return 'misc';
+  return 'misc'; // 預設給綠，或你想回傳空字串也可
+}
 </script>
 
   <!---->
