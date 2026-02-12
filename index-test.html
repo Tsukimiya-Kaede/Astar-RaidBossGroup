@@ -688,8 +688,8 @@ $(document).on('click', '.name-history-btn', function () {
 /* =========================
    設定：請填你的 Apps Script Web App（exec）URL
 ========================= */
-const GAS_UPDATE_URL = //'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
-'https://script.google.com/macros/s/AKfycbwAAMocuEMv_Q1xbEqP7yykZ61Wvo-8v_aMDvzyDjrxHtBFtS2MDYr1rTXZfRUaAfL8/exec';
+const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwAAMocuEMv_Q1xbEqP7yykZ61Wvo-8v_aMDvzyDjrxHtBFtS2MDYr1rTXZfRUaAfL8/exec';
+//'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
 // 把「新增角色」事件記錄到 歷史更名LOG（gid=170886432）
 async function appendRenameLogToGAS({ code, name, when }) {
   if (!code || !name) throw new Error('appendRenameLog 需要 code 與 name');
