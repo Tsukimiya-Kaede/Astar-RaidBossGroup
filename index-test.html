@@ -148,6 +148,27 @@
 	.badge-camp.latushard{  background:#6f42c1; } /* 困拉 = 紫 */
 	.badge-camp.zakum{      background:#fd7e14; } /* 炎魔 = 橘 */
 	.badge-camp.misc{       background:#198754; } /* 訓練營/外援 = 綠 */
+	
+	/* === 營區彩色 badge（列表 & 編輯器共用）=== */
+	.badge-camp{ color:#fff; font-weight:600; border:0; }
+	.badge-camp.latus{      background:#0d6efd; } /* 普拉 = 藍 */
+	.badge-camp.latushard{  background:#6f42c1; } /* 困拉 = 紫 */
+	.badge-camp.zakum{      background:#fd7e14; } /* 炎魔 = 橘 */
+	.badge-camp.misc{       background:#198754; } /* 訓練/外援 = 綠 */
+
+	/* === 編輯器：多選 chips === */
+	.camp-chip{
+	  display:inline-flex; align-items:center; gap:.4rem;
+	  padding:.35rem .55rem; border-radius:999px; color:#fff;
+	  cursor:pointer; user-select:none; transition:transform .05s ease;
+	}
+	.camp-chip input{ display:none; }
+	.camp-chip:active{ transform:scale(.98); }
+	.camp-chip[aria-checked="true"]{ box-shadow:0 0 0 2px rgba(0,0,0,.15) inset; }
+
+	/* 小工具列 */
+	.camp-toolbar{ display:flex; flex-wrap:wrap; gap:.5rem; margin:.25rem 0 .5rem; }
+	.camp-toolbar .btn-sm{ padding:.1rem .5rem; }
   </style>
 </head>
 
@@ -1281,17 +1302,14 @@ function createEditor()
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>所在營區（G）</span>
-      <select id="edit_camp" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-      <option value="">（請選擇）</option>
-      <!-- 依你實際使用的營區字樣維持即可 -->
-      <option>普拉一營</option><option>普拉二營</option><option>普拉三營</option><option>普拉四營</option><option>普拉五營</option>
-      <option>普拉六營</option><option>普拉七營</option><option>普拉八營</option><option>普拉九營</option><option>普拉十營</option>
-      <option>困拉一營</option><option>困拉二營</option><option>困拉三營</option><option>困拉四營</option><option>困拉五營</option>
-      <option>困拉六營</option><option>困拉七營</option><option>困拉八營</option><option>困拉九營</option><option>困拉十營</option>
-      <option>炎魔一營</option><option>炎魔二營</option><option>炎魔三營</option><option>炎魔四營</option><option>炎魔五營</option>
-      <option>炎魔六營</option><option>炎魔七營</option><option>炎魔八營</option><option>炎魔九營</option><option>炎魔十營</option>
-      <option>訓練營</option><option>外援大大</option>
-      </select>
+		<label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
+		  <span>所在營區（G，可複選）</span>
+		  <!-- chips mount -->
+		  <div id="camp_selector" class="border rounded p-2"></div>
+		  <!-- 只讀：顯示將寫回的字串（你要也可隱藏） -->
+		  <input id="edit_camp" type="text" class="form-control form-control-sm"
+				 placeholder="（會自動由上方勾選生成）" readonly>
+		</label>
     </label>
     </div>
     <div class="d-flex gap-2 justify-content-end mt-3">
@@ -1315,39 +1333,94 @@ function createEditor()
   return overlay;
 }
 
-function openEditor(values, onSave) 
-{
+function openEditor(values, onSave) {
+  // 先確保有編輯視窗 DOM
   let overlay = document.getElementById('editOverlay');
   if (!overlay) overlay = createEditor();
-  
+
+  // ====== 填入既有欄位 ======
   overlay.querySelector('#edit_name').value   = values.name  ?? '';
   overlay.querySelector('#edit_code').value   = values.code  ?? '';
   overlay.querySelector('#edit_job').value    = values.job   ?? '';
   overlay.querySelector('#edit_level').value  = values.level ?? '';
   overlay.querySelector('#edit_attack').value = values.attack?? '';
-  
-  const campSelect = overlay.querySelector('#edit_camp');
-  const campValue  = values.camp ?? '';
-  if (campValue) {
-    const exists = Array.from(campSelect.options).some(o => o.value === campValue || o.text === campValue);
-    if (!exists) campSelect.add(new Option(campValue, campValue));
-    campSelect.value = campValue;
-  } else {
-    campSelect.value = '';
+
+  // ====== 營區 chips UI：內建渲染＋讀取工具 ======
+  // 全部可選清單（可依實際需要增減）
+  const ALL_CAMPS = [
+    '普拉一營','普拉二營','普拉三營','普拉四營','普拉五營',
+    '普拉六營','普拉七營','普拉八營','普拉九營','普拉十營',
+    '困拉一營','困拉二營','困拉三營','困拉四營','困拉五營',
+    '困拉六營','困拉七營','困拉八營','困拉九營','困拉十營',
+    '炎魔一營','炎魔二營','炎魔三營','炎魔四營','炎魔五營',
+    '炎魔六營','炎魔七營','炎魔八營','炎魔九營','炎魔十營',
+    '訓練營','外援大大'
+  ];
+
+  const selectorBox = overlay.querySelector('#camp_selector');     // chips 掛載處
+  const campPreview = overlay.querySelector('#edit_camp');         // 只讀預覽輸入框
+  const initialSelected = new Set(extractCamps(values.camp));      // 由字串擷取成陣列
+
+  // 依營區名稱找顏色 class（你已在全域定義 campColorClass）
+  function colorClass(camp) { return 'badge-camp ' + (campColorClass(camp) || 'misc'); }
+
+  // 渲染 chips（可複選）
+  function renderCampSelector() {
+    selectorBox.innerHTML = ''; // 先清空
+    const frag = document.createDocumentFragment();
+
+    ALL_CAMPS.forEach(camp => {
+      const chip = document.createElement('span');
+      chip.textContent = camp;
+      chip.className = `badge rounded-pill ${colorClass(camp)} me-1 mb-1`;
+      chip.style.cursor = 'pointer';
+      chip.dataset.value = camp;
+      if (initialSelected.has(camp)) chip.classList.add('active'); // 用 active 表示選取
+
+      // 點擊切換選取
+      chip.addEventListener('click', () => {
+        if (chip.classList.contains('active')) {
+          chip.classList.remove('active');
+          initialSelected.delete(camp);
+        } else {
+          chip.classList.add('active');
+          initialSelected.add(camp);
+        }
+        // 即時更新只讀預覽
+        campPreview.value = Array.from(initialSelected).join('、');
+      });
+
+      frag.appendChild(chip);
+    });
+
+    selectorBox.appendChild(frag);
+    // 初始預覽
+    campPreview.value = Array.from(initialSelected).join('、');
   }
-  
+
+  // 讀取目前 chips 勾選（從 DOM 讀，不依靠 initialSelected 以保險）
+  function readSelectedCamps() {
+    const chips = selectorBox.querySelectorAll('span.badge');
+    const out = [];
+    chips.forEach(el => {
+      if (el.classList.contains('active')) out.push(el.dataset.value || el.textContent.trim());
+    });
+    return out;
+  }
+
+  // 初始化 chips
+  renderCampSelector();
+
+  // ====== 其他控制項 ======
   const btnCancel = overlay.querySelector('#btn_cancel');
   const btnSave   = overlay.querySelector('#btn_save');
   const mask      = overlay.querySelector('#editLoadingMask');
 
   const setBusy = (busy) => {
-    // 遮罩顯示/隱藏
     mask.style.display = busy ? 'flex' : 'none';
-    // 鎖定/解鎖按鈕與表單
     btnSave.disabled = busy;
     btnCancel.disabled = busy;
     overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
-    // 變更儲存按鈕內容（加上 spinner）
     if (busy) {
       btnSave.dataset._orig = btnSave.innerHTML;
       btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
@@ -1359,21 +1432,24 @@ function openEditor(values, onSave)
 
   const close = () => overlay.remove();
   btnCancel.onclick = () => { if (!btnCancel.disabled) close(); };
-  
-  btnSave.onclick = async () => 
-  {
-    // 防重複觸發（極短時間連點）
+
+  // ====== 送出儲存 ======
+  btnSave.onclick = async () => {
     if (btnSave.disabled) return;
 
+    // 收集最新值
+    const selectedCamps = readSelectedCamps();                 // ← 多選
+    const campString    = selectedCamps.join('、');            // 寫回字串
     const updated = {
       name:   overlay.querySelector('#edit_name').value.trim(),
       code:   overlay.querySelector('#edit_code').value.trim(),
       job:    overlay.querySelector('#edit_job').value.trim(),
       level:  overlay.querySelector('#edit_level').value.trim(),
       attack: overlay.querySelector('#edit_attack').value.trim(),
-      camp:   overlay.querySelector('#edit_camp').value.trim(),
+      camp:   readSelectedCamps(overlay.querySelector('#camp_selector')).join('、')
     };
-    const isNew = !!values.__isNew;
+    const isNew   = !!values.__isNew;
+    const oldName = String(values.name || '').trim();
 
     if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
       alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
@@ -1385,8 +1461,9 @@ function openEditor(values, onSave)
     }
 
     try {
-      setBusy(true); // 🔒 顯示載入、鎖住按鈕
+      setBusy(true);
 
+      // upsert 至 GAS
       const form = new URLSearchParams();
       form.set('action', 'upsertByCode');
       form.set('code',   updated.code);
@@ -1413,22 +1490,45 @@ function openEditor(values, onSave)
         throw new Error(result.message || '更新/新增失敗');
       }
 
+      // === 新增 or 更新後處理 ===
       if (isNew) {
-		  const t = resolveSheetTarget(DEFAULT_SHEET_URL);
-		  loadFromSheet(t.sheetId, t.gid);
-		  loadRenameLog(t.sheetId);
-		} else {
-		  onSave?.(updated);
-		}
-		alert(isNew ? '新增成功！' : '更新成功！');
-		close();
+        // 新增：直接重載清單 & 更名 LOG
+        const t = resolveSheetTarget(DEFAULT_SHEET_URL);
+        loadFromSheet(t.sheetId, t.gid);
+        loadRenameLog(t.sheetId);
+
+        // 新增時也寫一筆 LOG（你若不想新增時寫，這段可移除）
+        try {
+          await appendRenameLogToGAS({ code: updated.code, name: updated.name });
+          loadRenameLog(t.sheetId);
+        } catch (logErr) {
+          console.warn('新增成功，但寫入更名LOG失敗：', logErr);
+        }
+      } else {
+        // 更新：若「名稱有變更」→ 寫入 LOG
+        if (updated.name && oldName && updated.name !== oldName) {
+          try {
+            await appendRenameLogToGAS({ code: updated.code, name: updated.name });
+            const t = resolveSheetTarget(DEFAULT_SHEET_URL);
+            loadRenameLog(t.sheetId);
+          } catch (logErr) {
+            console.warn('更新成功，但寫入更名LOG失敗：', logErr);
+          }
+        }
+        // 回呼讓列表的那一列更新畫面（你原本的 onSave 會處理）
+        onSave?.(updated);
+      }
+
+      alert(isNew ? '新增成功！' : '更新成功！');
+      close();
     } catch (e) {
       console.error(e);
       alert('送出失敗：' + e.message);
-      setBusy(false); // ❌ 失敗才恢復，允許重試
+      setBusy(false); // 失敗才恢復讓使用者可重試
     }
   };
 }
+
 
 /* =========================
    公會職業分佈統計（Chart.js）
@@ -1729,6 +1829,96 @@ function campColorClass(camp) {
   if (/^炎魔[一二三四五六七八九十]營$/.test(camp)) return 'zakum';
   if (camp === '訓練營' || camp === '外援大大') return 'misc';
   return 'misc'; // 預設給綠，或你想回傳空字串也可
+}
+
+/* 建立完整的營區清單 */
+const CAMP_OPTIONS = [
+  ...Array.from({length:10}, (_,i)=>`普拉${'一二三四五六七八九十'[i]}營`),
+  ...Array.from({length:10}, (_,i)=>`困拉${'一二三四五六七八九十'[i]}營`),
+  ...Array.from({length:10}, (_,i)=>`炎魔${'一二三四五六七八九十'[i]}營`),
+  '訓練營','外援大大'
+];
+
+/* 若你尚未定義這個函式，解註解即可
+function campColorClass(camp) {
+  if (/^普拉[一二三四五六七八九十]營$/.test(camp)) return 'latus';
+  if (/^困拉[一二三四五六七八九十]營$/.test(camp)) return 'latushard';
+  if (/^炎魔[一二三四五六七八九十]營$/.test(camp)) return 'zakum';
+  if (camp === '訓練營' || camp === '外援大大') return 'misc';
+  return 'misc';
+}
+*/
+
+/* 產生多選 Chips（mountEl: 容器, selected: Set<string>） */
+function renderCampSelector(mountEl, selected = new Set()) {
+  if (!mountEl) return;
+  // 工具列（快速選群組 / 清空 / 全選）
+  const toolsHtml = `
+    <div class="camp-toolbar">
+      <button type="button" class="btn btn-outline-primary btn-sm" data-preset="latus">全選 普拉</button>
+      <button type="button" class="btn btn-outline-purple btn-sm"  data-preset="latushard" style="--bs-btn-color:#6f42c1;--bs-btn-border-color:#6f42c1;">全選 困拉</button>
+      <button type="button" class="btn btn-outline-warning btn-sm" data-preset="zakum">全選 炎魔</button>
+      <button type="button" class="btn btn-outline-success btn-sm" data-preset="misc">全選 訓練/外援</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-action="clear">清空</button>
+      <button type="button" class="btn btn-outline-dark btn-sm" data-action="all">全選全部</button>
+    </div>
+  `;
+
+  const chipsHtml = CAMP_OPTIONS.map(v=>{
+    const checked = selected.has(v);
+    const cls = campColorClass(v);
+    return `
+      <label class="camp-chip badge-camp ${cls}" aria-checked="${checked?'true':'false'}">
+        <input type="checkbox" value="${v}" ${checked?'checked':''}>
+        <span>${v}</span>
+      </label>
+    `;
+  }).join('');
+
+  mountEl.innerHTML = toolsHtml + `<div class="d-flex flex-wrap gap-2">${chipsHtml}</div>`;
+
+  // 點 chip 切換
+  mountEl.querySelectorAll('.camp-chip').forEach(lbl=>{
+    const cb = lbl.querySelector('input[type=checkbox]');
+    lbl.addEventListener('click', (ev)=>{
+      // 避免雙觸發：點 label 即可
+      if (ev.target.tagName === 'INPUT') return;
+      cb.checked = !cb.checked;
+      lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
+      mountEl.dispatchEvent(new CustomEvent('campChanged', {bubbles:true}));
+    });
+  });
+
+  // 工具列：快速選取
+  mountEl.querySelectorAll('[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.preset; // latus/latushard/zakum/misc
+      mountEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        const camp = cb.value;
+        const hit = campColorClass(camp) === key;
+        cb.checked = hit;
+        cb.closest('.camp-chip')?.setAttribute('aria-checked', hit?'true':'false');
+      });
+      mountEl.dispatchEvent(new CustomEvent('campChanged', {bubbles:true}));
+    });
+  });
+  // 清空/全選
+  mountEl.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const act = btn.dataset.action;
+      const chk = (act==='all');
+      mountEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        cb.checked = chk;
+        cb.closest('.camp-chip')?.setAttribute('aria-checked', chk?'true':'false');
+      });
+      mountEl.dispatchEvent(new CustomEvent('campChanged', {bubbles:true}));
+    });
+  });
+}
+
+/* 從 selector 取回選取的營區陣列 */
+function readSelectedCamps(mountEl) {
+  return Array.from(mountEl.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
 }
 </script>
 
