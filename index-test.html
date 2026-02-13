@@ -1361,19 +1361,15 @@ function createEditor()
 }
 
 function openEditor(values, onSave) {
-  // 先確保有編輯視窗 DOM
   let overlay = document.getElementById('editOverlay');
   if (!overlay) overlay = createEditor();
 
-  // ====== 填入既有欄位 ======
   overlay.querySelector('#edit_name').value   = values.name  ?? '';
   overlay.querySelector('#edit_code').value   = values.code  ?? '';
   overlay.querySelector('#edit_job').value    = values.job   ?? '';
   overlay.querySelector('#edit_level').value  = values.level ?? '';
   overlay.querySelector('#edit_attack').value = values.attack?? '';
 
-  // ====== 營區 chips UI：內建渲染＋讀取工具 ======
-  // 全部可選清單（可依實際需要增減）
   const ALL_CAMPS = [
     '普拉一營','普拉二營','普拉三營','普拉四營','普拉五營',
     '普拉六營','普拉七營','普拉八營','普拉九營','普拉十營',
@@ -1383,28 +1379,22 @@ function openEditor(values, onSave) {
     '炎魔六營','炎魔七營','炎魔八營','炎魔九營','炎魔十營',
     '訓練營','外援大大'
   ];
+  const selectorBox = overlay.querySelector('#camp_selector');
+  const campPreview = overlay.querySelector('#edit_camp');
+  const initialSelected = new Set(extractCamps(values.camp));
 
-  const selectorBox = overlay.querySelector('#camp_selector');     // chips 掛載處
-  const campPreview = overlay.querySelector('#edit_camp');         // 只讀預覽輸入框
-  const initialSelected = new Set(extractCamps(values.camp));      // 由字串擷取成陣列
-
-  // 依營區名稱找顏色 class（你已在全域定義 campColorClass）
   function colorClass(camp) { return 'badge-camp ' + (campColorClass(camp) || 'misc'); }
 
-  // 渲染 chips（可複選）
   function renderCampSelector() {
-    selectorBox.innerHTML = ''; // 先清空
+    selectorBox.innerHTML = '';
     const frag = document.createDocumentFragment();
-
     ALL_CAMPS.forEach(camp => {
       const chip = document.createElement('span');
       chip.textContent = camp;
       chip.className = `badge rounded-pill ${colorClass(camp)} me-1 mb-1`;
       chip.style.cursor = 'pointer';
       chip.dataset.value = camp;
-      if (initialSelected.has(camp)) chip.classList.add('active'); // 用 active 表示選取
-
-      // 點擊切換選取
+      if (initialSelected.has(camp)) chip.classList.add('active');
       chip.addEventListener('click', () => {
         if (chip.classList.contains('active')) {
           chip.classList.remove('active');
@@ -1413,32 +1403,19 @@ function openEditor(values, onSave) {
           chip.classList.add('active');
           initialSelected.add(camp);
         }
-        // 即時更新只讀預覽
         campPreview.value = Array.from(initialSelected).join('、');
       });
-
       frag.appendChild(chip);
     });
-
     selectorBox.appendChild(frag);
-    // 初始預覽
     campPreview.value = Array.from(initialSelected).join('、');
   }
-
-  // 讀取目前 chips 勾選（從 DOM 讀，不依靠 initialSelected 以保險）
   function readSelectedCamps() {
-    const chips = selectorBox.querySelectorAll('span.badge');
-    const out = [];
-    chips.forEach(el => {
-      if (el.classList.contains('active')) out.push(el.dataset.value || el.textContent.trim());
-    });
-    return out;
+    return Array.from(selectorBox.querySelectorAll('span.badge.active'))
+      .map(el => el.dataset.value || el.textContent.trim());
   }
-
-  // 初始化 chips
   renderCampSelector();
 
-  // ====== 其他控制項 ======
   const btnCancel = overlay.querySelector('#btn_cancel');
   const btnSave   = overlay.querySelector('#btn_save');
   const mask      = overlay.querySelector('#editLoadingMask');
@@ -1460,20 +1437,16 @@ function openEditor(values, onSave) {
   const close = () => overlay.remove();
   btnCancel.onclick = () => { if (!btnCancel.disabled) close(); };
 
-  // ====== 送出儲存 ======
   btnSave.onclick = async () => {
     if (btnSave.disabled) return;
 
-    // 收集最新值
-    const selectedCamps = readSelectedCamps();                 // ← 多選
-    const campString    = selectedCamps.join('、');            // 寫回字串
     const updated = {
       name:   overlay.querySelector('#edit_name').value.trim(),
       code:   overlay.querySelector('#edit_code').value.trim(),
       job:    overlay.querySelector('#edit_job').value.trim(),
       level:  overlay.querySelector('#edit_level').value.trim(),
       attack: overlay.querySelector('#edit_attack').value.trim(),
-      camp:   readSelectedCamps(overlay.querySelector('#camp_selector')).join('、')
+      camp:   readSelectedCamps().join('、')
     };
     const isNew   = !!values.__isNew;
     const oldName = String(values.name || '').trim();
@@ -1490,7 +1463,6 @@ function openEditor(values, onSave) {
     try {
       setBusy(true);
 
-      // upsert 至 GAS
       const form = new URLSearchParams();
       form.set('action', 'upsertByCode');
       form.set('code',   updated.code);
@@ -1507,43 +1479,23 @@ function openEditor(values, onSave) {
         cache: 'no-store',
         redirect: 'follow'
       });
-
       const text = await resp.text();
-      let result;
-      try { result = JSON.parse(text); } catch {
-        throw new Error('GAS 回傳非 JSON，請確認 Web App 用 /exec 且「任何人」可存取。');
-      }
-      if (!resp.ok || result.status !== 'ok') {
-        throw new Error(result.message || '更新/新增失敗');
-      }
+      let result; try { result = JSON.parse(text); } catch { throw new Error('GAS 回傳非 JSON'); }
+      if (!resp.ok || result.status !== 'ok') throw new Error(result.message || '更新/新增失敗');
 
-      // === 新增 or 更新後處理 ===
+      // ✅ 前端不再主動寫 LOG，交給後端 upsertByCode 處理
+      // if (isNew) { await appendRenameLogToGAS(...); }  ← 移除
+      // if (!isNew && updated.name !== oldName) { await appendRenameLogToGAS(...); } ← 移除
+
       if (isNew) {
-        // 新增：直接重載清單 & 更名 LOG
         const t = resolveSheetTarget(DEFAULT_SHEET_URL);
         loadFromSheet(t.sheetId, t.gid);
         loadRenameLog(t.sheetId);
-
-        // 新增時也寫一筆 LOG（你若不想新增時寫，這段可移除）
-        try {
-          await appendRenameLogToGAS({ code: updated.code, name: updated.name });
-          loadRenameLog(t.sheetId);
-        } catch (logErr) {
-          console.warn('新增成功，但寫入更名LOG失敗：', logErr);
-        }
       } else {
-        // 更新：若「名稱有變更」→ 寫入 LOG
-        if (updated.name && oldName && updated.name !== oldName) {
-          try {
-            await appendRenameLogToGAS({ code: updated.code, name: updated.name });
-            const t = resolveSheetTarget(DEFAULT_SHEET_URL);
-            loadRenameLog(t.sheetId);
-          } catch (logErr) {
-            console.warn('更新成功，但寫入更名LOG失敗：', logErr);
-          }
-        }
-        // 回呼讓列表的那一列更新畫面（你原本的 onSave 會處理）
         onSave?.(updated);
+        // 重新載入 LOG（讓右側問號視窗內容是最新）
+        const t = resolveSheetTarget(DEFAULT_SHEET_URL);
+        loadRenameLog(t.sheetId);
       }
 
       alert(isNew ? '新增成功！' : '更新成功！');
@@ -1551,10 +1503,11 @@ function openEditor(values, onSave) {
     } catch (e) {
       console.error(e);
       alert('送出失敗：' + e.message);
-      setBusy(false); // 失敗才恢復讓使用者可重試
+      setBusy(false);
     }
   };
 }
+
 
 
 /* =========================
