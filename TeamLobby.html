@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🍁Astar RaidBoss 招募版 & 跨公會名單🍁</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+    body { overflow-y: scroll; margin: 0; padding: 0; }
+    .status-badge { font-size: 0.85rem; }
+    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
+    #sourceBadge { display: none !important; }
+    .title{font-weight:bold; font-size:1.0rem;}
+
+    /* 分頁外框 + 顏色（沿用你原本風格） */
+    .nav-tabs-custom .nav-link{ border:2px solid transparent; font-weight:600; margin-right:.5rem; }
+    .nav-tabs-custom .nav-link:hover{ opacity:.9; }
+
+    /* 招募版（橘） */
+    .nav-tabs-custom .tab-recruit{ color:#fd7e14; border-color:#fd7e14; }
+    .nav-tabs-custom .tab-recruit.active{ color:#fff; background:#fd7e14; }
+
+    /* 跨公會名單（綠） */
+    .nav-tabs-custom .tab-cross{ color:#198754; border-color:#198754; }
+    .nav-tabs-custom .tab-cross.active{ color:#fff; background:#198754; }
+
+    /* reset-content / clean-table（沿用） */
+    .reset-content { display: table-cell; line-height: 1.5; font-size: 1rem; padding: 0.5; border: none; }
+    .clean-table { all: revert; width: 100%; border-collapse: collapse; }
+
+    /* 工具列：搜尋框不要撐開 */
+    .toolbar-compact{ gap:.5rem; flex-wrap:wrap; }
+    .toolbar-compact .search-group{ width:180px; flex:0 0 auto; }
+    .toolbar-compact .search-group input{ min-width:0; }
+    @media (max-width:576px){ .toolbar-compact .search-group{ width:150px; } }
+
+    /* 捲到列後的高亮動畫 */
+    .row-pulse { animation: rowPulse 2s ease-out 0s 1; }
+    @keyframes rowPulse {
+      0%   { background-color: #fff3cd; }
+      50%  { background-color: #ffe8a1; }
+      100% { background-color: transparent; }
+    }
+
+    /* 狀態 badge */
+    .badge-status{ color:#fff; font-weight:700; border:0; }
+    .badge-status.open{ background:#0d6efd; }   /* 招募中：藍 */
+    .badge-status.full{ background:#6f42c1; }   /* 已滿：紫 */
+    .badge-status.closed{ background:#6c757d; } /* 關閉：灰 */
+
+    /* BOSS badge */
+    .badge-boss{ color:#fff; font-weight:700; border:0; }
+    .badge-boss.latus{ background:#0d6efd; }     /* 拉圖斯：藍 */
+    .badge-boss.latushard{ background:#6f42c1; } /* 困拉：紫 */
+    .badge-boss.zakum{ background:#fd7e14; }     /* 炎魔：橘 */
+    .badge-boss.other{ background:#198754; }     /* 其他：綠 */
+
+    /* 公會 badge */
+    .badge-guild{ color:#fff; font-weight:700; border:0; background:#198754; }
+
+    /* 角色名稱右側小問號（保留風格，可做備註/聯絡快速查看） */
+    .name-history-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; line-height:22px;
+      border-radius:50%; border:0;
+      background:#ffc107; color:#212529; font-weight:700;
+      cursor:pointer; margin-left:.25rem;
+    }
+    .name-history-btn:hover{ filter: brightness(0.95); }
+
+    /* Editor overlay（沿用你的做法） */
+    #editOverlay { z-index: 9999; }
+  </style>
+</head>
+
+<body class="bg-body">
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
+    <div class="container-fluid">
+      <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁Astar RaidBoss 招募 & 跨公會名單🍁</span>
+
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span id="sourceBadge" class="badge bg-light text-dark status-badge">source</span>
+
+        <button id="btnGoRecruit" class="btn btn-outline-light btn-sm title">📣 招募版</button>
+        <button id="btnGoCross" class="btn btn-outline-light btn-sm title">👥 跨公會名單</button>
+
+        <a href="https://www.artalemaplestory.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="楓之谷圖鑑">🍁 楓之谷圖鑑</a>
+        <a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="第三方交易平台">🏪 第三方交易平台</a>
+        <a href="https://a2983456456.github.io/artale-drop/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="怪物掉落物查詢工具">👾 怪物掉落物查詢工具</a>
+
+        <button id="toggleTheme" class="btn btn-outline-light btn-sm title">🌙 夜間模式</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page: Recruit -->
+  <div id="RecruitPage" class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h3 class="mb-0"><b>📣 RaidBoss 組團招募版</b></h3>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h4 class="card-title mb-2">➡️ 使用說明</h4>
+        <p class="mb-1 text-muted">
+          這裡用來和其他公會成員跨公會組王團。你可以「新增招募」、「修改招募」、「搜尋/篩選 Boss / 狀態」。
+        </p>
+        <small class="text-muted">
+          資料來源預設使用 Google Sheet（CSV 讀取）＋ GAS（寫回）。請在程式碼中設定 <b>RECRUIT_SHEET_URL / GAS_RECRUIT_URL</b>。
+        </small>
+        <div id="recruitMsg" class="text-danger mt-2"></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <h4 class="card-title mb-2 mb-sm-0">🧩 招募列表</h4>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap ms-auto" style="min-width:0;">
+            <button id="btnAddRecruit" class="btn btn-warning btn-sm">新增招募</button>
+
+            <select id="filterBoss" class="form-select form-select-sm w-auto">
+              <option value="">全部 Boss</option>
+              <option value="拉圖斯">拉圖斯</option>
+              <option value="拉圖斯(困難)">拉圖斯(困難)</option>
+              <option value="殘暴炎魔">殘暴炎魔</option>
+              <option value="其他">其他</option>
+            </select>
+
+            <select id="filterStatus" class="form-select form-select-sm w-auto">
+              <option value="">全部狀態</option>
+              <option value="招募中">招募中</option>
+              <option value="已滿">已滿</option>
+              <option value="關閉">關閉</option>
+            </select>
+
+            <input id="recruitSearchInput" type="text" class="form-control w-auto" placeholder="搜尋：關鍵字/公會/聯絡/備註" style="min-width:0;">
+            <button id="recruitSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
+
+            <button id="btnReloadRecruit" class="btn btn-outline-secondary btn-sm">重新整理</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle reset-content">
+            <thead class="table-secondary">
+              <tr>
+                <th style="width: 12%;">Boss</th>
+                <th style="width: 14%;">出團時間</th>
+                <th style="width: 12%;">狀態</th>
+                <th style="width: 14%;">需求職業/角色</th>
+                <th style="width: 12%;">發文公會</th>
+                <th style="width: 14%;">聯絡方式</th>
+                <th style="width: 12%;">備註</th>
+                <th style="width: 10%;">修改</th>
+              </tr>
+            </thead>
+            <tbody id="recruitTableBody">
+              <tr><td colspan="8" class="text-center text-muted">尚未讀取資料</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: Cross-Guild Members -->
+  <div id="CrossPage" class="container py-4 d-none">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h3 class="mb-0"><b>👥 其他公會成員資料 / 成員清單</b></h3>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h4 class="card-title mb-2">➡️ 使用說明</h4>
+        <p class="mb-1 text-muted">
+          這裡用來建立「其他公會成員」資料，方便跨公會組團時快速找到人。
+          成員清單表格風格與你原本的角色清單相同（分組列 + 修改按鈕）。
+        </p>
+        <small class="text-muted">
+          請在程式碼中設定 <b>CROSS_SHEET_URL / GAS_CROSS_URL</b>。欄位用「角色代碼」作為主鍵（可自行規範，例如：公會縮寫+數字）。
+        </small>
+        <div id="crossMsg" class="text-danger mt-2"></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <h4 class="card-title mb-2 mb-sm-0">🏋️ 成員清單（跨公會）</h4>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap ms-auto" style="min-width:0;">
+            <button id="btnAddCross" class="btn btn-success btn-sm">新增成員</button>
+
+            <input id="crossSearchInput" type="text" class="form-control w-auto" placeholder="搜尋：角色/代碼/公會/職業/備註" style="min-width:0;">
+            <button id="crossSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
+
+            <button id="btnReloadCross" class="btn btn-outline-secondary btn-sm">重新整理</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle reset-content">
+            <thead class="table-secondary">
+              <tr>
+                <th style="width: 18%;">角色名稱</th>
+                <th style="width: 12%;">角色代碼</th>
+                <th style="width: 18%;">角色職業</th>
+                <th style="width: 10%;">角色等級</th>
+                <th style="width: 10%;">角色乾表</th>
+                <th style="width: 14%;">公會名稱</th>
+                <th style="width: 10%;">備註</th>
+                <th style="width: 8%;">修改</th>
+              </tr>
+            </thead>
+            <tbody id="crossTableBody">
+              <tr><td colspan="8" class="text-center text-muted">尚未讀取資料</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Note Modal (for "?" button) -->
+  <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">快速查看</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="small text-muted mb-2" id="noteTarget">—</div>
+          <div class="border rounded p-2" id="noteBody" style="min-height:120px;">—</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   ✅ 你需要先設定的參數
+========================= */
+// 招募版（建議用 Google Sheet 當資料庫：欄位在下面有註解）
+const RECRUIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/REPLACE_ME/edit?gid=0#gid=0';
+const GAS_RECRUIT_URL   = 'https://script.google.com/macros/s/REPLACE_ME/exec';
+
+// 跨公會成員（另一份 Sheet）
+const CROSS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/REPLACE_ME/edit?gid=0#gid=0';
+const GAS_CROSS_URL   = 'https://script.google.com/macros/s/REPLACE_ME/exec';
+
+/*
+【招募版 Sheet 建議欄位】
+A: id（唯一值，建議用時間戳或 UUID；若你不想，前端也會自動生）
+B: boss（拉圖斯 / 拉圖斯(困難) / 殘暴炎魔 / 其他）
+C: time（出團時間字串，例如 2026-03-01 21:00）
+D: status（招募中 / 已滿 / 關閉）
+E: need（需求職業/角色，例如 缺主教、缺輸出）
+F: guild（發文公會）
+G: contact（聯絡方式，例如 DC:xxx / 遊戲ID）
+H: note（備註）
+I: updatedAt（可選）
+
+【跨公會成員 Sheet 建議欄位】
+A: name
+B: code（主鍵）
+C: job
+D: level
+E: attack
+F: guild
+G: note
+H: updatedAt（可選）
+*/
+
+/* =========================
+   工具：解析 SheetId / gid
+========================= */
+function parseSheetFromUrl(url) {
+  if (!url) return null;
+  const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!idMatch) return null;
+  const sheetId = idMatch[1];
+  const urlObj = new URL(url);
+  const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
+  return { sheetId, gid };
+}
+function csvUrl(sheetId, gid){
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+}
+function safeText(x){ return (x === null || x === undefined) ? '' : String(x); }
+function nowISO(){ return new Date().toISOString(); }
+function uid(){
+  // 簡易唯一 ID：時間戳+隨機（足夠招募版用）
+  return `R${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+/* =========================
+   夜間模式
+========================= */
+$('#toggleTheme').on('click', function () {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-bs-theme') === 'dark';
+  html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
+  $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
+});
+
+/* =========================
+   分頁切換（兩頁式：招募 / 跨公會）
+========================= */
+function showPage(page){
+  const isRecruit = (page === 'recruit');
+  $('#RecruitPage').toggleClass('d-none', !isRecruit);
+  $('#CrossPage').toggleClass('d-none', isRecruit);
+}
+$('#btnGoRecruit').on('click', ()=>showPage('recruit'));
+$('#btnGoCross').on('click', ()=>showPage('cross'));
+
+/* =========================
+   招募版：狀態 / Boss 顏色
+========================= */
+function bossClass(boss){
+  const b = safeText(boss).trim();
+  if (b === '拉圖斯') return 'latus';
+  if (b === '拉圖斯(困難)' || b === '拉圖斯（困難）') return 'latushard';
+  if (b === '殘暴炎魔') return 'zakum';
+  return 'other';
+}
+function statusClass(status){
+  const s = safeText(status).trim();
+  if (s === '招募中') return 'open';
+  if (s === '已滿') return 'full';
+  return 'closed';
+}
+
+/* =========================
+   全域狀態
+========================= */
+let recruitData = [];
+let crossData   = [];
+let recruitTarget = null;
+let crossTarget   = null;
+
+/* =========================
+   讀取：招募版
+========================= */
+function loadRecruit(){
+  $('#recruitMsg').text('');
+  $('#recruitTableBody').html(`<tr><td colspan="8" class="text-center text-muted">讀取中...</td></tr>`);
+
+  if (!recruitTarget?.sheetId) { $('#recruitMsg').text('RECRUIT_SHEET_URL 無法解析 sheetId'); return; }
+
+  Papa.parse(csvUrl(recruitTarget.sheetId, recruitTarget.gid), {
+    download: true,
+    skipEmptyLines: true,
+    complete: (res) => {
+      try{
+        if (!res.data || res.data.length < 2){
+          recruitData = [];
+          renderRecruitTable(recruitData);
+          return;
+        }
+        const rows = res.data.slice(1);
+        recruitData = rows.map((r,i)=>({
+          id:       safeText(r[0]).trim() || uid(),
+          boss:     safeText(r[1]).trim(),
+          time:     safeText(r[2]).trim(),
+          status:   safeText(r[3]).trim() || '招募中',
+          need:     safeText(r[4]).trim(),
+          guild:    safeText(r[5]).trim(),
+          contact:  safeText(r[6]).trim(),
+          note:     safeText(r[7]).trim(),
+          rowIndex: i + 2
+        })).filter(x => x && (x.boss || x.guild || x.contact || x.time));
+        renderRecruitTable(recruitData);
+      }catch(e){
+        console.error(e);
+        $('#recruitMsg').text('解析招募資料時發生錯誤');
+        recruitData = [];
+        renderRecruitTable(recruitData);
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      $('#recruitMsg').text('讀取失敗，請確認招募版 Sheet 已設為「知道連結的任何人可檢視」');
+      recruitData = [];
+      renderRecruitTable(recruitData);
+    }
+  });
+}
+
+/* =========================
+   招募版：渲染（支援篩選/搜尋）
+========================= */
+function applyRecruitFilter(data){
+  const bossF = $('#filterBoss').val().trim();
+  const stF   = $('#filterStatus').val().trim();
+  const kw    = $('#recruitSearchInput').val().trim().toLowerCase();
+
+  return (data||[]).filter(x=>{
+    if (bossF && safeText(x.boss).trim() !== bossF) return false;
+    if (stF && safeText(x.status).trim() !== stF) return false;
+    if (kw){
+      const blob = [
+        x.boss, x.time, x.status, x.need, x.guild, x.contact, x.note
+      ].map(s=>safeText(s).toLowerCase()).join(' ');
+      if (!blob.includes(kw)) return false;
+    }
+    return true;
+  });
+}
+
+function renderRecruitTable(data){
+  const filtered = applyRecruitFilter(data);
+
+  if (!filtered.length){
+    $('#recruitTableBody').html(`<tr><td colspan="8" class="text-center text-muted">沒有符合的資料</td></tr>`);
+    return;
+  }
+
+  // 依 Boss 分組（分組列風格沿用）
+  const groups = {};
+  filtered.forEach(r=>{
+    const k = safeText(r.boss).trim() || '未填寫';
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(r);
+  });
+
+  const orderedKeys = Object.keys(groups).sort((a,b)=> a.localeCompare(b,'zh-Hant'));
+  let html = '';
+
+  orderedKeys.forEach(k=>{
+    html += `<tr class="group-row"><td colspan="8">Boss：${k}（${groups[k].length}）</td></tr>`;
+    html += groups[k].map(r=>{
+      const bCls = bossClass(r.boss);
+      const sCls = statusClass(r.status);
+      return `
+        <tr id="row-recruit-${safeText(r.id).replace(/[^a-zA-Z0-9_-]/g,'_')}">
+          <td><span class="badge badge-boss ${bCls}">${safeText(r.boss)||'—'}</span></td>
+          <td class="font-monospace">${safeText(r.time)||'—'}</td>
+          <td><span class="badge badge-status ${sCls}">${safeText(r.status)||'—'}</span></td>
+          <td>${safeText(r.need)||'<span class="text-muted">—</span>'}</td>
+          <td><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></td>
+          <td>
+            <div class="d-inline-flex align-items-center" style="gap:.35rem;">
+              <span>${safeText(r.contact)||'<span class="text-muted">—</span>'}</span>
+              <button type="button" class="name-history-btn btn-note"
+                data-title="聯絡方式"
+                data-target="${safeText(r.guild)}"
+                data-body="${safeText(r.contact).replace(/"/g,'&quot;')}">?</button>
+            </div>
+          </td>
+          <td class="small">${safeText(r.note)||'<span class="text-muted">—</span>'}</td>
+          <td>
+            <button class="btn btn-outline-secondary btn-sm btn-edit-recruit"
+              data-id="${safeText(r.id)}"
+              data-row="${r.rowIndex||0}"
+              data-boss="${safeText(r.boss).replace(/"/g,'&quot;')}"
+              data-time="${safeText(r.time).replace(/"/g,'&quot;')}"
+              data-status="${safeText(r.status).replace(/"/g,'&quot;')}"
+              data-need="${safeText(r.need).replace(/"/g,'&quot;')}"
+              data-guild="${safeText(r.guild).replace(/"/g,'&quot;')}"
+              data-contact="${safeText(r.contact).replace(/"/g,'&quot;')}"
+              data-note="${safeText(r.note).replace(/"/g,'&quot;')}">修改</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  });
+
+  $('#recruitTableBody').html(html);
+}
+
+$('#filterBoss, #filterStatus').on('change', ()=>renderRecruitTable(recruitData));
+$('#recruitSearchBtn').on('click', ()=>renderRecruitTable(recruitData));
+$('#recruitSearchInput').on('keypress', (e)=>{ if (e.which === 13) renderRecruitTable(recruitData); });
+
+/* =========================
+   讀取：跨公會名單
+========================= */
+function loadCross(){
+  $('#crossMsg').text('');
+  $('#crossTableBody').html(`<tr><td colspan="8" class="text-center text-muted">讀取中...</td></tr>`);
+
+  if (!crossTarget?.sheetId) { $('#crossMsg').text('CROSS_SHEET_URL 無法解析 sheetId'); return; }
+
+  Papa.parse(csvUrl(crossTarget.sheetId, crossTarget.gid), {
+    download: true,
+    skipEmptyLines: true,
+    complete: (res) => {
+      try{
+        if (!res.data || res.data.length < 2){
+          crossData = [];
+          renderCrossTable(crossData);
+          return;
+        }
+        const rows = res.data.slice(1);
+        crossData = rows.map((r,i)=>({
+          name:   safeText(r[0]).trim(),
+          code:   safeText(r[1]).trim(), // 主鍵
+          job:    safeText(r[2]).trim(),
+          level:  safeText(r[3]).trim(),
+          attack: safeText(r[4]).trim(),
+          guild:  safeText(r[5]).trim(),
+          note:   safeText(r[6]).trim(),
+          rowIndex: i + 2
+        })).filter(x => x && (x.name || x.code));
+        renderCrossTable(crossData);
+      }catch(e){
+        console.error(e);
+        $('#crossMsg').text('解析跨公會名單時發生錯誤');
+        crossData = [];
+        renderCrossTable(crossData);
+      }
+    },
+    error: (err) => {
+      console.error(err);
+      $('#crossMsg').text('讀取失敗，請確認跨公會 Sheet 已設為「知道連結的任何人可檢視」');
+      crossData = [];
+      renderCrossTable(crossData);
+    }
+  });
+}
+
+/* =========================
+   跨公會名單：搜尋 + 分組（依公會）
+========================= */
+function applyCrossSearch(data){
+  const kw = $('#crossSearchInput').val().trim().toLowerCase();
+  if (!kw) return data || [];
+  return (data||[]).filter(r=>{
+    const blob = [r.name,r.code,r.job,r.level,r.attack,r.guild,r.note].map(x=>safeText(x).toLowerCase()).join(' ');
+    return blob.includes(kw);
+  });
+}
+
+function renderCrossTable(data){
+  const filtered = applyCrossSearch(data);
+
+  if (!filtered.length){
+    $('#crossTableBody').html(`<tr><td colspan="8" class="text-center text-muted">沒有符合的資料</td></tr>`);
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(r=>{
+    const k = safeText(r.guild).trim() || '未填寫公會';
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(r);
+  });
+
+  const orderedKeys = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+
+  let html = '';
+  orderedKeys.forEach(k=>{
+    html += `<tr class="group-row"><td colspan="8">公會：${k}（${groups[k].length}）</td></tr>`;
+    html += groups[k].map(r=>{
+      const safeCode = safeText(r.code).trim().replace(/[^a-zA-Z0-9_-]/g,'_');
+      return `
+        <tr id="row-cross-${safeCode}">
+          <td>${safeText(r.name)||''}</td>
+          <td>
+            <div class="d-inline-flex align-items-center" style="gap:.5rem;">
+              <button type="button" class="name-history-btn btn-note"
+                data-title="備註"
+                data-target="${safeText(r.name)}（${safeText(r.guild)}）"
+                data-body="${safeText(r.note).replace(/"/g,'&quot;')}">?</button>
+              <span class="font-monospace">${safeText(r.code)||''}</span>
+            </div>
+          </td>
+          <td>${safeText(r.job)||''}</td>
+          <td>${safeText(r.level)||''}</td>
+          <td>${safeText(r.attack)||''}</td>
+          <td><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></td>
+          <td class="small">${safeText(r.note)||'<span class="text-muted">—</span>'}</td>
+          <td>
+            <button class="btn btn-outline-secondary btn-sm btn-edit-cross"
+              data-row="${r.rowIndex||0}"
+              data-name="${safeText(r.name).replace(/"/g,'&quot;')}"
+              data-code="${safeText(r.code).replace(/"/g,'&quot;')}"
+              data-job="${safeText(r.job).replace(/"/g,'&quot;')}"
+              data-level="${safeText(r.level).replace(/"/g,'&quot;')}"
+              data-attack="${safeText(r.attack).replace(/"/g,'&quot;')}"
+              data-guild="${safeText(r.guild).replace(/"/g,'&quot;')}"
+              data-note="${safeText(r.note).replace(/"/g,'&quot;')}">修改</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  });
+
+  $('#crossTableBody').html(html);
+}
+
+$('#crossSearchBtn').on('click', ()=>renderCrossTable(crossData));
+$('#crossSearchInput').on('keypress', (e)=>{ if (e.which === 13) renderCrossTable(crossData); });
+
+/* =========================
+   快速查看（? 按鈕）
+========================= */
+$(document).on('click', '.btn-note', function(){
+  const title  = $(this).data('title') || '快速查看';
+  const target = $(this).data('target') || '—';
+  const body   = $(this).data('body') || '—';
+  $('#noteModal .modal-title').text(title);
+  $('#noteTarget').text(`對象：${target}`);
+  $('#noteBody').html(body ? `<div class="small">${safeText(body)}</div>` : `<div class="text-muted">（空）</div>`);
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('noteModal')).show();
+});
+
+/* =========================
+   捲動 + 高亮（給搜尋/定位用）
+========================= */
+function pulseRow(el){
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('row-pulse');
+  void el.offsetWidth;
+  el.classList.add('row-pulse');
+  setTimeout(()=>el.classList.remove('row-pulse'), 2000);
+}
+
+/* =========================
+   Editor Overlay（通用）
+========================= */
+function createEditor(titleText, fieldsHtml){
+  const overlay = document.createElement('div');
+  overlay.id = 'editOverlay';
+  Object.assign(overlay.style, {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  });
+
+  const card = document.createElement('div');
+  Object.assign(card.style, {
+    position: 'relative',
+    background: '#fff', borderRadius: '12px', padding: '18px', width: 'min(720px, 92vw)',
+    boxShadow: '0 10px 30px rgba(0,0,0,.2)', color: '#222',
+    fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont'
+  });
+
+  card.innerHTML = `
+    <h3 style="margin:0 0 12px;font-size:18px;">${titleText}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      ${fieldsHtml}
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-3">
+      <button id="btn_cancel" class="btn btn-light border">取消</button>
+      <button id="btn_save" class="btn btn-primary">儲存</button>
+    </div>
+    <div id="editLoadingMask" style="
+      display:none; position:absolute; inset:0; background:rgba(255,255,255,.75);
+      border-radius:12px; z-index:10; backdrop-filter:saturate(180%) blur(2px);
+      align-items:center; justify-content:center;">
+      <div class="text-center">
+        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+        <div class="mt-2 fw-semibold">處理中，請稍候…</div>
+      </div>
+    </div>
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function setBusy(overlay, busy){
+  const mask = overlay.querySelector('#editLoadingMask');
+  const btnSave = overlay.querySelector('#btn_save');
+  const btnCancel = overlay.querySelector('#btn_cancel');
+  mask.style.display = busy ? 'flex' : 'none';
+  btnSave.disabled = busy;
+  btnCancel.disabled = busy;
+  overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
+  if (busy){
+    btnSave.dataset._orig = btnSave.innerHTML;
+    btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
+  }else if (btnSave.dataset._orig){
+    btnSave.innerHTML = btnSave.dataset._orig;
+    delete btnSave.dataset._orig;
+  }
+}
+
+/* =========================
+   招募版：新增/修改（寫回 GAS）
+========================= */
+function openRecruitEditor(values){
+  const isNew = !!values.__isNew;
+  const overlay = createEditor(isNew ? '新增招募' : '修改招募', `
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>Boss（B）</span>
+      <select id="r_boss" class="form-select">
+        <option value="拉圖斯">拉圖斯</option>
+        <option value="拉圖斯(困難)">拉圖斯(困難)</option>
+        <option value="殘暴炎魔">殘暴炎魔</option>
+        <option value="其他">其他</option>
+      </select>
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>出團時間（C）</span>
+      <input id="r_time" type="text" class="form-control" placeholder="例如：2026-03-01 21:00">
+    </label>
+
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>狀態（D）</span>
+      <select id="r_status" class="form-select">
+        <option value="招募中">招募中</option>
+        <option value="已滿">已滿</option>
+        <option value="關閉">關閉</option>
+      </select>
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>需求職業/角色（E）</span>
+      <input id="r_need" type="text" class="form-control" placeholder="例如：缺主教/缺輸出/缺綁王">
+    </label>
+
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>發文公會（F）</span>
+      <input id="r_guild" type="text" class="form-control" placeholder="例如：Astar">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>聯絡方式（G）</span>
+      <input id="r_contact" type="text" class="form-control" placeholder="例如：DC:xxx / 遊戲ID">
+    </label>
+
+    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
+      <span>備註（H）</span>
+      <textarea id="r_note" class="form-control" rows="3" placeholder="例如：需可語音、掉寶分配、集合地點..."></textarea>
+    </label>
+  `);
+
+  // set initial
+  overlay.querySelector('#r_boss').value   = values.boss   || '拉圖斯';
+  overlay.querySelector('#r_time').value   = values.time   || '';
+  overlay.querySelector('#r_status').value = values.status || '招募中';
+  overlay.querySelector('#r_need').value   = values.need   || '';
+  overlay.querySelector('#r_guild').value  = values.guild  || '';
+  overlay.querySelector('#r_contact').value= values.contact|| '';
+  overlay.querySelector('#r_note').value   = values.note   || '';
+
+  const close = ()=>overlay.remove();
+  overlay.querySelector('#btn_cancel').onclick = ()=>close();
+
+  overlay.querySelector('#btn_save').onclick = async ()=>{
+    if (!GAS_RECRUIT_URL || GAS_RECRUIT_URL.includes('REPLACE_ME')){
+      alert('請先設定 GAS_RECRUIT_URL（必須是 /exec）');
+      return;
+    }
+
+    const payload = {
+      id: values.id || uid(),
+      boss: overlay.querySelector('#r_boss').value.trim(),
+      time: overlay.querySelector('#r_time').value.trim(),
+      status: overlay.querySelector('#r_status').value.trim(),
+      need: overlay.querySelector('#r_need').value.trim(),
+      guild: overlay.querySelector('#r_guild').value.trim(),
+      contact: overlay.querySelector('#r_contact').value.trim(),
+      note: overlay.querySelector('#r_note').value.trim(),
+      updatedAt: nowISO()
+    };
+
+    if (!payload.time || !payload.guild || !payload.contact){
+      alert('請至少填：出團時間 / 發文公會 / 聯絡方式');
+      return;
+    }
+
+    try{
+      setBusy(overlay, true);
+
+      const form = new URLSearchParams();
+      // 你 GAS 端只要做一個 upsertRecruitById 即可（用 id 當主鍵）
+      form.set('action', 'upsertRecruitById');
+      Object.entries(payload).forEach(([k,v])=> form.set(k, v));
+
+      const resp = await fetch(GAS_RECRUIT_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString(),
+        cache:'no-store',
+        redirect:'follow'
+      });
+
+      const text = await resp.text();
+      let json; try{ json = JSON.parse(text); }catch{ throw new Error('GAS 回傳非 JSON'); }
+      if (!resp.ok || json.status !== 'ok') throw new Error(json.message || '寫入失敗');
+
+      alert(isNew ? '新增成功！' : '更新成功！');
+      close();
+      loadRecruit();
+    }catch(e){
+      console.error(e);
+      alert('送出失敗：' + e.message);
+      setBusy(overlay, false);
+    }
+  };
+}
+
+$(document).on('click', '#btnAddRecruit', ()=>openRecruitEditor({__isNew:true}));
+$(document).on('click', '.btn-edit-recruit', function(){
+  openRecruitEditor({
+    __isNew:false,
+    id: $(this).data('id'),
+    rowIndex: Number($(this).data('row')||0),
+    boss: $(this).data('boss'),
+    time: $(this).data('time'),
+    status: $(this).data('status'),
+    need: $(this).data('need'),
+    guild: $(this).data('guild'),
+    contact: $(this).data('contact'),
+    note: $(this).data('note')
+  });
+});
+
+/* =========================
+   跨公會名單：新增/修改（寫回 GAS）
+========================= */
+function openCrossEditor(values){
+  const isNew = !!values.__isNew;
+  const overlay = createEditor(isNew ? '新增跨公會成員' : '修改跨公會成員', `
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色名稱（A）</span>
+      <input id="c_name" type="text" class="form-control">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色代碼（B，主鍵）</span>
+      <input id="c_code" type="text" class="form-control" placeholder="例如：GUILD001">
+    </label>
+
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色職業（C）</span>
+      <input id="c_job" type="text" class="form-control">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色等級（D）</span>
+      <input id="c_level" type="text" class="form-control">
+    </label>
+
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>角色乾表（E）</span>
+      <input id="c_attack" type="text" class="form-control">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>公會名稱（F）</span>
+      <input id="c_guild" type="text" class="form-control" placeholder="例如：Astar / 其他公會名">
+    </label>
+
+    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
+      <span>備註（G）</span>
+      <textarea id="c_note" class="form-control" rows="3" placeholder="例如：可打哪些王、裝備/語音、聯絡方式等"></textarea>
+    </label>
+  `);
+
+  overlay.querySelector('#c_name').value   = values.name   || '';
+  overlay.querySelector('#c_code').value   = values.code   || '';
+  overlay.querySelector('#c_job').value    = values.job    || '';
+  overlay.querySelector('#c_level').value  = values.level  || '';
+  overlay.querySelector('#c_attack').value = values.attack || '';
+  overlay.querySelector('#c_guild').value  = values.guild  || '';
+  overlay.querySelector('#c_note').value   = values.note   || '';
+
+  const close = ()=>overlay.remove();
+  overlay.querySelector('#btn_cancel').onclick = ()=>close();
+
+  overlay.querySelector('#btn_save').onclick = async ()=>{
+    if (!GAS_CROSS_URL || GAS_CROSS_URL.includes('REPLACE_ME')){
+      alert('請先設定 GAS_CROSS_URL（必須是 /exec）');
+      return;
+    }
+
+    const payload = {
+      name:   overlay.querySelector('#c_name').value.trim(),
+      code:   overlay.querySelector('#c_code').value.trim(),
+      job:    overlay.querySelector('#c_job').value.trim(),
+      level:  overlay.querySelector('#c_level').value.trim(),
+      attack: overlay.querySelector('#c_attack').value.trim(),
+      guild:  overlay.querySelector('#c_guild').value.trim(),
+      note:   overlay.querySelector('#c_note').value.trim(),
+      updatedAt: nowISO()
+    };
+
+    if (!payload.code){
+      alert('角色代碼不可為空（用來定位/更新）');
+      return;
+    }
+
+    try{
+      setBusy(overlay, true);
+
+      const form = new URLSearchParams();
+      // 你 GAS 端做一個 upsertCrossByCode（用 code 當主鍵）
+      form.set('action', 'upsertCrossByCode');
+      Object.entries(payload).forEach(([k,v])=> form.set(k, v));
+
+      const resp = await fetch(GAS_CROSS_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString(),
+        cache:'no-store',
+        redirect:'follow'
+      });
+
+      const text = await resp.text();
+      let json; try{ json = JSON.parse(text); }catch{ throw new Error('GAS 回傳非 JSON'); }
+      if (!resp.ok || json.status !== 'ok') throw new Error(json.message || '寫入失敗');
+
+      alert(isNew ? '新增成功！' : '更新成功！');
+      close();
+      loadCross();
+    }catch(e){
+      console.error(e);
+      alert('送出失敗：' + e.message);
+      setBusy(overlay, false);
+    }
+  };
+}
+
+$(document).on('click', '#btnAddCross', ()=>openCrossEditor({__isNew:true}));
+$(document).on('click', '.btn-edit-cross', function(){
+  openCrossEditor({
+    __isNew:false,
+    rowIndex: Number($(this).data('row')||0),
+    name: $(this).data('name'),
+    code: $(this).data('code'),
+    job: $(this).data('job'),
+    level: $(this).data('level'),
+    attack: $(this).data('attack'),
+    guild: $(this).data('guild'),
+    note: $(this).data('note')
+  });
+});
+
+/* =========================
+   重新整理按鈕
+========================= */
+$('#btnReloadRecruit').on('click', loadRecruit);
+$('#btnReloadCross').on('click', loadCross);
+
+/* =========================
+   初始化：解析兩份 Sheet 並載入
+========================= */
+$(function(){
+  recruitTarget = parseSheetFromUrl(RECRUIT_SHEET_URL);
+  crossTarget   = parseSheetFromUrl(CROSS_SHEET_URL);
+
+  loadRecruit();
+  loadCross();
+});
+</script>
+</body>
+</html>
