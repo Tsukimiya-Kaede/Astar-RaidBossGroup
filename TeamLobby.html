@@ -16,16 +16,12 @@
 
   <style>
     body { overflow-y: scroll; margin: 0; padding: 0; }
-    .status-badge { font-size: 0.85rem; }
     .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
-    #sourceBadge { display: none !important; }
     .title{font-weight:bold; font-size:1.0rem;}
     .reset-content { display: table-cell; line-height: 1.5; font-size: 1rem; padding: 0.5; border: none; }
-
-    /* 夜間模式下的面板背景微調 */
     [data-bs-theme="dark"] .card{ border-color: rgba(255,255,255,.12); }
 
-    /* ======= Anime 懸賞牆（無外部圖片：用 CSS 紋理） ======= */
+    /* ======= Anime 懸賞牆 ======= */
     .bounty-wall{
       border-radius: 16px;
       overflow: hidden;
@@ -35,10 +31,7 @@
     }
     .wall-header{
       padding: 14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
       border-bottom: 1px solid rgba(0,0,0,.08);
       background: rgba(255,255,255,.65);
       backdrop-filter: blur(6px);
@@ -75,15 +68,9 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
     }
-    @media (max-width: 1200px){
-      .bounty-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    }
-    @media (max-width: 768px){
-      .bounty-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 440px){
-      .bounty-grid{ grid-template-columns: 1fr; }
-    }
+    @media (max-width: 1200px){ .bounty-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 768px){ .bounty-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 440px){ .bounty-grid{ grid-template-columns: 1fr; } }
 
     .bounty-paper{
       position: relative;
@@ -92,63 +79,39 @@
       background:
         radial-gradient(circle at 25% 15%, rgba(0,0,0,.03), transparent 40%),
         linear-gradient(180deg, #fffdf7, #fbf4e8);
-      box-shadow:
-        0 10px 18px rgba(0,0,0,.16),
-        inset 0 0 0 1px rgba(0,0,0,.06);
+      box-shadow: 0 10px 18px rgba(0,0,0,.16),
+                  inset 0 0 0 1px rgba(0,0,0,.06);
       transform: rotate(var(--tilt, -1.2deg));
       transition: transform .12s ease, box-shadow .12s ease;
     }
     [data-bs-theme="dark"] .bounty-paper{
       background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.84));
-      box-shadow:
-        0 10px 18px rgba(0,0,0,.35),
-        inset 0 0 0 1px rgba(0,0,0,.12);
+      box-shadow: 0 10px 18px rgba(0,0,0,.35),
+                  inset 0 0 0 1px rgba(0,0,0,.12);
     }
-    .bounty-paper:hover{
-      transform: rotate(0deg) translateY(-2px);
-      box-shadow:
-        0 14px 24px rgba(0,0,0,.18),
-        inset 0 0 0 1px rgba(0,0,0,.06);
-    }
+    .bounty-paper:hover{ transform: rotate(0deg) translateY(-2px); }
     .bounty-paper:before{
-      content:"";
-      position:absolute; inset:0;
-      border-radius: 14px;
-      pointer-events:none;
+      content:""; position:absolute; inset:0; border-radius: 14px; pointer-events:none;
       background:
         radial-gradient(circle at 0% 0%, rgba(0,0,0,.10), transparent 26%),
         radial-gradient(circle at 100% 0%, rgba(0,0,0,.08), transparent 28%),
         radial-gradient(circle at 0% 100%, rgba(0,0,0,.08), transparent 28%),
         radial-gradient(circle at 100% 100%, rgba(0,0,0,.12), transparent 26%);
-      opacity: .22;
-      mix-blend-mode: multiply;
+      opacity: .22; mix-blend-mode: multiply;
     }
-
     .pin{
-      position:absolute;
-      top: -9px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 18px; height: 18px;
-      border-radius: 50%;
+      position:absolute; top: -9px; left: 50%; transform: translateX(-50%);
+      width: 18px; height: 18px; border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #fff, #d22);
       box-shadow: 0 6px 10px rgba(0,0,0,.25);
       border: 1px solid rgba(0,0,0,.18);
     }
     .pin:after{
-      content:"";
-      position:absolute;
-      left: 50%; top: 100%;
-      transform: translateX(-50%);
-      width: 2px; height: 10px;
-      background: rgba(0,0,0,.25);
-      border-radius: 2px;
+      content:""; position:absolute; left: 50%; top: 100%; transform: translateX(-50%);
+      width: 2px; height: 10px; background: rgba(0,0,0,.25); border-radius: 2px;
     }
     .tape{
-      position:absolute;
-      top: -8px;
-      width: 56px;
-      height: 18px;
+      position:absolute; top: -8px; width: 56px; height: 18px;
       background: rgba(255, 229, 128, .65);
       box-shadow: 0 6px 10px rgba(0,0,0,.15);
       border: 1px solid rgba(0,0,0,.06);
@@ -160,21 +123,14 @@
     .tape.right{ right: 10px; --tape-rot: 7deg; }
 
     .paper-title{
-      font-weight: 900;
-      letter-spacing: .5px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 8px;
+      font-weight: 900; letter-spacing: .5px;
+      display:flex; align-items:center; justify-content:space-between; gap: 8px;
     }
     .paper-meta{ font-size: .88rem; opacity: .9; }
     .paper-divider{ height: 1px; background: rgba(0,0,0,.10); margin: 10px 0 8px; }
     .paper-row{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 10px;
-      margin-bottom: 6px;
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap: 10px; margin-bottom: 6px;
     }
     .paper-k{ min-width: 72px; font-weight: 800; opacity: .9; font-size: .86rem; }
     .paper-v{ flex: 1; text-align: right; font-size: .9rem; word-break: break-word; }
@@ -200,6 +156,7 @@
       background:#ffc107; color:#212529; font-weight:700;
       cursor:pointer; margin-left:.25rem;
     }
+
     #editOverlay { z-index: 9999; }
   </style>
 </head>
@@ -225,12 +182,8 @@
     <div class="card shadow-sm mb-3">
       <div class="card-body">
         <h4 class="card-title mb-2">➡️ 使用說明</h4>
-        <p class="mb-1 text-muted">
-          每一張懸賞紙就是一則招募。支援 Boss/狀態/關鍵字篩選；可新增/修改招募。
-        </p>
-        <small class="text-muted">
-          請在程式碼中設定 <b>RECRUIT_SHEET_URL / GAS_RECRUIT_URL</b>（讀 Google Sheet CSV、寫回 GAS）。
-        </small>
+        <p class="mb-1 text-muted">每一張懸賞紙就是一則招募。支援 Boss/狀態/關鍵字篩選；可新增/修改招募。</p>
+        <small class="text-muted">請在程式碼中設定 <b>RECRUIT_SHEET_URL / GAS_RECRUIT_URL</b>（讀 Google Sheet CSV、寫回 GAS）。</small>
         <div id="recruitMsg" class="text-danger mt-2"></div>
       </div>
     </div>
@@ -279,11 +232,9 @@
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <h4 class="card-title mb-2">➡️ 使用說明</h4>
-        <p class="mb-1 text-muted">
-          這頁依「公會」分組顯示跨公會成員（表格風格沿用你原本的分組列 + 修改按鈕）。
-        </p>
+        <p class="mb-1 text-muted">此頁會「多來源合併」後依公會分組顯示成員（表格風格沿用分組列 + 修改按鈕）。</p>
         <small class="text-muted">
-          ✅ 已依照你的 1~4 步驟，把 ASTAR 公會名單（你提供的那份 Sheet）加入跨公會資料來源之一（可再新增更多來源）。
+          ✅ 已依照你要求：ASTAR 名單備註讀 K 欄，且「修改資料」也會一併寫回備註欄位（依來源回寫）。
         </small>
         <div id="crossMsg" class="text-danger mt-2"></div>
       </div>
@@ -352,25 +303,30 @@
 const RECRUIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/REPLACE_ME/edit?gid=0#gid=0';
 const GAS_RECRUIT_URL   = 'https://script.google.com/macros/s/REPLACE_ME/exec';
 
+// ✅ 一般跨公會（非特定來源）的寫回（你若不用可留著）
 const GAS_CROSS_URL     = 'https://script.google.com/macros/s/REPLACE_ME/exec';
 
+// ✅【步驟 1】新增：ASTAR 名單寫回用 GAS（請換成你的 /exec）
+const GAS_ASTAR_URL     = 'https://script.google.com/macros/s/REPLACE_ME/exec';
+
 /* =========================
-   ✅【步驟 1】跨公會名單：多資料來源（已加入 ASTAR）
-   - 你要新增其他公會：在陣列再加一筆即可
+   ✅【步驟 1】跨公會名單：多資料來源（含每個來源對應的 gasUrl/action）
 ========================= */
 const CROSS_SOURCES = [
   {
     label: 'ASTAR',
     sheetUrl: 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0',
-    // 依你原本 ASTAR 表的欄位（你貼的舊程式）：B=name, C=code, D=job, E=level, G=attack
+    gasUrl: GAS_ASTAR_URL,       // ✅ 寫回目標
+    action: 'upsertAstarByCode', // ✅ 後端分流 action（你可改成你現有的）
+    // ASTAR 欄位：B=name, C=code, D=job, E=level, G=attack, K=note
     mapping: {
       name:  1,   // B
       code:  2,   // C
       job:   3,   // D
       level: 4,   // E
-      attack:6,   // G（你原碼 attack 用 r[6]）
+      attack:6,   // G
       guild: null,
-      note:  null
+      note:  10   // ✅ K（備註）
     },
     fixedGuild: 'ASTAR'
   },
@@ -494,7 +450,6 @@ function applyRecruitFilter(data){
   const bossF = $('#filterBoss').val().trim();
   const stF   = $('#filterStatus').val().trim();
   const kw    = $('#recruitSearchInput').val().trim().toLowerCase();
-
   return (data||[]).filter(x=>{
     if (bossF && safeText(x.boss).trim() !== bossF) return false;
     if (stF && safeText(x.status).trim() !== stF) return false;
@@ -614,9 +569,7 @@ $('#recruitSearchBtn').on('click', ()=>renderRecruitWall(recruitData));
 $('#recruitSearchInput').on('keypress', (e)=>{ if (e.which === 13) renderRecruitWall(recruitData); });
 $('#btnReloadRecruit').on('click', loadRecruit);
 
-/* =========================
-   Quick Note（?）
-========================= */
+/* Quick Note（?） */
 $(document).on('click', '.btn-note', function(){
   const title  = $(this).data('title') || '快速查看';
   const target = $(this).data('target') || '—';
@@ -795,7 +748,7 @@ function openRecruitEditor(values){
       let json; try{ json = JSON.parse(text); }catch{ throw new Error('GAS 回傳非 JSON'); }
       if (!resp.ok || json.status !== 'ok') throw new Error(json.message || '寫入失敗');
 
-      alert(values.__isNew ? '新增成功！' : '更新成功！');
+      alert(isNew ? '新增成功！' : '更新成功！');
       close();
       loadRecruit();
     }catch(e){
@@ -805,7 +758,6 @@ function openRecruitEditor(values){
     }
   };
 }
-
 $(document).on('click', '#btnAddRecruit', ()=>openRecruitEditor({__isNew:true}));
 $(document).on('click', '.btn-edit-recruit', function(){
   openRecruitEditor({
@@ -851,7 +803,7 @@ function loadCrossFromOneSource(src){
             guild:  (src.fixedGuild || get(r, m.guild) || src.label || '').trim(),
             note:   get(r, m.note),
             rowIndex: i + 2,
-            __source: src.label
+            __source: src.label // ✅ 重要：記錄來源
           })).filter(x => x && (x.name || x.code));
 
           resolve(out);
@@ -882,7 +834,6 @@ async function loadCross(){
     const results = await Promise.all(CROSS_SOURCES.map(loadCrossFromOneSource));
     const merged = results.flat();
 
-    // 以 code 去重：同 code 後者覆蓋前者（你可自行改成保留先者）
     const byCode = new Map();
     for (const r of merged){
       const key = safeText(r.code).trim();
@@ -892,7 +843,6 @@ async function loadCross(){
 
     crossData = Array.from(byCode.values());
     $('#crossMsg').text(`已載入 ${CROSS_SOURCES.length} 份資料來源，共 ${crossData.length} 筆（依角色代碼去重）`);
-
     renderCrossTable(crossData);
   }catch(e){
     console.error(e);
@@ -903,11 +853,10 @@ async function loadCross(){
 }
 
 /* =========================
-   ✅【步驟 4】ASTAR 欄位對應：已在 CROSS_SOURCES.mapping 依你舊程式設定完成
-========================= */
-
-/* =========================
-   跨公會名單：搜尋 + 分組顯示（依公會）
+   ✅【步驟 4】修改資料：依來源回寫（含 note/備註）
+   - renderCrossTable 按鈕帶 data-source
+   - 點擊時把 __source 傳進 editor
+   - 儲存時依來源找到 gasUrl/action，並送出 note
 ========================= */
 function applyCrossSearch(data){
   const kw = $('#crossSearchInput').val().trim().toLowerCase();
@@ -949,6 +898,7 @@ function renderCrossTable(data){
         <td class="small">${safeText(r.note)||'<span class="text-muted">—</span>'}</td>
         <td>
           <button class="btn btn-outline-secondary btn-sm btn-edit-cross"
+            data-source="${safeText(r.__source||'').replace(/"/g,'&quot;')}"
             data-name="${safeText(r.name).replace(/"/g,'&quot;')}"
             data-code="${safeText(r.code).replace(/"/g,'&quot;')}"
             data-job="${safeText(r.job).replace(/"/g,'&quot;')}"
@@ -973,36 +923,40 @@ function openCrossEditor(values){
   const isNew = !!values.__isNew;
   const overlay = createEditor(isNew ? '新增跨公會成員' : '修改跨公會成員', `
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色名稱（A）</span>
+      <span>角色名稱</span>
       <input id="c_name" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色代碼（B，主鍵）</span>
+      <span>角色代碼（主鍵）</span>
       <input id="c_code" type="text" class="form-control" placeholder="例如：GUILD001">
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色職業（C）</span>
+      <span>角色職業</span>
       <input id="c_job" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色等級（D）</span>
+      <span>角色等級</span>
       <input id="c_level" type="text" class="form-control">
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色乾表（E）</span>
+      <span>角色乾表</span>
       <input id="c_attack" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>公會名稱（F）</span>
+      <span>公會名稱</span>
       <input id="c_guild" type="text" class="form-control" placeholder="例如：ASTAR / 其他公會名">
     </label>
 
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>備註（G）</span>
-      <textarea id="c_note" class="form-control" rows="3" placeholder="例如：可打哪些王、裝備/語音、聯絡方式等"></textarea>
+      <span>備註</span>
+      <textarea id="c_note" class="form-control" rows="3" placeholder="會一併寫回來源表格的備註欄（ASTAR=K 欄）"></textarea>
     </label>
+
+    <div class="small text-muted" style="grid-column:1 / -1;">
+      來源：<b>${safeText(values.__source||'')}</b>
+    </div>
   `);
 
   overlay.querySelector('#c_name').value   = values.name   || '';
@@ -1017,8 +971,13 @@ function openCrossEditor(values){
   overlay.querySelector('#btn_cancel').onclick = ()=>close();
 
   overlay.querySelector('#btn_save').onclick = async ()=>{
-    if (!GAS_CROSS_URL || GAS_CROSS_URL.includes('REPLACE_ME')){
-      alert('請先設定 GAS_CROSS_URL（必須是 /exec）');
+    // ✅ 依來源找設定（沒找到就走預設 GAS_CROSS_URL / upsertCrossByCode）
+    const src = (CROSS_SOURCES || []).find(s => s.label === values.__source) || null;
+    const gasUrl = src?.gasUrl || GAS_CROSS_URL;
+    const action = src?.action || 'upsertCrossByCode';
+
+    if (!gasUrl || gasUrl.includes('REPLACE_ME')){
+      alert('請先設定對應來源的 GAS URL（/exec）');
       return;
     }
 
@@ -1029,7 +988,7 @@ function openCrossEditor(values){
       level:  overlay.querySelector('#c_level').value.trim(),
       attack: overlay.querySelector('#c_attack').value.trim(),
       guild:  overlay.querySelector('#c_guild').value.trim(),
-      note:   overlay.querySelector('#c_note').value.trim(),
+      note:   overlay.querySelector('#c_note').value.trim(), // ✅ 備註一併寫回
       updatedAt: nowISO()
     };
 
@@ -1042,10 +1001,11 @@ function openCrossEditor(values){
       setBusy(overlay, true);
 
       const form = new URLSearchParams();
-      form.set('action', 'upsertCrossByCode');
+      form.set('action', action);
       Object.entries(payload).forEach(([k,v])=> form.set(k, v));
+      form.set('source', values.__source || '');
 
-      const resp = await fetch(GAS_CROSS_URL, {
+      const resp = await fetch(gasUrl, {
         method:'POST',
         headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
         body: form.toString(),
@@ -1057,7 +1017,7 @@ function openCrossEditor(values){
       let json; try{ json = JSON.parse(text); }catch{ throw new Error('GAS 回傳非 JSON'); }
       if (!resp.ok || json.status !== 'ok') throw new Error(json.message || '寫入失敗');
 
-      alert(isNew ? '新增成功！' : '更新成功！');
+      alert('更新成功！');
       close();
       loadCross();
     }catch(e){
@@ -1068,10 +1028,11 @@ function openCrossEditor(values){
   };
 }
 
-$(document).on('click', '#btnAddCross', ()=>openCrossEditor({__isNew:true}));
+$(document).on('click', '#btnAddCross', ()=>openCrossEditor({__isNew:true, __source:'ASTAR'})); // 新增預設先用 ASTAR（你可改）
 $(document).on('click', '.btn-edit-cross', function(){
   openCrossEditor({
     __isNew:false,
+    __source: $(this).data('source') || '',
     name: $(this).data('name'),
     code: $(this).data('code'),
     job: $(this).data('job'),
@@ -1088,7 +1049,7 @@ $(document).on('click', '.btn-edit-cross', function(){
 $(function(){
   recruitTarget = parseSheetFromUrl(RECRUIT_SHEET_URL);
   loadRecruit();
-  loadCross(); // ✅ 跨公會名單：多來源載入（含 ASTAR）
+  loadCross();
 });
 </script>
 </body>
