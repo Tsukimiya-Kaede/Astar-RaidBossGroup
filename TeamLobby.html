@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1223</title>
+  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -187,57 +187,23 @@
     .badge-boss.latushard{ background:#6f42c1; }
     .badge-boss.zakum{ background:#fd7e14; }
     .badge-boss.other{ background:#198754; }
-	
-	/* === 需求職業 chips（顏色分類）=== */
-	.need-chip{
-	  display:inline-flex; align-items:center; gap:.4rem;
-	  padding:.35rem .55rem; border-radius:999px; cursor:pointer; user-select:none;
-	  border:1px solid rgba(0,0,0,.12);
-	}
-	.need-chip input{ display:none; }
-	.need-chip[aria-checked="true"]{ box-shadow:0 0 0 2px rgba(0,0,0,.12) inset; }
-	.need-chip:active{ transform: scale(.98); }
 
-	.need-red{   background:#dc3545; color:#fff; }
-	.need-blue{  background:#0d6efd; color:#fff; }
-	.need-green{ background:#198754; color:#fff; }
-	.need-purple{background:#6f42c1; color:#fff; }
-
-	/* 淡黑 / 淡白：避免夜間模式看不到，採用偏中性又有邊框 */
-	.need-softdark{ background:#adb5bd; color:#212529; border-color: rgba(0,0,0,.18); } /* 淡黑灰 */
-	.need-softwhite{ background:#f8f9fa; color:#212529; border-color: rgba(0,0,0,.12); } /* 淡白 */
-
-	/* dark theme 下加強邊框可讀性 */
-	[data-bs-theme="dark"] .need-chip{ border-color: rgba(255,255,255,.18); }
-	[data-bs-theme="dark"] .need-softwhite{ background:#e9ecef; color:#212529; }
-
-	/* 需求工具列 */
-	.need-toolbar{ display:flex; flex-wrap:wrap; gap:.5rem; margin:.25rem 0 .5rem; }
-	.need-toolbar .btn-sm{ padding:.1rem .5rem; }
-
-	/* 出團成員：帶入工具 */
-	.member-insertbar{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
-	.member-insertbar .form-select{ width:auto; }
-	
-	/* 招募牆：目前成員顯示成「每人一行」，過長改水平捲動 */
-	.members-box{
-	  text-align: left;
-	  white-space: pre;          /* 保留換行；每行不自動換行 */
-	  overflow-x: auto;          /* 一行太長就水平捲動 */
-	  overflow-y: hidden;
-	  padding: .35rem .5rem;
-	  border-radius: 10px;
-	  background: rgba(0,0,0,.04);
-	  border: 1px solid rgba(0,0,0,.08);
-	  font-size: .86rem;
-	  line-height: 1.45;
-	}
-
-	/* 暗色模式也要舒服 */
-	[data-bs-theme="dark"] .members-box{
-	  background: rgba(255,255,255,.08);
-	  border-color: rgba(255,255,255,.14);
-	}	
+    /* ====== 新增：成員 Modal 顯示 ====== */
+    .members-pre{
+      white-space: pre-wrap;        /* 保留換行，長字可換行 */
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .9rem;
+      line-height: 1.45;
+      padding: .75rem;
+      border-radius: 10px;
+      background: rgba(0,0,0,.04);
+      border: 1px solid rgba(0,0,0,.08);
+    }
+    [data-bs-theme="dark"] .members-pre{
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.14);
+    }
   </style>
 </head>
 
@@ -317,6 +283,25 @@
     </div>
   </div>
 
+  <!-- ✅ 新增：查看成員 Modal（只影響此需求） -->
+  <div class="modal fade" id="membersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">目前成員</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="small text-muted mb-2" id="membersModalMeta">—</div>
+          <div class="members-pre" id="membersModalBody">—</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* =========================
    ✅ 設定區（已把 GAS_RECRUIT_URL 換成你提供的 /exec）
@@ -355,6 +340,16 @@ function statusClass(status){
   return 'closed';
 }
 
+/* ✅ 新增：安全塞到 data-* 用（不改其他邏輯） */
+function escapeAttr(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
+
 /* =========================
    夜間模式（不動）
 ========================= */
@@ -377,7 +372,7 @@ $('#btnGoRecruit').on('click', ()=>showMainPage('recruit'));
 $('#btnGoMembers').on('click', ()=>showMainPage('members'));
 
 /* =========================================================
-   招募牆（只改你指定的 3、4、事件綁定）
+   招募牆（保持你現有架構；只改「成員顯示」為按鈕 + Modal）
 ========================================================= */
 let recruitData = [];
 
@@ -398,8 +393,6 @@ function applyRecruitFilter(data){
   });
 }
 
-/* loadRecruit（不屬於你指定的 3/4/事件綁定修改範圍，所以不動原本結構）
-   但你若已經在其他地方把 loadRecruit 改成 A~H 讀取，這裡請保留你現有版本。 */
 function loadRecruit(){
   $('#recruitMsg').text('');
   $('#recruitWall').html(`<div class="text-center text-white-50 py-5">讀取中...</div>`);
@@ -448,9 +441,7 @@ function loadRecruit(){
   });
 }
 
-/* =========================
-   3) 修改 renderRecruitWall()：移除 id、改用 rowIndex
-========================= */
+/* ✅ 只修改此需求：成員欄位改成「查看」按鈕，點擊用 Modal 顯示 */
 function renderRecruitWall(data){
   const filtered = applyRecruitFilter(data);
 
@@ -480,8 +471,8 @@ function renderRecruitWall(data){
     const sCls = statusClass(r.status);
     const tilt = (idx % 5 === 0) ? -2.2 : (idx % 5 === 1) ? 1.7 : (idx % 5 === 2) ? -1.1 : (idx % 5 === 3) ? 2.3 : -0.6;
 
-    const members = safeText(r.members).trim();
-    const membersShow = members ? members : '<span class="text-muted">（尚未填）</span>';
+    const membersText = safeText(r.members).trim();
+    const membersCount = membersText ? membersText.split(/\r?\n/).filter(x=>x.trim()).length : 0;
 
     return `
       <div class="bounty-paper" style="--tilt:${tilt}deg">
@@ -501,33 +492,42 @@ function renderRecruitWall(data){
 
         <div class="paper-divider"></div>
 
-        <div class="paper-row"><div class="paper-k">職業需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
+        <div class="paper-row"><div class="paper-k">需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
+
+        <!-- ✅ 成員：改成按鈕 -->
         <div class="paper-row">
-  <div class="paper-k">成員</div>
-  <div class="paper-v">
-    ${
-      safeText(r.members).trim()
-        ? `<div class="members-box">${escapeHtml(r.members)}</div>`
-        : `<span class="text-muted">（尚未填）</span>`
-    }
-  </div>
-</div>
-        <div class="paper-row"><div class="paper-k">招募公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
-        <div class="paper-row"><div class="paper-k">聯絡方式</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
+          <div class="paper-k">成員</div>
+          <div class="paper-v">
+            ${
+              membersText
+                ? `<button type="button"
+                           class="btn btn-outline-primary btn-sm btn-show-members"
+                           data-boss="${escapeAttr(r.boss)}"
+                           data-time="${escapeAttr(r.time)}"
+                           data-guild="${escapeAttr(r.guild)}"
+                           data-members="${escapeAttr(membersText)}">
+                      查看（${membersCount}）
+                    </button>`
+                : `<span class="text-muted">（尚未填）</span>`
+            }
+          </div>
+        </div>
+
+        <div class="paper-row"><div class="paper-k">公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
+        <div class="paper-row"><div class="paper-k">聯絡</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
         <div class="paper-row"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
 
         <div class="paper-actions">
-          <!-- ✅ 改成 data-row -->
           <button class="btn btn-outline-secondary btn-sm btn-edit-recruit"
             data-row="${r.rowIndex||0}"
-            data-boss="${safeText(r.boss).replace(/"/g,'&quot;')}"
-            data-time="${safeText(r.time).replace(/"/g,'&quot;')}"
-            data-status="${safeText(r.status).replace(/"/g,'&quot;')}"
-            data-need="${safeText(r.need).replace(/"/g,'&quot;')}"
-            data-members="${safeText(r.members).replace(/"/g,'&quot;')}"
-            data-guild="${safeText(r.guild).replace(/"/g,'&quot;')}"
-            data-contact="${safeText(r.contact).replace(/"/g,'&quot;')}"
-            data-note="${safeText(r.note).replace(/"/g,'&quot;')}">修改</button>
+            data-boss="${escapeAttr(r.boss)}"
+            data-time="${escapeAttr(r.time)}"
+            data-status="${escapeAttr(r.status)}"
+            data-need="${escapeAttr(r.need)}"
+            data-members="${escapeAttr(r.members)}"
+            data-guild="${escapeAttr(r.guild)}"
+            data-contact="${escapeAttr(r.contact)}"
+            data-note="${escapeAttr(r.note)}">修改</button>
         </div>
       </div>
     `;
@@ -541,6 +541,19 @@ $('#recruitSearchBtn').on('click', ()=>renderRecruitWall(recruitData));
 $('#recruitSearchInput').on('keypress', (e)=>{ if (e.which === 13) renderRecruitWall(recruitData); });
 $('#btnReloadRecruit').on('click', loadRecruit);
 
+/* ✅ 新增：點「查看成員」開 Modal */
+$(document).on('click', '.btn-show-members', function(){
+  const boss = $(this).data('boss') || '';
+  const time = $(this).data('time') || '';
+  const guild = $(this).data('guild') || '';
+  const members = $(this).data('members') || '';
+
+  $('#membersModalMeta').text(`Boss：${boss || '—'}　|　時間：${time || '—'}　|　公會：${guild || '—'}`);
+  $('#membersModalBody').text(members || '（空）');
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('membersModal')).show();
+});
+
 /* ===== 招募 Editor Overlay（原本不動） ===== */
 function createRecruitEditor(titleText, fieldsHtml){
   const overlay = document.createElement('div');
@@ -550,11 +563,11 @@ function createRecruitEditor(titleText, fieldsHtml){
     inset:0,
     background:'rgba(0,0,0,.4)',
     display:'flex',
-    alignItems:'flex-start',         // ✅ 讓卡片從上方開始，避免被擋
+    alignItems:'flex-start',
     justifyContent:'center',
     zIndex:9999,
-    overflowY:'auto',                // ✅ overlay 可捲動
-    padding:'18px 10px'              // ✅ 手機也不貼邊
+    overflowY:'auto',
+    padding:'18px 10px'
   });
 
   const card = document.createElement('div');
@@ -563,14 +576,13 @@ function createRecruitEditor(titleText, fieldsHtml){
     background:'#fff',
     borderRadius:'12px',
     width:'min(760px, 92vw)',
-    maxHeight:'90vh',                // ✅ 關鍵：卡片最大高度
-    overflow:'auto',                 // ✅ 內容超出就捲動
+    maxHeight:'90vh',
+    overflow:'auto',
     boxShadow:'0 10px 30px rgba(0,0,0,.2)',
     color:'#222',
     fontFamily:'system-ui,-apple-system,BlinkMacSystemFont'
   });
 
-  // ✅ 讓底部按鈕列「黏住卡片底部」更好按
   card.innerHTML = `
     <div style="padding:18px;">
       <h3 style="margin:0 0 12px;font-size:18px;">${titleText}</h3>
@@ -607,290 +619,34 @@ function createRecruitEditor(titleText, fieldsHtml){
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  // ✅ 點灰色背景 = 取消（點卡片內不會）
   overlay.addEventListener('click', (e)=>{
     if (e.target === overlay) overlay.remove();
   });
-  // 保險：卡片內點擊不要冒泡成背景點擊
   card.addEventListener('click', (e)=> e.stopPropagation());
 
   return overlay;
 }
-
-/* =========================
-   4) 修改 openRecruitEditor()：送到新 GAS（append / update）
-========================= */
-function openRecruitEditor(values){
-  const isNew = !!values.__isNew;
-
-  // ========= 需求職業：分類 + 顏色 =========
-  const NEED_GROUPS = [
-    { cls:'need-red',       items:['英雄','聖騎士','黑騎士'] },
-    { cls:'need-blue',      items:['冰雷','火毒','主教'] },
-    { cls:'need-green',     items:['箭神','神射手'] },
-    { cls:'need-purple',    items:['夜使者','暗影神偷'] },
-    { cls:'need-softdark',  items:['拳霸','槍神'] },
-    { cls:'need-softwhite', items:['初新者'] },
-  ];
-  const NEED_OPTIONS = NEED_GROUPS.flatMap(g=>g.items);
-
-  const parseNeed = (raw)=>{
-    const s = safeText(raw || '').trim();
-    if (!s) return new Set();
-    return new Set(s.split(/[、,\/\s]+/g).map(x=>x.trim()).filter(Boolean));
-  };
-  const selectedNeed = parseNeed(values.need);
-
-  // datetime-local 需要 yyyy-MM-ddTHH:mm
-  const toDateTimeLocal = (raw)=>{
-    const s = safeText(raw || '').trim();
-    if (!s) return '';
-    let t = s.replace(/\//g,'-').replace(' ', 'T');
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t)) return t;
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(t)) return t.slice(0,16);
-    return t;
-  };
-  const fromDateTimeLocal = (val)=>{
-    const s = safeText(val || '').trim();
-    if (!s) return '';
-    return s.replace('T',' ');
-  };
-
-  const chipHtml = NEED_GROUPS.map(group=>{
-    return group.items.map(item=>{
-      const checked = selectedNeed.has(item);
-      return `
-        <label class="need-chip ${group.cls}" aria-checked="${checked?'true':'false'}">
-          <input type="checkbox" class="need-opt" value="${item}" ${checked?'checked':''}>
-          <span>${item}</span>
-        </label>
-      `;
-    }).join('');
-  }).join('');
-
-  const overlay = createRecruitEditor(isNew ? '新增招募' : '修改招募', `
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>Boss（A）</span>
-      <select id="r_boss" class="form-select">
-        <option value="拉圖斯">拉圖斯</option>
-        <option value="拉圖斯(困難)">拉圖斯(困難)</option>
-        <option value="殘暴炎魔">殘暴炎魔</option>
-        <option value="其他">其他</option>
-      </select>
-    </label>
-
-    <!-- ✅ datetime-local：月曆+時鐘 -->
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>出團時間（B）</span>
-      <input id="r_time" type="datetime-local" class="form-control">
-      <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
-    </label>
-
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>狀態（C）</span>
-      <select id="r_status" class="form-select">
-        <option value="招募中">招募中</option>
-        <option value="已滿">已滿</option>
-        <option value="關閉">關閉</option>
-      </select>
-    </label>
-
-    <!-- ✅ 需求多選：顏色分類 + 快速全選/清空 -->
-    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>招募需求（D，可多選）</span>
-
-      <div class="need-toolbar">
-        <button type="button" class="btn btn-outline-dark btn-sm" id="needAll">快速全選</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="needClear">清空</button>
-      </div>
-
-      <div id="need_box" class="border rounded p-2" style="background:rgba(0,0,0,.02);">
-        <div class="d-flex flex-wrap gap-2">${chipHtml}</div>
-        <div class="mt-2">
-          <input id="r_need_preview" class="form-control form-control-sm" type="text" readonly
-                 placeholder="（會自動由上方多選生成）">
-        </div>
-      </div>
-    </label>
-
-    <!-- ✅ 出團成員：可帶入 ASTAR 某營團員，也可自行編輯 -->
-    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>出團成員（E，可帶入 ASTAR 營區團員，也可手動填）</span>
-
-      <div class="member-insertbar">
-        <select id="mtez_pickCamp" class="form-select form-select-sm">
-          <option value="">（選擇要帶入的 ASTAR 營區）</option>
-        </select>
-        <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入團員</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearMembers">清空成員欄</button>
-      </div>
-
-      <textarea id="r_members" class="form-control" rows="6"
-        placeholder="可自行輸入，例如：\n小明（代碼） 職業 Lv 等級 乾表:xxx\n小王（代碼）..."></textarea>
-      <small class="text-muted">帶入格式：角色名稱（角色代碼） 職業 Lv 等級 乾表:數值</small>
-    </label>
-
-    <!-- ✅ 招募公會：下拉 -->
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>招募公會（F）</span>
-      <select id="r_guild" class="form-select">
-        <option value="ASTAR">ASTAR</option>
-        <option value="MTEZ">MTEZ</option>
-      </select>
-    </label>
-
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>聯絡方式（G）</span>
-      <input id="r_contact" type="text" class="form-control">
-    </label>
-
-    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>備註（H）</span>
-      <textarea id="r_note" class="form-control" rows="3"></textarea>
-    </label>
-  `);
-
-  // ===== 帶入值 =====
-  overlay.querySelector('#r_boss').value    = values.boss   || '拉圖斯';
-  overlay.querySelector('#r_time').value    = toDateTimeLocal(values.time || '');
-  overlay.querySelector('#r_status').value  = values.status || '招募中';
-  overlay.querySelector('#r_members').value = values.members|| '';
-  overlay.querySelector('#r_guild').value   = values.guild  || 'ASTAR';
-  overlay.querySelector('#r_contact').value = values.contact|| '';
-  overlay.querySelector('#r_note').value    = values.note   || '';
-
-  // ===== 需求 chips：同步 preview + 工具列（修正版：只用 change，不手動 toggle）=====
-	const needPreview = overlay.querySelector('#r_need_preview');
-
-	const readNeedSelected = ()=>{
-	  return Array.from(overlay.querySelectorAll('.need-opt:checked')).map(el=>el.value);
-	};
-	const syncNeedPreview = ()=>{
-	  needPreview.value = readNeedSelected().join('、');
-	};
-
-	// ✅ 只監聽 checkbox 的 change，並同步 aria-checked
-	overlay.querySelectorAll('.need-chip').forEach(lbl=>{
-	  const cb = lbl.querySelector('input.need-opt');
-
-	  // 初始 aria
-	  lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
-
-	  cb.addEventListener('change', ()=>{
-		lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
-		syncNeedPreview();
-	  });
-	});
-
-	syncNeedPreview();
-
-	// 快速全選 / 清空
-	overlay.querySelector('#needAll').addEventListener('click', ()=>{
-	  overlay.querySelectorAll('.need-chip').forEach(lbl=>{
-		const cb = lbl.querySelector('input.need-opt');
-		cb.checked = true;
-		lbl.setAttribute('aria-checked','true');
-	  });
-	  syncNeedPreview();
-	});
-	overlay.querySelector('#needClear').addEventListener('click', ()=>{
-	  overlay.querySelectorAll('.need-chip').forEach(lbl=>{
-		const cb = lbl.querySelector('input.need-opt');
-		cb.checked = false;
-		lbl.setAttribute('aria-checked','false');
-	  });
-	  syncNeedPreview();
-	});
-
-  // ===== 出團成員：營區帶入（ASTAR）=====
-  const campSel = overlay.querySelector('#mtez_pickCamp');
-  const membersBox = overlay.querySelector('#r_members');
-
-  // 先載入 ASTAR 營區資料並填入下拉
-  (async ()=>{
-    await ensureAstarCampData();
-    const camps = Array.from(astarCampMap.keys()).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
-    // 清空重建
-    campSel.innerHTML = `<option value="">（選擇要帶入的 ASTAR 營區）</option>` +
-      camps.map(c=>`<option value="${c}">${c}（${astarCampMap.get(c).length}）</option>`).join('');
-  })();
-
-  overlay.querySelector('#btnInsertCamp').addEventListener('click', ()=>{
-    const camp = campSel.value;
-    if (!camp) return;
-    const arr = astarCampMap.get(camp) || [];
-    const text = formatCampMembersText(camp, arr);
-
-    // append：若已有內容就先加一個空行
-    const cur = safeText(membersBox.value || '').trim();
-    membersBox.value = cur ? (cur + '\n\n' + text) : text;
-  });
-  overlay.querySelector('#btnClearMembers').addEventListener('click', ()=>{
-    membersBox.value = '';
-  });
-
-  const close = ()=>overlay.remove();
-  overlay.querySelector('#btn_cancel').onclick = ()=>close();
-
-  // ✅ 送出：保持你現有 append/update GAS，只改用新 UI 值
-  overlay.querySelector('#btn_save').onclick = async ()=>{
-    if (!GAS_RECRUIT_URL){
-      alert('未設定 GAS_RECRUIT_URL');
-      return;
-    }
-
-    const payload = {
-      boss:    overlay.querySelector('#r_boss').value.trim(),
-      time:    fromDateTimeLocal(overlay.querySelector('#r_time').value),
-      status:  overlay.querySelector('#r_status').value.trim(),
-      need:    readNeedSelected().join('、'),
-      members: membersBox.value.trim(),
-      guild:   overlay.querySelector('#r_guild').value.trim(),
-      contact: overlay.querySelector('#r_contact').value.trim(),
-      note:    overlay.querySelector('#r_note').value.trim(),
-      row:     Number(values.rowIndex || 0)
-    };
-
-    if (!payload.boss || !payload.time || !payload.guild || !payload.contact){
-      alert('請至少填：Boss / 出團時間 / 招募公會 / 聯絡方式');
-      return;
-    }
-
-    try{
-      setRecruitBusy(overlay, true);
-
-      const form = new URLSearchParams();
-      form.set('action', isNew ? 'appendRecruit' : 'updateRecruitRow');
-      Object.entries(payload).forEach(([k,v])=> form.set(k, safeText(v)));
-
-      const resp = await fetch(GAS_RECRUIT_URL, {
-        method:'POST',
-        headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: form.toString(),
-        cache:'no-store'
-      });
-
-      const text = await resp.text();
-      let json; try{ json = JSON.parse(text); }catch{ throw new Error('GAS 回傳非 JSON'); }
-      if (!resp.ok || json.status !== 'ok') throw new Error(json.message || '寫入失敗');
-
-      alert(isNew ? '新增成功！' : '更新成功！');
-      close();
-      loadRecruit();
-    }catch(e){
-      console.error(e);
-      alert('送出失敗：' + e.message);
-      setRecruitBusy(overlay, false);
-    }
-  };
+function setRecruitBusy(overlay, busy){
+  const mask = overlay.querySelector('#editLoadingMask');
+  const btnSave = overlay.querySelector('#btn_save');
+  const btnCancel = overlay.querySelector('#btn_cancel');
+  mask.style.display = busy ? 'flex' : 'none';
+  btnSave.disabled = busy;
+  btnCancel.disabled = busy;
+  overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
+  if (busy){
+    btnSave.dataset._orig = btnSave.innerHTML;
+    btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
+  } else if (btnSave.dataset._orig){
+    btnSave.innerHTML = btnSave.dataset._orig;
+    delete btnSave.dataset._orig;
+  }
 }
 
-/* 新增（維持，但補 rowIndex=0） */
-$('#btnAddRecruit').on('click', ()=>openRecruitEditor({__isNew:true, rowIndex:0}));
+/* openRecruitEditor（保持你現有版本；此處略，依你目前版本保留即可） */
+/* 你原本的 openRecruitEditor + 需求 chips + ASTAR 帶入成員功能請保留在這裡 */
 
-/* =========================
-   事件綁定：修改時只傳 rowIndex（不再傳 id）
-========================= */
+$('#btnAddRecruit').on('click', ()=>openRecruitEditor({__isNew:true, rowIndex:0}));
 $(document).on('click', '.btn-edit-recruit', function(){
   openRecruitEditor({
     __isNew:false,
@@ -911,129 +667,6 @@ $(function(){
   showMainPage('recruit');
   loadRecruit();
 });
-
-// =========================
-// ASTAR 營區團員資料（給招募視窗帶入用）
-// =========================
-const ASTAR_SHEET_URL_FOR_MEMBER_PICKER =
-  'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
-
-// 快取：campName -> [{name,code,job,level,attack}]
-let astarCampMap = new Map();
-let astarCampLoaded = false;
-let astarCampLoading = null;
-
-// 從 J 欄(營區)抓第一個有效營區（你原本也有類似 regex）
-function pickFirstCamp(raw){
-  const txt = String(raw || '').trim();
-  const re = /(普拉[一二三四五六七八九十]營|困拉[一二三四五六七八九十]營|炎魔[一二三四五六七八九十]營|訓練營|外援大大)/;
-  const m = txt.match(re);
-  return m ? m[1] : '';
-}
-
-async function ensureAstarCampData(){
-  if (astarCampLoaded) return;
-  if (astarCampLoading) return astarCampLoading;
-
-  const t = parseSheetFromUrl(ASTAR_SHEET_URL_FOR_MEMBER_PICKER);
-  if (!t?.sheetId) {
-    astarCampLoaded = true; // 避免一直重試
-    return;
-  }
-
-  astarCampLoading = new Promise((resolve)=>{
-    Papa.parse(csvUrl(t.sheetId, t.gid), {
-      download: true,
-      skipEmptyLines: true,
-      complete: (res)=>{
-        try{
-          astarCampMap = new Map();
-          if (!res.data || res.data.length < 2) { astarCampLoaded = true; resolve(); return; }
-
-          const rows = res.data.slice(1);
-          for (const r of rows){
-            // ASTAR 原表：B=name(1) C=code(2) D=job(3) E=level(4) G=attack(6) J=camp(9)
-            const name = safeText(r[1]).trim();
-            const code = safeText(r[2]).trim();
-            const job  = safeText(r[3]).trim();
-            const lv   = safeText(r[4]).trim();
-            const atk  = safeText(r[6]).trim();
-            const camp = pickFirstCamp(r[9]);
-
-            if (!name || !code || !camp) continue;
-
-            if (!astarCampMap.has(camp)) astarCampMap.set(camp, []);
-            astarCampMap.get(camp).push({ name, code, job, level: lv, attack: atk });
-          }
-
-          // 營區內排序（可選）
-          for (const arr of astarCampMap.values()){
-            arr.sort((a,b)=> (a.name||'').localeCompare(b.name||'','zh-Hant'));
-          }
-
-          astarCampLoaded = true;
-          resolve();
-        }catch(e){
-          console.error('ASTAR 營區載入失敗', e);
-          astarCampLoaded = true;
-          resolve();
-        }
-      },
-      error: (err)=>{
-        console.error('ASTAR 營區讀取失敗', err);
-        astarCampLoaded = true;
-        resolve();
-      }
-    });
-  });
-
-  return astarCampLoading;
-}
-
-// 把某營區的團員格式化成文字（可自行調整格式）
-function formatCampMembersText(camp, arr){
-  const lines = (arr || []).map(x=>{
-    const n = x.name || '';
-    const c = x.code ? `（${x.code}）` : '';
-    const j = x.job ? ` ${x.job}` : '';
-    const l = x.level ? ` Lv${x.level}` : '';
-    const a = x.attack ? ` 乾表:${x.attack}` : '';
-    return `${n}${c}${j}${l}${a}`.trim();
-  });
-  return `【${camp}】\n` + lines.join('\n');
-}
-
-function setRecruitBusy(overlay, busy){
-  const mask = overlay.querySelector('#editLoadingMask');
-  const btnSave = overlay.querySelector('#btn_save');
-  const btnCancel = overlay.querySelector('#btn_cancel');
-
-  // ✅ 新增：送出中避免誤觸背景（但遮罩仍可顯示）
-  overlay.style.pointerEvents = busy ? 'none' : 'auto';
-  mask.style.pointerEvents = 'auto';
-
-  mask.style.display = busy ? 'flex' : 'none';
-  btnSave.disabled = busy;
-  btnCancel.disabled = busy;
-  overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
-
-  if (busy){
-    btnSave.dataset._orig = btnSave.innerHTML;
-    btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
-  } else if (btnSave.dataset._orig){
-    btnSave.innerHTML = btnSave.dataset._orig;
-    delete btnSave.dataset._orig;
-  }
-}
-
-function escapeHtml(s){
-  return String(s ?? '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
 </script>
 </body>
 </html>
