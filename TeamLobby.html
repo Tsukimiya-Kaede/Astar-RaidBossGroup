@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1045</title>
+  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1102</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -187,6 +187,37 @@
     .badge-boss.latushard{ background:#6f42c1; }
     .badge-boss.zakum{ background:#fd7e14; }
     .badge-boss.other{ background:#198754; }
+	
+	/* === 需求職業 chips（顏色分類）=== */
+	.need-chip{
+	  display:inline-flex; align-items:center; gap:.4rem;
+	  padding:.35rem .55rem; border-radius:999px; cursor:pointer; user-select:none;
+	  border:1px solid rgba(0,0,0,.12);
+	}
+	.need-chip input{ display:none; }
+	.need-chip[aria-checked="true"]{ box-shadow:0 0 0 2px rgba(0,0,0,.12) inset; }
+	.need-chip:active{ transform: scale(.98); }
+
+	.need-red{   background:#dc3545; color:#fff; }
+	.need-blue{  background:#0d6efd; color:#fff; }
+	.need-green{ background:#198754; color:#fff; }
+	.need-purple{background:#6f42c1; color:#fff; }
+
+	/* 淡黑 / 淡白：避免夜間模式看不到，採用偏中性又有邊框 */
+	.need-softdark{ background:#adb5bd; color:#212529; border-color: rgba(0,0,0,.18); } /* 淡黑灰 */
+	.need-softwhite{ background:#f8f9fa; color:#212529; border-color: rgba(0,0,0,.12); } /* 淡白 */
+
+	/* dark theme 下加強邊框可讀性 */
+	[data-bs-theme="dark"] .need-chip{ border-color: rgba(255,255,255,.18); }
+	[data-bs-theme="dark"] .need-softwhite{ background:#e9ecef; color:#212529; }
+
+	/* 需求工具列 */
+	.need-toolbar{ display:flex; flex-wrap:wrap; gap:.5rem; margin:.25rem 0 .5rem; }
+	.need-toolbar .btn-sm{ padding:.1rem .5rem; }
+
+	/* 出團成員：帶入工具 */
+	.member-insertbar{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+	.member-insertbar .form-select{ width:auto; }
   </style>
 </head>
 
@@ -450,10 +481,10 @@ function renderRecruitWall(data){
 
         <div class="paper-divider"></div>
 
-        <div class="paper-row"><div class="paper-k">需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
-        <div class="paper-row"><div class="paper-k">成員</div><div class="paper-v">${membersShow}</div></div>
-        <div class="paper-row"><div class="paper-k">公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
-        <div class="paper-row"><div class="paper-k">聯絡</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
+        <div class="paper-row"><div class="paper-k">職業需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
+        <div class="paper-row"><div class="paper-k">目前成員</div><div class="paper-v">${membersShow}</div></div>
+        <div class="paper-row"><div class="paper-k">招募公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
+        <div class="paper-row"><div class="paper-k">聯絡方式</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
         <div class="paper-row"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
 
         <div class="paper-actions">
@@ -543,37 +574,50 @@ function setRecruitBusy(overlay, busy){
 function openRecruitEditor(values){
   const isNew = !!values.__isNew;
 
-  // ✅ 可多選職業清單
-  const NEED_OPTIONS = ['英雄','聖騎士','黑騎士','冰雷','火毒','主教','箭神','神射手','夜使者','暗影神偷','拳霸','槍神','初新者'];
+  // ========= 需求職業：分類 + 顏色 =========
+  const NEED_GROUPS = [
+    { cls:'need-red',       items:['英雄','聖騎士','黑騎士'] },
+    { cls:'need-blue',      items:['冰雷','火毒','主教'] },
+    { cls:'need-green',     items:['箭神','神射手'] },
+    { cls:'need-purple',    items:['夜使者','暗影神偷'] },
+    { cls:'need-softdark',  items:['拳霸','槍神'] },
+    { cls:'need-softwhite', items:['初新者'] },
+  ];
+  const NEED_OPTIONS = NEED_GROUPS.flatMap(g=>g.items);
 
-  // 將目前 need 字串解析成 set（支援「、」「,」「/」「空白」等分隔）
   const parseNeed = (raw)=>{
     const s = safeText(raw || '').trim();
     if (!s) return new Set();
     return new Set(s.split(/[、,\/\s]+/g).map(x=>x.trim()).filter(Boolean));
   };
+  const selectedNeed = parseNeed(values.need);
 
   // datetime-local 需要 yyyy-MM-ddTHH:mm
   const toDateTimeLocal = (raw)=>{
     const s = safeText(raw || '').trim();
     if (!s) return '';
-    // 允許輸入 "2026-03-01 21:00" 或 "2026/03/01 21:00"
     let t = s.replace(/\//g,'-').replace(' ', 'T');
-    // 如果已經是 yyyy-MM-ddTHH:mm 就直接回
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t)) return t;
-    // 若多了秒數就截斷
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(t)) return t.slice(0,16);
     return t;
   };
-
-  // 顯示用：把 datetime-local 轉回「yyyy-MM-dd HH:mm」
   const fromDateTimeLocal = (val)=>{
     const s = safeText(val || '').trim();
     if (!s) return '';
     return s.replace('T',' ');
   };
 
-  const selectedNeed = parseNeed(values.need);
+  const chipHtml = NEED_GROUPS.map(group=>{
+    return group.items.map(item=>{
+      const checked = selectedNeed.has(item);
+      return `
+        <label class="need-chip ${group.cls}" aria-checked="${checked?'true':'false'}">
+          <input type="checkbox" class="need-opt" value="${item}" ${checked?'checked':''}>
+          <span>${item}</span>
+        </label>
+      `;
+    }).join('');
+  }).join('');
 
   const overlay = createRecruitEditor(isNew ? '新增招募' : '修改招募', `
     <label style="display:flex;flex-direction:column;gap:6px;">
@@ -586,11 +630,11 @@ function openRecruitEditor(values){
       </select>
     </label>
 
-    <!-- ✅ 改成 datetime-local：有月曆+時鐘 -->
+    <!-- ✅ datetime-local：月曆+時鐘 -->
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>出團時間（B）</span>
       <input id="r_time" type="datetime-local" class="form-control">
-      <small class="text-muted">會自動以 yyyy-MM-dd HH:mm 格式寫入資料表</small>
+      <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
@@ -602,23 +646,17 @@ function openRecruitEditor(values){
       </select>
     </label>
 
-    <!-- ✅ 需求多選 -->
+    <!-- ✅ 需求多選：顏色分類 + 快速全選/清空 -->
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
       <span>招募需求（D，可多選）</span>
+
+      <div class="need-toolbar">
+        <button type="button" class="btn btn-outline-dark btn-sm" id="needAll">快速全選</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="needClear">清空</button>
+      </div>
+
       <div id="need_box" class="border rounded p-2" style="background:rgba(0,0,0,.02);">
-        <div class="d-flex flex-wrap gap-2">
-          ${
-            NEED_OPTIONS.map(x=>{
-              const checked = selectedNeed.has(x);
-              return `
-                <label class="badge rounded-pill text-bg-light border" style="cursor:pointer;">
-                  <input type="checkbox" class="me-1 need-opt" value="${x}" ${checked?'checked':''}>
-                  ${x}
-                </label>
-              `;
-            }).join('')
-          }
-        </div>
+        <div class="d-flex flex-wrap gap-2">${chipHtml}</div>
         <div class="mt-2">
           <input id="r_need_preview" class="form-control form-control-sm" type="text" readonly
                  placeholder="（會自動由上方多選生成）">
@@ -626,12 +664,24 @@ function openRecruitEditor(values){
       </div>
     </label>
 
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>出團成員（E）</span>
-      <input id="r_members" type="text" class="form-control">
+    <!-- ✅ 出團成員：可帶入 ASTAR 某營團員，也可自行編輯 -->
+    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
+      <span>出團成員（E，可帶入 ASTAR 營區團員，也可手動填）</span>
+
+      <div class="member-insertbar">
+        <select id="mtez_pickCamp" class="form-select form-select-sm">
+          <option value="">（選擇要帶入的 ASTAR 營區）</option>
+        </select>
+        <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入團員</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearMembers">清空成員欄</button>
+      </div>
+
+      <textarea id="r_members" class="form-control" rows="6"
+        placeholder="可自行輸入，例如：\n小明（代碼） 職業 Lv 等級 乾表:xxx\n小王（代碼）..."></textarea>
+      <small class="text-muted">帶入格式：角色名稱（角色代碼） 職業 Lv 等級 乾表:數值</small>
     </label>
 
-    <!-- ✅ 發文公會(F) 改名 + 下拉 -->
+    <!-- ✅ 招募公會：下拉 -->
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>招募公會（F）</span>
       <select id="r_guild" class="form-select">
@@ -651,7 +701,7 @@ function openRecruitEditor(values){
     </label>
   `);
 
-  // ===== 帶入值（維持你原本的欄位）=====
+  // ===== 帶入值 =====
   overlay.querySelector('#r_boss').value    = values.boss   || '拉圖斯';
   overlay.querySelector('#r_time').value    = toDateTimeLocal(values.time || '');
   overlay.querySelector('#r_status').value  = values.status || '招募中';
@@ -660,22 +710,78 @@ function openRecruitEditor(values){
   overlay.querySelector('#r_contact').value = values.contact|| '';
   overlay.querySelector('#r_note').value    = values.note   || '';
 
-  // need preview 同步
+  // ===== 需求 chips：同步 preview + 工具列 =====
+  const needPreview = overlay.querySelector('#r_need_preview');
   const readNeedSelected = ()=>{
     return Array.from(overlay.querySelectorAll('.need-opt:checked')).map(el=>el.value);
   };
-  const syncNeedPreview = ()=>{
-    overlay.querySelector('#r_need_preview').value = readNeedSelected().join('、');
-  };
-  overlay.querySelectorAll('.need-opt').forEach(cb=>{
-    cb.addEventListener('change', syncNeedPreview);
+  const syncNeedPreview = ()=>{ needPreview.value = readNeedSelected().join('、'); };
+
+  // 點 chip 切換（維持 aria-checked）
+  overlay.querySelectorAll('.need-chip').forEach(lbl=>{
+    const cb = lbl.querySelector('input.need-opt');
+    lbl.addEventListener('click', (ev)=>{
+      if (ev.target.tagName === 'INPUT') return;
+      cb.checked = !cb.checked;
+      lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
+      syncNeedPreview();
+    });
+    cb.addEventListener('change', ()=>{
+      lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
+      syncNeedPreview();
+    });
   });
   syncNeedPreview();
+
+  // 快速全選 / 清空
+  overlay.querySelector('#needAll').addEventListener('click', ()=>{
+    overlay.querySelectorAll('.need-chip').forEach(lbl=>{
+      const cb = lbl.querySelector('input.need-opt');
+      cb.checked = true;
+      lbl.setAttribute('aria-checked','true');
+    });
+    syncNeedPreview();
+  });
+  overlay.querySelector('#needClear').addEventListener('click', ()=>{
+    overlay.querySelectorAll('.need-chip').forEach(lbl=>{
+      const cb = lbl.querySelector('input.need-opt');
+      cb.checked = false;
+      lbl.setAttribute('aria-checked','false');
+    });
+    syncNeedPreview();
+  });
+
+  // ===== 出團成員：營區帶入（ASTAR）=====
+  const campSel = overlay.querySelector('#mtez_pickCamp');
+  const membersBox = overlay.querySelector('#r_members');
+
+  // 先載入 ASTAR 營區資料並填入下拉
+  (async ()=>{
+    await ensureAstarCampData();
+    const camps = Array.from(astarCampMap.keys()).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+    // 清空重建
+    campSel.innerHTML = `<option value="">（選擇要帶入的 ASTAR 營區）</option>` +
+      camps.map(c=>`<option value="${c}">${c}（${astarCampMap.get(c).length}）</option>`).join('');
+  })();
+
+  overlay.querySelector('#btnInsertCamp').addEventListener('click', ()=>{
+    const camp = campSel.value;
+    if (!camp) return;
+    const arr = astarCampMap.get(camp) || [];
+    const text = formatCampMembersText(camp, arr);
+
+    // append：若已有內容就先加一個空行
+    const cur = safeText(membersBox.value || '').trim();
+    membersBox.value = cur ? (cur + '\n\n' + text) : text;
+  });
+  overlay.querySelector('#btnClearMembers').addEventListener('click', ()=>{
+    membersBox.value = '';
+  });
 
   const close = ()=>overlay.remove();
   overlay.querySelector('#btn_cancel').onclick = ()=>close();
 
-  // ✅ 送出邏輯：保持你現有 append/update，只是把 time/need/guild 改成新UI取值
+  // ✅ 送出：保持你現有 append/update GAS，只改用新 UI 值
   overlay.querySelector('#btn_save').onclick = async ()=>{
     if (!GAS_RECRUIT_URL){
       alert('未設定 GAS_RECRUIT_URL');
@@ -684,10 +790,10 @@ function openRecruitEditor(values){
 
     const payload = {
       boss:    overlay.querySelector('#r_boss').value.trim(),
-      time:    fromDateTimeLocal(overlay.querySelector('#r_time').value), // ✅ datetime-local -> 字串
+      time:    fromDateTimeLocal(overlay.querySelector('#r_time').value),
       status:  overlay.querySelector('#r_status').value.trim(),
-      need:    readNeedSelected().join('、'), // ✅ 多選存成「、」串
-      members: overlay.querySelector('#r_members').value.trim(),
+      need:    readNeedSelected().join('、'),
+      members: membersBox.value.trim(),
       guild:   overlay.querySelector('#r_guild').value.trim(),
       contact: overlay.querySelector('#r_contact').value.trim(),
       note:    overlay.querySelector('#r_note').value.trim(),
@@ -754,6 +860,97 @@ $(function(){
   showMainPage('recruit');
   loadRecruit();
 });
+
+// =========================
+// ASTAR 營區團員資料（給招募視窗帶入用）
+// =========================
+const ASTAR_SHEET_URL_FOR_MEMBER_PICKER =
+  'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
+
+// 快取：campName -> [{name,code,job,level,attack}]
+let astarCampMap = new Map();
+let astarCampLoaded = false;
+let astarCampLoading = null;
+
+// 從 J 欄(營區)抓第一個有效營區（你原本也有類似 regex）
+function pickFirstCamp(raw){
+  const txt = String(raw || '').trim();
+  const re = /(普拉[一二三四五六七八九十]營|困拉[一二三四五六七八九十]營|炎魔[一二三四五六七八九十]營|訓練營|外援大大)/;
+  const m = txt.match(re);
+  return m ? m[1] : '';
+}
+
+async function ensureAstarCampData(){
+  if (astarCampLoaded) return;
+  if (astarCampLoading) return astarCampLoading;
+
+  const t = parseSheetFromUrl(ASTAR_SHEET_URL_FOR_MEMBER_PICKER);
+  if (!t?.sheetId) {
+    astarCampLoaded = true; // 避免一直重試
+    return;
+  }
+
+  astarCampLoading = new Promise((resolve)=>{
+    Papa.parse(csvUrl(t.sheetId, t.gid), {
+      download: true,
+      skipEmptyLines: true,
+      complete: (res)=>{
+        try{
+          astarCampMap = new Map();
+          if (!res.data || res.data.length < 2) { astarCampLoaded = true; resolve(); return; }
+
+          const rows = res.data.slice(1);
+          for (const r of rows){
+            // ASTAR 原表：B=name(1) C=code(2) D=job(3) E=level(4) G=attack(6) J=camp(9)
+            const name = safeText(r[1]).trim();
+            const code = safeText(r[2]).trim();
+            const job  = safeText(r[3]).trim();
+            const lv   = safeText(r[4]).trim();
+            const atk  = safeText(r[6]).trim();
+            const camp = pickFirstCamp(r[9]);
+
+            if (!name || !code || !camp) continue;
+
+            if (!astarCampMap.has(camp)) astarCampMap.set(camp, []);
+            astarCampMap.get(camp).push({ name, code, job, level: lv, attack: atk });
+          }
+
+          // 營區內排序（可選）
+          for (const arr of astarCampMap.values()){
+            arr.sort((a,b)=> (a.name||'').localeCompare(b.name||'','zh-Hant'));
+          }
+
+          astarCampLoaded = true;
+          resolve();
+        }catch(e){
+          console.error('ASTAR 營區載入失敗', e);
+          astarCampLoaded = true;
+          resolve();
+        }
+      },
+      error: (err)=>{
+        console.error('ASTAR 營區讀取失敗', err);
+        astarCampLoaded = true;
+        resolve();
+      }
+    });
+  });
+
+  return astarCampLoading;
+}
+
+// 把某營區的團員格式化成文字（可自行調整格式）
+function formatCampMembersText(camp, arr){
+  const lines = (arr || []).map(x=>{
+    const n = x.name || '';
+    const c = x.code ? `（${x.code}）` : '';
+    const j = x.job ? ` ${x.job}` : '';
+    const l = x.level ? ` Lv${x.level}` : '';
+    const a = x.attack ? ` 乾表:${x.attack}` : '';
+    return `${n}${c}${j}${l}${a}`.trim();
+  });
+  return `【${camp}】\n` + lines.join('\n');
+}
 </script>
 </body>
 </html>
