@@ -823,6 +823,7 @@ function openRecruitEditor(values){
           <option value="">（選擇要帶入的 ASTAR 營區）</option>
         </select>
         <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入團員</button>
+		<button type="button" class="btn btn-outline-dark btn-sm" id="btnPickMtezMembers">選擇 MTEZ 公會成員</button>
         <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearMembers">清空成員欄</button>
       </div>
       <textarea id="r_members" class="form-control" rows="6"></textarea>
@@ -938,6 +939,18 @@ function splitDateTime_(raw){
   // 帶入 ASTAR 營區
   const campSel = overlay.querySelector('#pickCamp');
   const membersBox = overlay.querySelector('#r_members');
+  // ✅ MTEZ 成員：打開選擇 Modal
+	overlay.querySelector('#btnPickMtezMembers').addEventListener('click', async ()=>{
+	  // 確保 mtezMembers 已有資料（若你初始化一定會 reloadMembers，可省略這段）
+	  if (!Array.isArray(mtezMembers) || mtezMembers.length === 0){
+		await reloadMembers(); // 你已有此函式
+	  }
+
+	  _mtezInsertTargetTextarea = membersBox;   // 指定這次要插入到哪個 textarea
+	  $('#mtezPickSearch').val('');             // 清空搜尋
+	  renderMtezPickTable_();                   // 渲染列表
+	  bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).show();
+	});
   (async ()=>{
     await ensureAstarCampData();
     const camps = Array.from(astarCampMap.keys()).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
@@ -1317,6 +1330,152 @@ $(document).on('click', '.btn-edit-member', function(){
     attack: $(this).data('attack'),
     note: $(this).data('note')
   });
+});
+
+<!-- ✅ MTEZ 成員選擇 Modal（給招募 > 出團成員 帶入用） -->
+<div class="modal fade" id="mtezPickModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">選擇 MTEZ 公會成員（勾選後帶入出團成員）</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+          <input id="mtezPickSearch" class="form-control form-control-sm w-auto" style="min-width:240px"
+                 placeholder="搜尋：名稱/代碼/職業/備註">
+          <button id="mtezPickClear" class="btn btn-outline-secondary btn-sm">清空勾選</button>
+          <button id="mtezPickSelectAll" class="btn btn-outline-dark btn-sm">全選目前結果</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-secondary">
+              <tr>
+                <th style="width:44px;">選</th>
+                <th style="width:16%;">角色名稱</th>
+                <th style="width:14%;">角色代碼</th>
+                <th style="width:18%;">角色職業</th>
+                <th style="width:10%;">等級</th>
+                <th style="width:12%;">乾表</th>
+              </tr>
+            </thead>
+            <tbody id="mtezPickBody">
+              <tr><td colspan="6" class="text-center text-muted">尚未載入</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <small class="text-muted">
+          帶入格式：角色名稱（角色代碼） 職業 Lv等級 乾表:數值（每位一行）
+        </small>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+        <button id="mtezPickInsert" class="btn btn-primary btn-sm">帶入勾選成員</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+// =========================
+// ✅ MTEZ 成員挑選：工具函式（給招募出團成員帶入）
+// =========================
+let _mtezInsertTargetTextarea = null; // 指向目前要插入的出團成員 textarea
+
+function formatOneMemberLine_(x){
+  const n = x.name || '';
+  const c = x.code ? `（${x.code}）` : '';
+  const j = x.job ? ` ${x.job}` : '';
+  const l = x.level ? ` Lv${x.level}` : '';
+  const a = x.attack ? ` 乾表:${x.attack}` : '';
+  return `${n}${c}${j}${l}${a}`.trim();
+}
+
+function filterMtezForPicker_(kw){
+  const key = String(kw || '').trim().toLowerCase();
+  const src = Array.isArray(mtezMembers) ? mtezMembers : [];
+  if (!key) return src;
+  return src.filter(r=>{
+    const blob = [r.name,r.code,r.job,r.level,r.attack,r.note].map(v=>String(v||'').toLowerCase()).join(' ');
+    return blob.includes(key);
+  });
+}
+
+function renderMtezPickTable_(){
+  const kw = $('#mtezPickSearch').val();
+  const rows = filterMtezForPicker_(kw);
+
+  if (!rows.length){
+    $('#mtezPickBody').html(`<tr><td colspan="6" class="text-center text-muted">沒有符合的成員</td></tr>`);
+    return;
+  }
+
+  const html = rows.map(r=>{
+    const id = `mtez_${String(r.code||'').replace(/[^a-zA-Z0-9_-]/g,'_')}`;
+    return `
+      <tr>
+        <td>
+          <input class="form-check-input mtez-pick-cb" type="checkbox"
+                 data-name="${escapeAttr(r.name)}"
+                 data-code="${escapeAttr(r.code)}"
+                 data-job="${escapeAttr(r.job)}"
+                 data-level="${escapeAttr(r.level)}"
+                 data-attack="${escapeAttr(r.attack)}">
+        </td>
+        <td>${safeText(r.name)}</td>
+        <td class="font-monospace">${safeText(r.code)}</td>
+        <td>${safeText(r.job)}</td>
+        <td>${safeText(r.level)}</td>
+        <td>${safeText(r.attack)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  $('#mtezPickBody').html(html);
+}
+
+// 搜尋即時刷新
+$(document).on('input', '#mtezPickSearch', renderMtezPickTable_);
+
+// 清空勾選
+$(document).on('click', '#mtezPickClear', function(){
+  $('#mtezPickBody .mtez-pick-cb').prop('checked', false);
+});
+
+// 全選目前結果
+$(document).on('click', '#mtezPickSelectAll', function(){
+  $('#mtezPickBody .mtez-pick-cb').prop('checked', true);
+});
+
+// 按「帶入勾選成員」
+$(document).on('click', '#mtezPickInsert', function(){
+  if (!_mtezInsertTargetTextarea){
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).hide();
+    return;
+  }
+
+  const picked = Array.from(document.querySelectorAll('#mtezPickBody .mtez-pick-cb:checked')).map(cb=>({
+    name: cb.dataset.name || '',
+    code: cb.dataset.code || '',
+    job: cb.dataset.job || '',
+    level: cb.dataset.level || '',
+    attack: cb.dataset.attack || ''
+  }));
+
+  if (!picked.length){
+    alert('請先勾選要帶入的 MTEZ 成員');
+    return;
+  }
+
+  const text = picked.map(formatOneMemberLine_).join('\n');
+
+  const cur = safeText(_mtezInsertTargetTextarea.value || '').trim();
+  _mtezInsertTargetTextarea.value = cur ? (cur + '\n' + text) : text;
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).hide();
 });
 
 /* =========================
