@@ -218,6 +218,26 @@
 	/* 出團成員：帶入工具 */
 	.member-insertbar{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
 	.member-insertbar .form-select{ width:auto; }
+	
+	/* 招募牆：目前成員顯示成「每人一行」，過長改水平捲動 */
+	.members-box{
+	  text-align: left;
+	  white-space: pre;          /* 保留換行；每行不自動換行 */
+	  overflow-x: auto;          /* 一行太長就水平捲動 */
+	  overflow-y: hidden;
+	  padding: .35rem .5rem;
+	  border-radius: 10px;
+	  background: rgba(0,0,0,.04);
+	  border: 1px solid rgba(0,0,0,.08);
+	  font-size: .86rem;
+	  line-height: 1.45;
+	}
+
+	/* 暗色模式也要舒服 */
+	[data-bs-theme="dark"] .members-box{
+	  background: rgba(255,255,255,.08);
+	  border-color: rgba(255,255,255,.14);
+	}	
   </style>
 </head>
 
@@ -482,7 +502,9 @@ function renderRecruitWall(data){
         <div class="paper-divider"></div>
 
         <div class="paper-row"><div class="paper-k">職業需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
-        <div class="paper-row"><div class="paper-k">目前成員</div><div class="paper-v">${membersShow}</div></div>
+        <div class="paper-row"><div class="paper-k">目前成員</div>
+		<div class="paper-v">${safeText(r.members).trim()? `<div class="members-box">${escapeHtml(r.members)}</div>`: `<span class="text-muted">（尚未填）</span>`}</div>
+		<div class="paper-v">${membersShow}</div>
         <div class="paper-row"><div class="paper-k">招募公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
         <div class="paper-row"><div class="paper-k">聯絡方式</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
         <div class="paper-row"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
@@ -995,6 +1017,15 @@ function setRecruitBusy(overlay, busy){
     btnSave.innerHTML = btnSave.dataset._orig;
     delete btnSave.dataset._orig;
   }
+}
+
+function escapeHtml(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
 }
 </script>
 </body>
