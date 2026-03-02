@@ -335,6 +335,53 @@
     </div>
   </div>
 
+	<!-- ✅ MTEZ 成員選擇 Modal（給招募 > 出團成員 帶入用） -->
+	<div class="modal fade" id="mtezPickModal" tabindex="-1" aria-hidden="true">
+	  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title">選擇 MTEZ 公會成員（勾選後帶入出團成員）</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		  </div>
+
+		  <div class="modal-body">
+			<div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+			  <input id="mtezPickSearch" class="form-control form-control-sm w-auto" style="min-width:240px"
+					 placeholder="搜尋：名稱/代碼/職業/備註">
+			  <button id="mtezPickClear" class="btn btn-outline-secondary btn-sm">清空勾選</button>
+			  <button id="mtezPickSelectAll" class="btn btn-outline-dark btn-sm">全選目前結果</button>
+			</div>
+
+			<div class="table-responsive">
+			  <table class="table table-sm table-hover align-middle">
+				<thead class="table-secondary">
+				  <tr>
+					<th style="width:44px;">選</th>
+					<th style="width:16%;">角色名稱</th>
+					<th style="width:14%;">角色代碼</th>
+					<th style="width:18%;">角色職業</th>
+					<th style="width:10%;">等級</th>
+					<th style="width:12%;">乾表</th>
+				  </tr>
+				</thead>
+				<tbody id="mtezPickBody">
+				  <tr><td colspan="6" class="text-center text-muted">尚未載入</td></tr>
+				</tbody>
+			  </table>
+			</div>
+
+			<small class="text-muted">
+			  帶入格式：角色名稱（角色代碼） 職業 Lv等級 乾表:數值（每位一行）
+			</small>
+		  </div>
+
+		  <div class="modal-footer">
+			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+			<button id="mtezPickInsert" class="btn btn-primary btn-sm">帶入勾選成員</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
 <script>
 /* =========================
    ✅ 設定區
