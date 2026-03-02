@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1017</title>
+  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1045</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -542,6 +542,39 @@ function setRecruitBusy(overlay, busy){
 ========================= */
 function openRecruitEditor(values){
   const isNew = !!values.__isNew;
+
+  // ✅ 可多選職業清單
+  const NEED_OPTIONS = ['英雄','聖騎士','黑騎士','冰雷','火毒','主教','箭神','神射手','夜使者','暗影神偷','拳霸','槍神','初新者'];
+
+  // 將目前 need 字串解析成 set（支援「、」「,」「/」「空白」等分隔）
+  const parseNeed = (raw)=>{
+    const s = safeText(raw || '').trim();
+    if (!s) return new Set();
+    return new Set(s.split(/[、,\/\s]+/g).map(x=>x.trim()).filter(Boolean));
+  };
+
+  // datetime-local 需要 yyyy-MM-ddTHH:mm
+  const toDateTimeLocal = (raw)=>{
+    const s = safeText(raw || '').trim();
+    if (!s) return '';
+    // 允許輸入 "2026-03-01 21:00" 或 "2026/03/01 21:00"
+    let t = s.replace(/\//g,'-').replace(' ', 'T');
+    // 如果已經是 yyyy-MM-ddTHH:mm 就直接回
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t)) return t;
+    // 若多了秒數就截斷
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(t)) return t.slice(0,16);
+    return t;
+  };
+
+  // 顯示用：把 datetime-local 轉回「yyyy-MM-dd HH:mm」
+  const fromDateTimeLocal = (val)=>{
+    const s = safeText(val || '').trim();
+    if (!s) return '';
+    return s.replace('T',' ');
+  };
+
+  const selectedNeed = parseNeed(values.need);
+
   const overlay = createRecruitEditor(isNew ? '新增招募' : '修改招募', `
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>Boss（A）</span>
@@ -552,9 +585,12 @@ function openRecruitEditor(values){
         <option value="其他">其他</option>
       </select>
     </label>
+
+    <!-- ✅ 改成 datetime-local：有月曆+時鐘 -->
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>出團時間（B）</span>
-      <input id="r_time" type="text" class="form-control" placeholder="例如：2026-03-01 21:00">
+      <input id="r_time" type="datetime-local" class="form-control">
+      <small class="text-muted">會自動以 yyyy-MM-dd HH:mm 格式寫入資料表</small>
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
@@ -565,9 +601,29 @@ function openRecruitEditor(values){
         <option value="關閉">關閉</option>
       </select>
     </label>
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>需求職業/角色（D）</span>
-      <input id="r_need" type="text" class="form-control">
+
+    <!-- ✅ 需求多選 -->
+    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
+      <span>招募需求（D，可多選）</span>
+      <div id="need_box" class="border rounded p-2" style="background:rgba(0,0,0,.02);">
+        <div class="d-flex flex-wrap gap-2">
+          ${
+            NEED_OPTIONS.map(x=>{
+              const checked = selectedNeed.has(x);
+              return `
+                <label class="badge rounded-pill text-bg-light border" style="cursor:pointer;">
+                  <input type="checkbox" class="me-1 need-opt" value="${x}" ${checked?'checked':''}>
+                  ${x}
+                </label>
+              `;
+            }).join('')
+          }
+        </div>
+        <div class="mt-2">
+          <input id="r_need_preview" class="form-control form-control-sm" type="text" readonly
+                 placeholder="（會自動由上方多選生成）">
+        </div>
+      </div>
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
@@ -575,9 +631,13 @@ function openRecruitEditor(values){
       <input id="r_members" type="text" class="form-control">
     </label>
 
+    <!-- ✅ 發文公會(F) 改名 + 下拉 -->
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>發文公會（F）</span>
-      <input id="r_guild" type="text" class="form-control">
+      <span>招募公會（F）</span>
+      <select id="r_guild" class="form-select">
+        <option value="ASTAR">ASTAR</option>
+        <option value="MTEZ">MTEZ</option>
+      </select>
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
@@ -591,18 +651,31 @@ function openRecruitEditor(values){
     </label>
   `);
 
+  // ===== 帶入值（維持你原本的欄位）=====
   overlay.querySelector('#r_boss').value    = values.boss   || '拉圖斯';
-  overlay.querySelector('#r_time').value    = values.time   || '';
+  overlay.querySelector('#r_time').value    = toDateTimeLocal(values.time || '');
   overlay.querySelector('#r_status').value  = values.status || '招募中';
-  overlay.querySelector('#r_need').value    = values.need   || '';
   overlay.querySelector('#r_members').value = values.members|| '';
-  overlay.querySelector('#r_guild').value   = values.guild  || '';
+  overlay.querySelector('#r_guild').value   = values.guild  || 'ASTAR';
   overlay.querySelector('#r_contact').value = values.contact|| '';
   overlay.querySelector('#r_note').value    = values.note   || '';
+
+  // need preview 同步
+  const readNeedSelected = ()=>{
+    return Array.from(overlay.querySelectorAll('.need-opt:checked')).map(el=>el.value);
+  };
+  const syncNeedPreview = ()=>{
+    overlay.querySelector('#r_need_preview').value = readNeedSelected().join('、');
+  };
+  overlay.querySelectorAll('.need-opt').forEach(cb=>{
+    cb.addEventListener('change', syncNeedPreview);
+  });
+  syncNeedPreview();
 
   const close = ()=>overlay.remove();
   overlay.querySelector('#btn_cancel').onclick = ()=>close();
 
+  // ✅ 送出邏輯：保持你現有 append/update，只是把 time/need/guild 改成新UI取值
   overlay.querySelector('#btn_save').onclick = async ()=>{
     if (!GAS_RECRUIT_URL){
       alert('未設定 GAS_RECRUIT_URL');
@@ -611,18 +684,18 @@ function openRecruitEditor(values){
 
     const payload = {
       boss:    overlay.querySelector('#r_boss').value.trim(),
-      time:    overlay.querySelector('#r_time').value.trim(),
+      time:    fromDateTimeLocal(overlay.querySelector('#r_time').value), // ✅ datetime-local -> 字串
       status:  overlay.querySelector('#r_status').value.trim(),
-      need:    overlay.querySelector('#r_need').value.trim(),
+      need:    readNeedSelected().join('、'), // ✅ 多選存成「、」串
       members: overlay.querySelector('#r_members').value.trim(),
       guild:   overlay.querySelector('#r_guild').value.trim(),
       contact: overlay.querySelector('#r_contact').value.trim(),
       note:    overlay.querySelector('#r_note').value.trim(),
-      row:     Number(values.rowIndex || 0) // ✅ 修改用列號；新增時為 0
+      row:     Number(values.rowIndex || 0)
     };
 
     if (!payload.boss || !payload.time || !payload.guild || !payload.contact){
-      alert('請至少填：Boss / 出團時間 / 發文公會 / 聯絡方式');
+      alert('請至少填：Boss / 出團時間 / 招募公會 / 聯絡方式');
       return;
     }
 
