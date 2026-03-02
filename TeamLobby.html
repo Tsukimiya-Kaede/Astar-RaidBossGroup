@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1102</title>
+  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-1117</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -517,26 +517,53 @@ function createRecruitEditor(titleText, fieldsHtml){
   const overlay = document.createElement('div');
   overlay.id = 'recruitEditOverlay';
   Object.assign(overlay.style, {
-    position:'fixed', inset:0, background:'rgba(0,0,0,.4)',
-    display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999
+    position:'fixed',
+    inset:0,
+    background:'rgba(0,0,0,.4)',
+    display:'flex',
+    alignItems:'flex-start',         // ✅ 讓卡片從上方開始，避免被擋
+    justifyContent:'center',
+    zIndex:9999,
+    overflowY:'auto',                // ✅ overlay 可捲動
+    padding:'18px 10px'              // ✅ 手機也不貼邊
   });
 
   const card = document.createElement('div');
   Object.assign(card.style, {
-    position:'relative', background:'#fff', borderRadius:'12px', padding:'18px',
-    width:'min(760px, 92vw)', boxShadow:'0 10px 30px rgba(0,0,0,.2)', color:'#222',
+    position:'relative',
+    background:'#fff',
+    borderRadius:'12px',
+    width:'min(760px, 92vw)',
+    maxHeight:'90vh',                // ✅ 關鍵：卡片最大高度
+    overflow:'auto',                 // ✅ 內容超出就捲動
+    boxShadow:'0 10px 30px rgba(0,0,0,.2)',
+    color:'#222',
     fontFamily:'system-ui,-apple-system,BlinkMacSystemFont'
   });
 
+  // ✅ 讓底部按鈕列「黏住卡片底部」更好按
   card.innerHTML = `
-    <h3 style="margin:0 0 12px;font-size:18px;">${titleText}</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      ${fieldsHtml}
+    <div style="padding:18px;">
+      <h3 style="margin:0 0 12px;font-size:18px;">${titleText}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${fieldsHtml}
+      </div>
     </div>
-    <div class="d-flex gap-2 justify-content-end mt-3">
+
+    <div class="d-flex gap-2 justify-content-end" style="
+      position: sticky;
+      bottom: 0;
+      padding: 12px 18px;
+      background: rgba(255,255,255,.92);
+      border-top: 1px solid rgba(0,0,0,.08);
+      backdrop-filter: blur(6px);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+    ">
       <button id="btn_cancel" class="btn btn-light border">取消</button>
       <button id="btn_save" class="btn btn-primary">儲存</button>
     </div>
+
     <div id="editLoadingMask" style="
       display:none; position:absolute; inset:0; background:rgba(255,255,255,.75);
       border-radius:12px; z-index:10; backdrop-filter:saturate(180%) blur(2px);
@@ -547,25 +574,18 @@ function createRecruitEditor(titleText, fieldsHtml){
       </div>
     </div>
   `;
+
   overlay.appendChild(card);
   document.body.appendChild(overlay);
+
+  // ✅ 點灰色背景 = 取消（點卡片內不會）
+  overlay.addEventListener('click', (e)=>{
+    if (e.target === overlay) overlay.remove();
+  });
+  // 保險：卡片內點擊不要冒泡成背景點擊
+  card.addEventListener('click', (e)=> e.stopPropagation());
+
   return overlay;
-}
-function setRecruitBusy(overlay, busy){
-  const mask = overlay.querySelector('#editLoadingMask');
-  const btnSave = overlay.querySelector('#btn_save');
-  const btnCancel = overlay.querySelector('#btn_cancel');
-  mask.style.display = busy ? 'flex' : 'none';
-  btnSave.disabled = busy;
-  btnCancel.disabled = busy;
-  overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
-  if (busy){
-    btnSave.dataset._orig = btnSave.innerHTML;
-    btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
-  } else if (btnSave.dataset._orig){
-    btnSave.innerHTML = btnSave.dataset._orig;
-    delete btnSave.dataset._orig;
-  }
 }
 
 /* =========================
@@ -950,6 +970,29 @@ function formatCampMembersText(camp, arr){
     return `${n}${c}${j}${l}${a}`.trim();
   });
   return `【${camp}】\n` + lines.join('\n');
+}
+
+function setRecruitBusy(overlay, busy){
+  const mask = overlay.querySelector('#editLoadingMask');
+  const btnSave = overlay.querySelector('#btn_save');
+  const btnCancel = overlay.querySelector('#btn_cancel');
+
+  // ✅ 新增：送出中避免誤觸背景（但遮罩仍可顯示）
+  overlay.style.pointerEvents = busy ? 'none' : 'auto';
+  mask.style.pointerEvents = 'auto';
+
+  mask.style.display = busy ? 'flex' : 'none';
+  btnSave.disabled = busy;
+  btnCancel.disabled = busy;
+  overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
+
+  if (busy){
+    btnSave.dataset._orig = btnSave.innerHTML;
+    btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
+  } else if (btnSave.dataset._orig){
+    btnSave.innerHTML = btnSave.dataset._orig;
+    delete btnSave.dataset._orig;
+  }
 }
 </script>
 </body>
