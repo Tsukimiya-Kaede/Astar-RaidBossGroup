@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-0208</title>
+  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-0343</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -782,10 +782,15 @@ function openRecruitEditor(values){
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>出團時間（B）</span>
-	  <input id="r_time" type="datetime-local" class="form-control" min="">
-      <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
-    </label>
+	  <span>出團日期（B）</span>
+	  <input id="r_date" type="date" class="form-control">
+	</label>
+
+	<label style="display:flex;flex-direction:column;gap:6px;">
+	  <span>出團時間（B）</span>
+	  <input id="r_clock" type="time" class="form-control" step="60">
+	  <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
+	</label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>狀態（C）</span>
@@ -843,25 +848,57 @@ function openRecruitEditor(values){
   `);
 
   overlay.querySelector('#r_boss').value    = values.boss   || '拉圖斯';
-	// 修改後
-	const timeInput = overlay.querySelector('#r_time');
 
-	// 設定 min = 現在（到分鐘）
+// ====== ✅ 新版：date + time（r_date / r_clock） ======
+const dateEl  = overlay.querySelector('#r_date');
+const clockEl = overlay.querySelector('#r_clock');
+
+const pad = (n)=> String(n).padStart(2,'0');
+
+// 將 values.time（"YYYY-MM-DD HH:mm" 或 "YYYY-MM-DDTHH:mm"）拆成 date/time
+function splitDateTime_(raw){
+  const s = String(raw || '').trim().replace(/\//g,'-');
+  if (!s) return { date:'', time:'' };
+  const iso = s.includes('T') ? s : s.replace(' ', 'T');
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return { date:'', time:'' };
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  };
+}
+
+	// min 限制（新增：不能選過去）
 	const now = new Date();
 	now.setSeconds(0,0);
-	const pad = (n)=> String(n).padStart(2,'0');
-	const minStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-	timeInput.min = minStr;
+	const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+	const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-	// 帶入值（修改時可能是過去；但你說「新增時禁止過去」
-	// 所以：修改時照舊；新增時若未填，就給現在+5分鐘）
-	if (values.__isNew){
-	  const d = new Date(now.getTime() + 5*60*1000);
-	  const defStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-	  timeInput.value = toDateTimeLocal(values.time || defStr);
-	} else {
-	  timeInput.value = toDateTimeLocal(values.time || '');
+	// date 最小 = 今天
+	dateEl.min = todayStr;
+
+	// time 最小：只有「選今天」才限制 >= nowTime
+	function syncClockMin_(){
+	  if (!values.__isNew) { clockEl.min = ''; return; }  // 修改不強制（你要也可改成強制）
+	  if (dateEl.value === todayStr) clockEl.min = nowTimeStr;
+	  else clockEl.min = '';
 	}
+	dateEl.addEventListener('change', syncClockMin_);
+
+	// 帶入值：
+	// 新增時：沒值就預設 now+5min
+	const s = splitDateTime_(values.time || '');
+	if (values.__isNew){
+	  const def = new Date(now.getTime() + 5*60*1000);
+	  const defDate = `${def.getFullYear()}-${pad(def.getMonth()+1)}-${pad(def.getDate())}`;
+	  const defTime = `${pad(def.getHours())}:${pad(def.getMinutes())}`;
+	  dateEl.value  = s.date || defDate;
+	  clockEl.value = s.time || defTime;
+	} else {
+	  dateEl.value  = s.date || '';
+	  clockEl.value = s.time || '';
+	}
+	syncClockMin_();
   overlay.querySelector('#r_status').value  = values.status || '招募中';
   overlay.querySelector('#r_members').value = values.members|| '';
   overlay.querySelector('#r_guild').value   = values.guild  || 'ASTAR';
@@ -931,25 +968,40 @@ function openRecruitEditor(values){
   overlay.querySelector('#btn_cancel').onclick = ()=>overlay.remove();
 
   overlay.querySelector('#btn_save').onclick = async ()=>{
-	const pickedRaw = overlay.querySelector('#r_time').value; // yyyy-MM-ddTHH:mm
-	const pickedDate = pickedRaw ? new Date(pickedRaw) : null;  
-	
-	if (isNew && pickedDate && pickedDate.getTime() < Date.now()){
-	  alert('出團時間不可選擇過去時間，請重新設定。');
-	  setRecruitBusy(overlay, false); // 若你有先 setBusy
-	  return;
-	}	
-    const payload = {
-      boss:    overlay.querySelector('#r_boss').value.trim(),
-      time: fromDateTimeLocal(pickedRaw),
-      status:  overlay.querySelector('#r_status').value.trim(),
-      need:    readNeedSelected().join('、'),
-      members: membersBox.value.trim(),
-      guild:   overlay.querySelector('#r_guild').value.trim(),
-      contact: overlay.querySelector('#r_contact').value.trim(),
-      note:    overlay.querySelector('#r_note').value.trim(),
-      row:     Number(values.rowIndex || 0)
-    };
+	const dateStr  = overlay.querySelector('#r_date').value;   // YYYY-MM-DD
+	const clockStr = overlay.querySelector('#r_clock').value;  // HH:mm
+
+	// 組成你要寫回 Sheet 的格式：YYYY-MM-DD HH:mm
+	const combinedTime = (dateStr && clockStr) ? `${dateStr} ${clockStr}` : '';
+
+	// 新增時禁止過去（防止手動繞過 min）
+	if (isNew){
+	  if (!dateStr || !clockStr){
+		alert('請選擇出團日期與時間');
+		return;
+	  }
+	  const dt = new Date(`${dateStr}T${clockStr}`);
+	  if (isNaN(dt.getTime())){
+		alert('出團日期/時間格式不正確，請重新選擇');
+		return;
+	  }
+	  if (dt.getTime() < Date.now()){
+		alert('出團時間不可選擇過去時間，請重新設定。');
+		return;
+	  }
+	}
+
+	const payload = {
+	  boss:   overlay.querySelector('#r_boss').value.trim(),
+	  time:   combinedTime,   // ✅ 寫回 B 欄：YYYY-MM-DD HH:mm
+	  status: overlay.querySelector('#r_status').value.trim(),
+	  need:   readNeedSelected().join('、'),
+	  members: membersBox.value.trim(),
+	  guild:  overlay.querySelector('#r_guild').value.trim(),
+	  contact: overlay.querySelector('#r_contact').value.trim(),
+	  note:   overlay.querySelector('#r_note').value.trim(),
+	  row:    Number(values.rowIndex || 0)
+	};
     if (!payload.boss || !payload.time || !payload.guild || !payload.contact){
       alert('請至少填：Boss / 出團時間 / 招募公會 / 聯絡方式');
       return;
