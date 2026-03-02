@@ -502,9 +502,16 @@ function renderRecruitWall(data){
         <div class="paper-divider"></div>
 
         <div class="paper-row"><div class="paper-k">職業需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
-        <div class="paper-row"><div class="paper-k">目前成員</div>
-		<div class="paper-v">${safeText(r.members).trim()? `<div class="members-box">${escapeHtml(r.members)}</div>`: `<span class="text-muted">（尚未填）</span>`}</div>
-		<div class="paper-v">${membersShow}</div>
+        <div class="paper-row">
+  <div class="paper-k">成員</div>
+  <div class="paper-v">
+    ${
+      safeText(r.members).trim()
+        ? `<div class="members-box">${escapeHtml(r.members)}</div>`
+        : `<span class="text-muted">（尚未填）</span>`
+    }
+  </div>
+</div>
         <div class="paper-row"><div class="paper-k">招募公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
         <div class="paper-row"><div class="paper-k">聯絡方式</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
         <div class="paper-row"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
