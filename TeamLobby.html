@@ -224,11 +224,11 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-		  <select id="filterTab" class="form-select form-select-sm w-auto">
-		    <option value="active">現行招募</option>
-		    <option value="history">歷史紀錄</option>
-		  </select>
-		
+          <select id="filterTab" class="form-select form-select-sm w-auto">
+            <option value="active">現行招募</option>
+            <option value="history">歷史紀錄</option>
+          </select>
+
           <select id="filterBoss" class="form-select form-select-sm w-auto">
             <option value="">全部 Boss</option>
             <option value="拉圖斯">拉圖斯</option>
@@ -335,66 +335,64 @@
     </div>
   </div>
 
-	<!-- ✅ MTEZ 成員選擇 Modal（給招募 > 出團成員 帶入用） -->
-	<div class="modal fade" id="mtezPickModal" tabindex="-1" aria-hidden="true">
-	  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-		<div class="modal-content">
-		  <div class="modal-header">
-			<h5 class="modal-title">選擇 MTEZ 公會成員（勾選後帶入出團成員）</h5>
-			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		  </div>
+  <!-- ✅ MTEZ 成員選擇 Modal（給招募 > 出團成員 帶入用） -->
+  <div class="modal fade" id="mtezPickModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">選擇 MTEZ 公會成員（勾選後帶入出團成員）</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-		  <div class="modal-body">
-			<div class="d-flex align-items-center gap-2 flex-wrap mb-2">
-			  <input id="mtezPickSearch" class="form-control form-control-sm w-auto" style="min-width:240px"
-					 placeholder="搜尋：名稱/代碼/職業/備註">
-			  <button id="mtezPickClear" class="btn btn-outline-secondary btn-sm">清空勾選</button>
-			  <button id="mtezPickSelectAll" class="btn btn-outline-dark btn-sm">全選目前結果</button>
-			</div>
+        <div class="modal-body">
+          <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+            <input id="mtezPickSearch" class="form-control form-control-sm w-auto" style="min-width:240px"
+                   placeholder="搜尋：名稱/代碼/職業/備註">
+            <button id="mtezPickClear" class="btn btn-outline-secondary btn-sm">清空勾選</button>
+            <button id="mtezPickSelectAll" class="btn btn-outline-dark btn-sm">全選目前結果</button>
+          </div>
 
-			<div class="table-responsive">
-			  <table class="table table-sm table-hover align-middle">
-				<thead class="table-secondary">
-				  <tr>
-					<th style="width:44px;">選</th>
-					<th style="width:16%;">角色名稱</th>
-					<th style="width:14%;">角色代碼</th>
-					<th style="width:18%;">角色職業</th>
-					<th style="width:10%;">等級</th>
-					<th style="width:12%;">乾表</th>
-				  </tr>
-				</thead>
-				<tbody id="mtezPickBody">
-				  <tr><td colspan="6" class="text-center text-muted">尚未載入</td></tr>
-				</tbody>
-			  </table>
-			</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+              <thead class="table-secondary">
+                <tr>
+                  <th style="width:44px;">選</th>
+                  <th style="width:16%;">角色名稱</th>
+                  <th style="width:14%;">角色代碼</th>
+                  <th style="width:18%;">角色職業</th>
+                  <th style="width:10%;">等級</th>
+                  <th style="width:12%;">乾表</th>
+                </tr>
+              </thead>
+              <tbody id="mtezPickBody">
+                <tr><td colspan="6" class="text-center text-muted">尚未載入</td></tr>
+              </tbody>
+            </table>
+          </div>
 
-			<small class="text-muted">
-			  帶入格式：角色名稱（角色代碼） 職業 Lv等級 乾表:數值（每位一行）
-			</small>
-		  </div>
+          <small class="text-muted">
+            帶入格式：角色名稱（角色代碼） 職業 Lv等級 乾表:數值（每位一行）
+          </small>
+        </div>
 
-		  <div class="modal-footer">
-			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
-			<button id="mtezPickInsert" class="btn btn-primary btn-sm">帶入勾選成員</button>
-		  </div>
-		</div>
-	  </div>
-	</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+          <button id="mtezPickInsert" class="btn btn-primary btn-sm">帶入勾選成員</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 /* =========================
    ✅ 設定區
 ========================= */
-// 招募牆：讀 gid=778704961（A~H）+ 寫回 GAS（appendRecruit / updateRecruitRow）
 const RECRUIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=778704961#gid=778704961';
 const GAS_RECRUIT_URL   = 'https://script.google.com/macros/s/AKfycbxfP9isxLRDuF1SVUCsC4FvvwBXO5ncGNBzLNDidG4oX4Aufj5dKGbszQROb5uGonCt/exec';
 
-// 公會成員：ASTAR/MTEZ 來源（B/C/D/E/G/K）
 const ASTAR_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
 const MTEZ_SHEET_URL  = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=1449952622#gid=1449952622';
 
-// MTEZ 寫回 GAS（action=upsertMtezByCode）
 const GAS_MTEZ_URL = 'https://script.google.com/macros/s/AKfycbywkvtNs2_j3DdKkuvFsiV6oDcQ7D8r6WcdlSRtvHQSOlH5LBty93KUXiGwynqduOzx/exec';
 const GAS_MTEZ_ACTION = 'upsertMtezByCode';
 
@@ -461,19 +459,16 @@ $('#btnGoMembers').on('click', ()=>showMainPage('members'));
 ========================================================= */
 let recruitData = [];
 
-// 修改後：加上歷史/現行分頁
 function parseRecruitTime(t){
-  // 允許 "YYYY-MM-DD HH:mm" / "YYYY/MM/DD HH:mm" / "YYYY-MM-DDTHH:mm"
   const s = String(t || '').trim().replace(/\//g,'-');
   if (!s) return null;
-  // 轉成 ISO：YYYY-MM-DDTHH:mm
   const iso = s.includes('T') ? s : s.replace(' ', 'T');
   const d = new Date(iso);
   return isNaN(d.getTime()) ? null : d;
 }
 
 function applyRecruitFilter(data){
-  const tab   = ($('#filterTab').val() || 'active').trim(); // ✅ 新增
+  const tab   = ($('#filterTab').val() || 'active').trim();
   const bossF = $('#filterBoss').val().trim();
   const stF   = $('#filterStatus').val().trim();
   const kw    = $('#recruitSearchInput').val().trim().toLowerCase();
@@ -484,10 +479,9 @@ function applyRecruitFilter(data){
     const dt = parseRecruitTime(x.time);
     if (dt){
       const isPast = dt.getTime() < now.getTime();
-      if (tab === 'history' && !isPast) return false; // 歷史：只要過去
-      if (tab === 'active'  &&  isPast) return false; // 現行：排除過去
+      if (tab === 'history' && !isPast) return false;
+      if (tab === 'active'  &&  isPast) return false;
     } else {
-      // 若時間解析失敗：預設放現行（你也可改成直接排除）
       if (tab === 'history') return false;
     }
 
@@ -682,10 +676,19 @@ function createRecruitEditor(titleText, fieldsHtml){
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('click', (e)=>{ if (e.target === overlay) overlay.remove(); });
+  // ✅ 修正重點：
+  // 當 Bootstrap Modal 開啟時，body 會有 class "modal-open"
+  // 這時候點到 bootstrap 的 backdrop 不要把招募 overlay 當成「點灰底取消」
+  overlay.addEventListener('click', (e)=>{
+    if (e.target !== overlay) return;
+    if (document.body.classList.contains('modal-open')) return; // ✅ 防止點 MTEZ Modal 背景時把招募視窗關掉
+    overlay.remove();
+  });
+
   card.addEventListener('click', (e)=> e.stopPropagation());
   return overlay;
 }
+
 function setRecruitBusy(overlay, busy){
   const mask = overlay.querySelector('#editLoadingMask');
   const btnSave = overlay.querySelector('#btn_save');
@@ -760,19 +763,8 @@ async function ensureAstarCampData(){
   });
   return astarCampLoading;
 }
-function formatCampMembersText(camp, arr){
-  const lines = (arr || []).map(x=>{
-    const n = x.name || '';
-    const c = x.code ? `（${x.code}）` : '';
-    const j = x.job ? ` ${x.job}` : '';
-    const l = x.level ? ` Lv${x.level}` : '';
-    const a = x.attack ? ` 乾表:${x.attack}` : '';
-    return `${n}${c}${j}${l}${a}`.trim();
-  });
-  return `【${camp}】\n` + lines.join('\n');
-}
 
-/* ===== 招募 Editor（含需求 chips + ASTAR 帶入）===== */
+/* ===== 招募 Editor（含需求 chips + ASTAR 帶入 + MTEZ 勾選帶入）===== */
 function openRecruitEditor(values){
   const isNew = !!values.__isNew;
 
@@ -782,28 +774,15 @@ function openRecruitEditor(values){
     { cls:'need-green',     items:['箭神','神射手'] },
     { cls:'need-purple',    items:['夜使者','暗影神偷'] },
     { cls:'need-softdark',  items:['拳霸','槍神'] },
-    { cls:'need-softwhite', items:['初新者'] },
+    { cls:'need-softwhite', items:['初心者'] },
   ];
+
   const parseNeed = (raw)=>{
     const s = safeText(raw || '').trim();
     if (!s) return new Set();
     return new Set(s.split(/[、,\/\s]+/g).map(x=>x.trim()).filter(Boolean));
   };
   const selectedNeed = parseNeed(values.need);
-
-  const toDateTimeLocal = (raw)=>{
-    const s = safeText(raw || '').trim();
-    if (!s) return '';
-    let t = s.replace(/\//g,'-').replace(' ', 'T');
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(t)) return t;
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(t)) return t.slice(0,16);
-    return t;
-  };
-  const fromDateTimeLocal = (val)=>{
-    const s = safeText(val || '').trim();
-    if (!s) return '';
-    return s.replace('T',' ');
-  };
 
   const chipHtml = NEED_GROUPS.map(group=>{
     return group.items.map(item=>{
@@ -829,15 +808,15 @@ function openRecruitEditor(values){
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
-	  <span>出團日期（B）</span>
-	  <input id="r_date" type="date" class="form-control">
-	</label>
+      <span>出團日期（B）</span>
+      <input id="r_date" type="date" class="form-control">
+    </label>
 
-	<label style="display:flex;flex-direction:column;gap:6px;">
-	  <span>出團時間（B）</span>
-	  <input id="r_clock" type="time" class="form-control" step="60">
-	  <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
-	</label>
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>出團時間（B）</span>
+      <input id="r_clock" type="time" class="form-control" step="60">
+      <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
+    </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
       <span>狀態（C）</span>
@@ -870,7 +849,7 @@ function openRecruitEditor(values){
           <option value="">（選擇要帶入的 ASTAR 營區）</option>
         </select>
         <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入團員</button>
-		<button type="button" class="btn btn-outline-dark btn-sm" id="btnPickMtezMembers">選擇 MTEZ 公會成員</button>
+        <button type="button" class="btn btn-outline-dark btn-sm" id="btnPickMtezMembers">選擇 MTEZ 公會成員</button>
         <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearMembers">清空成員欄</button>
       </div>
       <textarea id="r_members" class="form-control" rows="6"></textarea>
@@ -895,63 +874,55 @@ function openRecruitEditor(values){
     </label>
   `);
 
-  overlay.querySelector('#r_boss').value    = values.boss   || '拉圖斯';
+  overlay.querySelector('#r_boss').value   = values.boss || '拉圖斯';
+  overlay.querySelector('#r_status').value = values.status || '招募中';
+  overlay.querySelector('#r_members').value = values.members || '';
+  overlay.querySelector('#r_guild').value   = values.guild || 'ASTAR';
+  overlay.querySelector('#r_contact').value = values.contact || '';
+  overlay.querySelector('#r_note').value    = values.note || '';
 
-// ====== ✅ 新版：date + time（r_date / r_clock） ======
-const dateEl  = overlay.querySelector('#r_date');
-const clockEl = overlay.querySelector('#r_clock');
+  // date/time 禁止過去（新增/修改都限制）
+  const dateEl  = overlay.querySelector('#r_date');
+  const clockEl = overlay.querySelector('#r_clock');
+  const pad = (n)=> String(n).padStart(2,'0');
 
-const pad = (n)=> String(n).padStart(2,'0');
+  function splitDateTime_(raw){
+    const s = String(raw || '').trim().replace(/\//g,'-');
+    if (!s) return { date:'', time:'' };
+    const iso = s.includes('T') ? s : s.replace(' ', 'T');
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return { date:'', time:'' };
+    return {
+      date: `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    };
+  }
 
-// 將 values.time（"YYYY-MM-DD HH:mm" 或 "YYYY-MM-DDTHH:mm"）拆成 date/time
-function splitDateTime_(raw){
-  const s = String(raw || '').trim().replace(/\//g,'-');
-  if (!s) return { date:'', time:'' };
-  const iso = s.includes('T') ? s : s.replace(' ', 'T');
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return { date:'', time:'' };
-  return {
-    date: `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
-    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`
-  };
-}
+  const now = new Date();
+  now.setSeconds(0,0);
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-	// min 限制（新增：不能選過去）
-	const now = new Date();
-	now.setSeconds(0,0);
-	const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-	const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  dateEl.min = todayStr;
 
-	// date 最小 = 今天
-	dateEl.min = todayStr;
+  function syncClockMin_(){
+    if (dateEl.value === todayStr) clockEl.min = nowTimeStr;
+    else clockEl.min = '';
+  }
+  dateEl.addEventListener('change', syncClockMin_);
 
-	// time 最小：只有「選今天」才限制 >= nowTime
-	function syncClockMin_(){
-	  // ✅ 新增/修改都限制不可選過去
-	  if (dateEl.value === todayStr) clockEl.min = nowTimeStr;
-	  else clockEl.min = '';
-	}
-	dateEl.addEventListener('change', syncClockMin_);
-
-	// 帶入值：
-	// 新增時：沒值就預設 now+5min
-	const s = splitDateTime_(values.time || '');
-	if (values.__isNew){
-	  const def = new Date(now.getTime() + 5*60*1000);
-	  const defDate = `${def.getFullYear()}-${pad(def.getMonth()+1)}-${pad(def.getDate())}`;
-	  const defTime = `${pad(def.getHours())}:${pad(def.getMinutes())}`;
-	  dateEl.value  = s.date || defDate;
-	  clockEl.value = s.time || defTime;
-	} else {
-	  dateEl.value  = s.date || '';
-	  clockEl.value = s.time || '';
-	}
-	syncClockMin_();
-  overlay.querySelector('#r_status').value  = values.status || '招募中';
-  overlay.querySelector('#r_members').value = values.members|| '';
-  overlay.querySelector('#r_guild').value   = values.guild  || 'ASTAR';
-  overlay.querySelector('#r_contact').value = values.contact|| '';
-  overlay.querySelector('#r_note').value    = values.note   || '';
+  const s = splitDateTime_(values.time || '');
+  if (values.__isNew){
+    const def = new Date(now.getTime() + 5*60*1000);
+    const defDate = `${def.getFullYear()}-${pad(def.getMonth()+1)}-${pad(def.getDate())}`;
+    const defTime = `${pad(def.getHours())}:${pad(def.getMinutes())}`;
+    dateEl.value  = s.date || defDate;
+    clockEl.value = s.time || defTime;
+  } else {
+    dateEl.value  = s.date || '';
+    clockEl.value = s.time || '';
+  }
+  syncClockMin_();
 
   // 需求：change 同步 preview（避免失效）
   const needPreview = overlay.querySelector('#r_need_preview');
@@ -983,83 +954,84 @@ function splitDateTime_(raw){
     syncNeedPreview();
   });
 
-  // 帶入 ASTAR 營區
+  // ASTAR 營區帶入
   const campSel = overlay.querySelector('#pickCamp');
   const membersBox = overlay.querySelector('#r_members');
-  // ✅ MTEZ 成員：打開選擇 Modal
-	overlay.querySelector('#btnPickMtezMembers').addEventListener('click', async ()=>{
-	  // 確保 mtezMembers 已有資料（若你初始化一定會 reloadMembers，可省略這段）
-	  if (!Array.isArray(mtezMembers) || mtezMembers.length === 0){
-		await reloadMembers(); // 你已有此函式
-	  }
 
-	  _mtezInsertTargetTextarea = membersBox;   // 指定這次要插入到哪個 textarea
-	  $('#mtezPickSearch').val('');             // 清空搜尋
-	  renderMtezPickTable_();                   // 渲染列表
-	  bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).show();
-	});
   (async ()=>{
     await ensureAstarCampData();
     const camps = Array.from(astarCampMap.keys()).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
     campSel.innerHTML = `<option value="">（選擇要帶入的 ASTAR 營區）</option>` +
       camps.map(c=>`<option value="${c}">${c}（${astarCampMap.get(c).length}）</option>`).join('');
   })();
+
   overlay.querySelector('#btnInsertCamp').addEventListener('click', ()=>{
-	  const camp = campSel.value;
-	  if (!camp) return;
+    const camp = campSel.value;
+    if (!camp) return;
+    const arr = astarCampMap.get(camp) || [];
+    const text = arr.map(x=>{
+      const n = x.name || '';
+      const c = x.code ? `（${x.code}）` : '';
+      const j = x.job ? ` ${x.job}` : '';
+      const l = x.level ? ` Lv${x.level}` : '';
+      const a = x.attack ? ` 乾表:${x.attack}` : '';
+      return `${n}${c}${j}${l}${a}`.trim();
+    }).join('\n');
 
-	  const arr = astarCampMap.get(camp) || [];
+    const cur = safeText(membersBox.value || '').trim();
+    membersBox.value = cur ? (cur + '\n\n' + text) : text;
+  });
 
-	  // ✅ 只帶團員資訊（不含【營區】）
-	  const text = arr.map(x=>{
-		const n = x.name || '';
-		const c = x.code ? `（${x.code}）` : '';
-		const j = x.job ? ` ${x.job}` : '';
-		const l = x.level ? ` Lv${x.level}` : '';
-		const a = x.attack ? ` 乾表:${x.attack}` : '';
-		return `${n}${c}${j}${l}${a}`.trim();
-	  }).join('\n');
-
-	  const cur = safeText(membersBox.value || '').trim();
-	  membersBox.value = cur ? (cur + '\n\n' + text) : text;
-	});
   overlay.querySelector('#btnClearMembers').addEventListener('click', ()=>{ membersBox.value = ''; });
+
+  // ✅ MTEZ 成員：打開選擇 Modal（加 stopPropagation，避免冒泡）
+  overlay.querySelector('#btnPickMtezMembers').addEventListener('click', async (ev)=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    if (!Array.isArray(mtezMembers) || mtezMembers.length === 0){
+      await reloadMembers();
+    }
+
+    _mtezInsertTargetTextarea = membersBox;
+    $('#mtezPickSearch').val('');
+    renderMtezPickTable_();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).show();
+  });
 
   overlay.querySelector('#btn_cancel').onclick = ()=>overlay.remove();
 
   overlay.querySelector('#btn_save').onclick = async ()=>{
-	const dateStr  = overlay.querySelector('#r_date').value;   // YYYY-MM-DD
-	const clockStr = overlay.querySelector('#r_clock').value;  // HH:mm
+    const dateStr  = overlay.querySelector('#r_date').value;
+    const clockStr = overlay.querySelector('#r_clock').value;
+    const combinedTime = (dateStr && clockStr) ? `${dateStr} ${clockStr}` : '';
 
-	// 組成你要寫回 Sheet 的格式：YYYY-MM-DD HH:mm
-	const combinedTime = (dateStr && clockStr) ? `${dateStr} ${clockStr}` : '';
+    if (!dateStr || !clockStr){
+      alert('請選擇出團日期與時間');
+      return;
+    }
+    const dt = new Date(`${dateStr}T${clockStr}`);
+    if (isNaN(dt.getTime())){
+      alert('出團日期/時間格式不正確，請重新選擇');
+      return;
+    }
+    if (dt.getTime() < Date.now()){
+      alert('出團時間不可選擇過去時間，請重新設定。');
+      return;
+    }
 
-	// ✅ 新增/修改都禁止過去
-	if (!dateStr || !clockStr){
-	  alert('請選擇出團日期與時間');
-	  return;
-	}
-	const dt = new Date(`${dateStr}T${clockStr}`);
-	if (isNaN(dt.getTime())){
-	  alert('出團日期/時間格式不正確，請重新選擇');
-	  return;
-	}
-	if (dt.getTime() < Date.now()){
-	  alert('出團時間不可選擇過去時間，請重新設定。');
-	  return;
-	}
+    const payload = {
+      boss:   overlay.querySelector('#r_boss').value.trim(),
+      time:   combinedTime,
+      status: overlay.querySelector('#r_status').value.trim(),
+      need:   readNeedSelected().join('、'),
+      members: membersBox.value.trim(),
+      guild:  overlay.querySelector('#r_guild').value.trim(),
+      contact: overlay.querySelector('#r_contact').value.trim(),
+      note:   overlay.querySelector('#r_note').value.trim(),
+      row:    Number(values.rowIndex || 0)
+    };
 
-	const payload = {
-	  boss:   overlay.querySelector('#r_boss').value.trim(),
-	  time:   combinedTime,   // ✅ 寫回 B 欄：YYYY-MM-DD HH:mm
-	  status: overlay.querySelector('#r_status').value.trim(),
-	  need:   readNeedSelected().join('、'),
-	  members: membersBox.value.trim(),
-	  guild:  overlay.querySelector('#r_guild').value.trim(),
-	  contact: overlay.querySelector('#r_contact').value.trim(),
-	  note:   overlay.querySelector('#r_note').value.trim(),
-	  row:    Number(values.rowIndex || 0)
-	};
     if (!payload.boss || !payload.time || !payload.guild || !payload.contact){
       alert('請至少填：Boss / 出團時間 / 招募公會 / 聯絡方式');
       return;
@@ -1116,7 +1088,7 @@ let currentGuildTab = 'MTEZ';
 let astarMembers = [];
 let mtezMembers  = [];
 
-const MEMBER_MAPPING = { name:1, code:2, job:3, level:4, attack:6, note:10 }; // B/C/D/E/G/K
+const MEMBER_MAPPING = { name:1, code:2, job:3, level:4, attack:6, note:10 };
 
 function mapRowToMember(row, guild){
   return {
@@ -1183,7 +1155,7 @@ function renderMemberTable(){
   $('#tabMtez').toggleClass('active', currentGuildTab === 'MTEZ');
 
   $('#guildTitle').text(currentGuildTab === 'ASTAR' ? '🏋️ ASTAR 成員（唯讀）' : '🏋️ MTEZ 成員（可編輯）');
-  $('#btnAddMember').toggle(currentGuildTab === 'MTEZ'); // 只有 MTEZ 可新增
+  $('#btnAddMember').toggle(currentGuildTab === 'MTEZ');
 
   const rows = getCurrentMembers();
   if (!rows.length){
@@ -1267,6 +1239,7 @@ function createMemberEditor(titleText, fieldsHtml){
   card.addEventListener('click', (e)=>e.stopPropagation());
   return overlay;
 }
+
 function setMemberBusy(overlay, busy){
   const mask = overlay.querySelector('#editLoadingMask');
   const btnSave = overlay.querySelector('#btn_save');
@@ -1382,7 +1355,7 @@ $(document).on('click', '.btn-edit-member', function(){
 // =========================
 // ✅ MTEZ 成員挑選：工具函式（給招募出團成員帶入）
 // =========================
-let _mtezInsertTargetTextarea = null; // 指向目前要插入的出團成員 textarea
+let _mtezInsertTargetTextarea = null;
 
 function formatOneMemberLine_(x){
   const n = x.name || '';
@@ -1412,44 +1385,37 @@ function renderMtezPickTable_(){
     return;
   }
 
-  const html = rows.map(r=>{
-    const id = `mtez_${String(r.code||'').replace(/[^a-zA-Z0-9_-]/g,'_')}`;
-    return `
-      <tr>
-        <td>
-          <input class="form-check-input mtez-pick-cb" type="checkbox"
-                 data-name="${escapeAttr(r.name)}"
-                 data-code="${escapeAttr(r.code)}"
-                 data-job="${escapeAttr(r.job)}"
-                 data-level="${escapeAttr(r.level)}"
-                 data-attack="${escapeAttr(r.attack)}">
-        </td>
-        <td>${safeText(r.name)}</td>
-        <td class="font-monospace">${safeText(r.code)}</td>
-        <td>${safeText(r.job)}</td>
-        <td>${safeText(r.level)}</td>
-        <td>${safeText(r.attack)}</td>
-      </tr>
-    `;
-  }).join('');
+  const html = rows.map(r=>`
+    <tr>
+      <td>
+        <input class="form-check-input mtez-pick-cb" type="checkbox"
+               data-name="${escapeAttr(r.name)}"
+               data-code="${escapeAttr(r.code)}"
+               data-job="${escapeAttr(r.job)}"
+               data-level="${escapeAttr(r.level)}"
+               data-attack="${escapeAttr(r.attack)}">
+      </td>
+      <td>${safeText(r.name)}</td>
+      <td class="font-monospace">${safeText(r.code)}</td>
+      <td>${safeText(r.job)}</td>
+      <td>${safeText(r.level)}</td>
+      <td>${safeText(r.attack)}</td>
+    </tr>
+  `).join('');
 
   $('#mtezPickBody').html(html);
 }
 
-// 搜尋即時刷新
 $(document).on('input', '#mtezPickSearch', renderMtezPickTable_);
 
-// 清空勾選
 $(document).on('click', '#mtezPickClear', function(){
   $('#mtezPickBody .mtez-pick-cb').prop('checked', false);
 });
 
-// 全選目前結果
 $(document).on('click', '#mtezPickSelectAll', function(){
   $('#mtezPickBody .mtez-pick-cb').prop('checked', true);
 });
 
-// 按「帶入勾選成員」
 $(document).on('click', '#mtezPickInsert', function(){
   if (!_mtezInsertTargetTextarea){
     bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).hide();
@@ -1470,7 +1436,6 @@ $(document).on('click', '#mtezPickInsert', function(){
   }
 
   const text = picked.map(formatOneMemberLine_).join('\n');
-
   const cur = safeText(_mtezInsertTargetTextarea.value || '').trim();
   _mtezInsertTargetTextarea.value = cur ? (cur + '\n' + text) : text;
 
