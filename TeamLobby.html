@@ -391,6 +391,53 @@
     </div>
   </div>
 
+	<!-- ✅ ASTAR 成員選擇 Modal（給招募 > 出團成員 帶入用） -->
+	<div class="modal fade" id="astarPickModal" tabindex="-1" aria-hidden="true">
+	  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+		<div class="modal-content">
+		  <div class="modal-header">
+			<h5 class="modal-title">選擇 ASTAR 公會成員（勾選後帶入出團成員）</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		  </div>
+
+		  <div class="modal-body">
+			<div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+			  <input id="astarPickSearch" class="form-control form-control-sm w-auto" style="min-width:240px"
+					 placeholder="搜尋：名稱/代碼/職業/備註">
+			  <button id="astarPickClear" class="btn btn-outline-secondary btn-sm">清空勾選</button>
+			  <button id="astarPickSelectAll" class="btn btn-outline-dark btn-sm">全選目前結果</button>
+			</div>
+
+			<div class="table-responsive">
+			  <table class="table table-sm table-hover align-middle">
+				<thead class="table-secondary">
+				  <tr>
+					<th style="width:44px;">選</th>
+					<th style="width:16%;">角色名稱</th>
+					<th style="width:14%;">角色代碼</th>
+					<th style="width:18%;">角色職業</th>
+					<th style="width:10%;">等級</th>
+					<th style="width:12%;">乾表</th>
+				  </tr>
+				</thead>
+				<tbody id="astarPickBody">
+				  <tr><td colspan="6" class="text-center text-muted">尚未載入</td></tr>
+				</tbody>
+			  </table>
+			</div>
+
+			<small class="text-muted">
+			  帶入格式：角色名稱（角色代碼） 職業 Lv等級 乾表:數值（每位一行）
+			</small>
+		  </div>
+
+		  <div class="modal-footer">
+			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+			<button id="astarPickInsert" class="btn btn-primary btn-sm">帶入勾選成員</button>
+		  </div>
+		</div>
+	  </div>
+	</div>
 <script>
 /* =========================
    ✅ 設定區
@@ -851,12 +898,13 @@ function openRecruitEditor(values){
     </label>
 
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>出團成員（E，可帶入 ASTAR 營區團員，也可手動填）</span>
+      <span>出團成員（可帶入 ASTAR 營區團員，也可手動填）</span>
       <div class="member-insertbar">
         <select id="pickCamp" class="form-select form-select-sm">
           <option value="">（選擇要帶入的 ASTAR 營區）</option>
         </select>
-        <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入團員</button>
+        <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入各營區團員</button>
+		<button type="button" class="btn btn-outline-dark btn-sm" id="btnPickAstarMembers">選擇 ASTAR 公會成員</button>
         <button type="button" class="btn btn-outline-dark btn-sm" id="btnPickMtezMembers">選擇 MTEZ 公會成員</button>
         <button type="button" class="btn btn-outline-secondary btn-sm" id="btnClearMembers">清空成員欄</button>
       </div>
@@ -1006,6 +1054,20 @@ function openRecruitEditor(values){
     renderMtezPickTable_();
     bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).show();
   });
+
+	overlay.querySelector('#btnPickAstarMembers').addEventListener('click', async (ev)=>{
+	  ev.preventDefault();
+	  ev.stopPropagation();
+
+	  if (!Array.isArray(astarMembers) || astarMembers.length === 0){
+		await reloadMembers(); // 會同時載入 astarMembers/mtezMembers
+	  }
+
+	  _astarInsertTargetTextarea = membersBox;  // 指向出團成員 textarea
+	  $('#astarPickSearch').val('');
+	  renderAstarPickTable_();
+	  bootstrap.Modal.getOrCreateInstance(document.getElementById('astarPickModal')).show();
+	});
 
   overlay.querySelector('#btn_cancel').onclick = ()=>overlay.remove();
 
@@ -1448,6 +1510,92 @@ $(document).on('click', '#mtezPickInsert', function(){
   _mtezInsertTargetTextarea.value = cur ? (cur + '\n' + text) : text;
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('mtezPickModal')).hide();
+});
+
+// =========================
+// ✅ ASTAR 成員挑選：工具函式（給招募出團成員帶入）
+// =========================
+let _astarInsertTargetTextarea = null;
+
+function filterAstarForPicker_(kw){
+  const key = String(kw || '').trim().toLowerCase();
+  const src = Array.isArray(astarMembers) ? astarMembers : [];
+  if (!key) return src;
+  return src.filter(r=>{
+    const blob = [r.name,r.code,r.job,r.level,r.attack,r.note].map(v=>String(v||'').toLowerCase()).join(' ');
+    return blob.includes(key);
+  });
+}
+
+function renderAstarPickTable_(){
+  const kw = $('#astarPickSearch').val();
+  const rows = filterAstarForPicker_(kw);
+
+  if (!rows.length){
+    $('#astarPickBody').html(`<tr><td colspan="6" class="text-center text-muted">沒有符合的成員</td></tr>`);
+    return;
+  }
+
+  const html = rows.map(r=>`
+    <tr>
+      <td>
+        <input class="form-check-input astar-pick-cb" type="checkbox"
+               data-name="${escapeAttr(r.name)}"
+               data-code="${escapeAttr(r.code)}"
+               data-job="${escapeAttr(r.job)}"
+               data-level="${escapeAttr(r.level)}"
+               data-attack="${escapeAttr(r.attack)}">
+      </td>
+      <td>${safeText(r.name)}</td>
+      <td class="font-monospace">${safeText(r.code)}</td>
+      <td>${safeText(r.job)}</td>
+      <td>${safeText(r.level)}</td>
+      <td>${safeText(r.attack)}</td>
+    </tr>
+  `).join('');
+
+  $('#astarPickBody').html(html);
+}
+
+// 搜尋即時刷新
+$(document).on('input', '#astarPickSearch', renderAstarPickTable_);
+
+// 清空勾選
+$(document).on('click', '#astarPickClear', function(){
+  $('#astarPickBody .astar-pick-cb').prop('checked', false);
+});
+
+// 全選目前結果
+$(document).on('click', '#astarPickSelectAll', function(){
+  $('#astarPickBody .astar-pick-cb').prop('checked', true);
+});
+
+// 按「帶入勾選成員」
+$(document).on('click', '#astarPickInsert', function(){
+  if (!_astarInsertTargetTextarea){
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('astarPickModal')).hide();
+    return;
+  }
+
+  const picked = Array.from(document.querySelectorAll('#astarPickBody .astar-pick-cb:checked')).map(cb=>({
+    name: cb.dataset.name || '',
+    code: cb.dataset.code || '',
+    job: cb.dataset.job || '',
+    level: cb.dataset.level || '',
+    attack: cb.dataset.attack || ''
+  }));
+
+  if (!picked.length){
+    alert('請先勾選要帶入的 ASTAR 成員');
+    return;
+  }
+
+  const text = picked.map(formatOneMemberLine_).join('\n'); // ✅ 沿用你已經有的同格式函式
+
+  const cur = safeText(_astarInsertTargetTextarea.value || '').trim();
+  _astarInsertTargetTextarea.value = cur ? (cur + '\n' + text) : text;
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('astarPickModal')).hide();
 });
 
 /* =========================
