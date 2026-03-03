@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar MTEZ RaidBoss 跨公會隊伍招募牆 & 公會成員清單🍁-0415</title>
+  <title>🍁Astar & MTEZ RaidBoss 跨公會隊伍招募牆 & 公會成員清單🍁</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -17,7 +17,17 @@
   <style>
     body { overflow-y: scroll; margin: 0; padding: 0; }
     .title{font-weight:bold; font-size:1.0rem;}
-    .reset-content { display: table-cell; line-height: 1.5; font-size: 1rem; padding: 0.5; border: none; }
+       .reset-content 
+	{ 
+	  display: table; 
+	  line-height: 1.5; 
+	  font-size: 1rem; 
+	  padding: 0.5; 
+	  border: none; 
+	  
+	  width: 100%;       /* 嘗試填滿視窗寬度 */
+	  min-width: 100%;    /* 嘗試填滿視窗寬度 */
+	}
     [data-bs-theme="dark"] .card{ border-color: rgba(255,255,255,.12); }
     .badge-guild{ color:#fff; font-weight:800; border:0; background:#198754; }
 
@@ -204,6 +214,22 @@
 	.modal{
 	  z-index: 11010 !important;
 	}
+	
+	/* ✅ 夜間模式：讓「招募牆」的紙張內容文字更清楚（不影響整站） */
+	[data-bs-theme="dark"] #RecruitPage .bounty-paper,
+	[data-bs-theme="dark"] #RecruitPage .bounty-paper *{
+	  color: #111 !important;      /* 讓字變深，對亮紙背景更清楚 */
+	}
+
+	/* ✅ 仍保留 muted 的層次，但不要灰到看不見 */
+	[data-bs-theme="dark"] #RecruitPage .bounty-paper .text-muted{
+	  color: rgba(0,0,0,.65) !important;
+	}
+
+	/* ✅ 分隔線也加深一點 */
+	[data-bs-theme="dark"] #RecruitPage .bounty-paper .paper-divider{
+	  background: rgba(0,0,0,.18) !important;
+	}
   </style>
 </head>
 
@@ -321,7 +347,7 @@
                 <th style="width: 10%;">角色乾表</th>
                 <th style="width: 12%;">公會</th>
                 <th style="width: 20%;">備註</th>
-                <th style="width: 8%;">修改</th>
+                <th style="width: 18%;">修改資料</th>
               </tr>
             </thead>
             <tbody id="memberTableBody">
@@ -894,7 +920,7 @@ function openRecruitEditor(values){
 
   const overlay = createRecruitEditor(isNew ? '新增招募' : '修改招募', `
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>Boss（A）</span>
+      <span>Boss</span>
       <select id="r_boss" class="form-select">
         <option value="拉圖斯">拉圖斯</option>
         <option value="拉圖斯(困難)">拉圖斯(困難)</option>
@@ -902,29 +928,29 @@ function openRecruitEditor(values){
         <option value="其他">其他</option>
       </select>
     </label>
-
+	
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>出團日期（B）</span>
-      <input id="r_date" type="date" class="form-control">
-    </label>
-
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>出團時間（B）</span>
-      <input id="r_clock" type="time" class="form-control" step="60">
-      <small class="text-muted">會以 yyyy-MM-dd HH:mm 寫入資料表</small>
-    </label>
-
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>狀態（C）</span>
+      <span>狀態</span>
       <select id="r_status" class="form-select">
         <option value="招募中">招募中</option>
         <option value="已滿">已滿</option>
         <option value="關閉">關閉</option>
       </select>
     </label>
+	
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>出團日期</span>
+      <input id="r_date" type="date" class="form-control">
+    </label>
+
+    <label style="display:flex;flex-direction:column;gap:6px;">
+      <span>出團時間</span>
+      <input id="r_clock" type="time" class="form-control" step="60">
+      <small class="text-muted">※無法選擇過去的時間，請注意※</small>
+    </label>
 
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>招募需求（D，可多選）</span>
+      <span>招募需求（可多選）</span>
       <div class="need-toolbar">
         <button type="button" class="btn btn-outline-dark btn-sm" id="needAll">快速全選</button>
         <button type="button" class="btn btn-outline-secondary btn-sm" id="needClear">清空</button>
@@ -939,10 +965,10 @@ function openRecruitEditor(values){
     </label>
 
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>出團成員（可帶入 ASTAR 營區團員，也可手動填）</span>
+      <span>目前出團成員（可帶入 Astar 各營區成員，也可手動填）</span>
       <div class="member-insertbar">
         <select id="pickCamp" class="form-select form-select-sm">
-          <option value="">（選擇要帶入的 ASTAR 營區）</option>
+          <option value="">（選擇要帶入的 Astar 營區）</option>
         </select>
         <button type="button" class="btn btn-outline-primary btn-sm" id="btnInsertCamp">帶入各營區團員</button>
 		<button type="button" class="btn btn-outline-dark btn-sm" id="btnPickAstarMembers">選擇 ASTAR 公會成員</button>
@@ -953,7 +979,7 @@ function openRecruitEditor(values){
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>招募公會（F）</span>
+      <span>招募公會</span>
       <select id="r_guild" class="form-select">
         <option value="ASTAR">ASTAR</option>
         <option value="MTEZ">MTEZ</option>
@@ -961,12 +987,12 @@ function openRecruitEditor(values){
     </label>
 
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>聯絡方式（G）</span>
+      <span>團長聯絡方式</span>
       <input id="r_contact" type="text" class="form-control">
     </label>
 
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>備註（H）</span>
+      <span>備註</span>
       <textarea id="r_note" class="form-control" rows="3"></textarea>
     </label>
   `);
@@ -1289,7 +1315,7 @@ function renderMemberTable(){
       <td>
         ${
 			canEditMtez
-			  ? `<button class="btn btn-outline-secondary btn-sm btn-edit-member"
+			  ? `<button class="btn btn-outline-secondary btn-edit-member"
 					data-name="${escapeAttr(r.name)}"
 					data-code="${escapeAttr(r.code)}"
 					data-job="${escapeAttr(r.job)}"
@@ -1297,10 +1323,10 @@ function renderMemberTable(){
 					data-attack="${escapeAttr(r.attack)}"
 					data-note="${escapeAttr(r.note)}">修改</button>`
 			  : (canEditAstar
-				  ? `<button class="btn btn-outline-primary btn-sm btn-edit-astar-note"
+				  ? `<button class="btn btn-outline-primary btn-edit-astar-note"
 						data-name="${escapeAttr(r.name)}"
 						data-code="${escapeAttr(r.code)}"
-						data-note="${escapeAttr(r.note)}">修改備註</button>`
+						data-note="${escapeAttr(r.note)}">修改</button>`
 				  : `<span class="text-muted">—</span>`
 				)
 		  }
