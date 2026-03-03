@@ -1299,15 +1299,15 @@ function renderMemberTable(){
       <td>
         ${
 			canEditMtez
-			  ? `<button class="btn btn-outline-secondary btn-sm btn-edit-member"
+			  ? `<button class="btn btn-outline-secondary btn-edit-member"
 					data-name="${escapeAttr(r.name)}"
 					data-code="${escapeAttr(r.code)}"
 					data-job="${escapeAttr(r.job)}"
 					data-level="${escapeAttr(r.level)}"
 					data-attack="${escapeAttr(r.attack)}"
-					data-note="${escapeAttr(r.note)}">修改</button>`
+					data-note="${escapeAttr(r.note)}">修改資料</button>`
 			  : (canEditAstar
-				  ? `<button class="btn btn-outline-primary btn-sm btn-edit-astar-note"
+				  ? `<button class="btn btn-outline-primary btn-edit-astar-note"
 						data-name="${escapeAttr(r.name)}"
 						data-code="${escapeAttr(r.code)}"
 						data-note="${escapeAttr(r.note)}">修改備註</button>`
