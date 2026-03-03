@@ -1405,27 +1405,27 @@ function openMtezEditor(values){
   const isNew = !!values.__isNew;
   const overlay = createMemberEditor(isNew ? '新增 MTEZ 成員' : '修改 MTEZ 成員', `
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色名稱（B）</span>
+      <span>角色名稱</span>
       <input id="m_name" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色代碼（C，主鍵）</span>
+      <span>角色代碼</span>
       <input id="m_code" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色職業（D）</span>
+      <span>角色職業</span>
       <input id="m_job" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色等級（E）</span>
+      <span>角色等級</span>
       <input id="m_level" type="text" class="form-control">
     </label>
     <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色乾表（G）</span>
+      <span>角色乾表</span>
       <input id="m_attack" type="text" class="form-control">
     </label>
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>備註（K）</span>
+      <span>備註</span>
       <textarea id="m_note" class="form-control" rows="3"></textarea>
     </label>
   `);
@@ -1451,7 +1451,7 @@ function openMtezEditor(values){
       updatedAt: nowISO()
     };
     if (!payload.code){
-      alert('角色代碼不可為空（主鍵 / C 欄）');
+      alert('角色代碼不可為空');
       return;
     }
     try{
@@ -1676,12 +1676,12 @@ $(document).on('click', '#astarPickInsert', function(){
 // ✅ ASTAR：只修改備註（K 欄）
 // =========================
 function openAstarNoteEditor(values){
-  const overlay = createMemberEditor('修改 ASTAR 備註（K 欄）', `
+  const overlay = createMemberEditor('修改 ASTAR 備註', `
     <div class="small text-muted" style="grid-column:1 / -1;">
       角色：<b>${safeText(values.name || '')}</b>　代碼：<span class="font-monospace">${safeText(values.code || '')}</span>
     </div>
     <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-      <span>備註（K）</span>
+      <span>備註</span>
       <textarea id="a_note" class="form-control" rows="4"></textarea>
     </label>
   `);
