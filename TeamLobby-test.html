@@ -17,7 +17,17 @@
   <style>
     body { overflow-y: scroll; margin: 0; padding: 0; }
     .title{font-weight:bold; font-size:1.0rem;}
-    .reset-content { display: table-cell; line-height: 1.5; font-size: 1rem; padding: 0.5; border: none; }
+       .reset-content 
+	{ 
+	  display: table; 
+	  line-height: 1.5; 
+	  font-size: 1rem; 
+	  padding: 0.5; 
+	  border: none; 
+	  
+	  width: 100%;       /* 嘗試填滿視窗寬度 */
+	  min-width: 100%;    /* 嘗試填滿視窗寬度 */
+	}
     [data-bs-theme="dark"] .card{ border-color: rgba(255,255,255,.12); }
     .badge-guild{ color:#fff; font-weight:800; border:0; background:#198754; }
 
@@ -220,7 +230,7 @@
   </nav>
 
   <!-- ===================== 招募牆 ===================== -->
-  <div id="RecruitPage" class="container-fluid py-4">
+  <div id="RecruitPage" class="container py-4">
     <div class="d-flex align-items-center justify-content-between mb-2">
       <h3 class="mb-0"><b>📣 RaidBoss 隊伍招募牆</b></h3>
     </div>
@@ -274,7 +284,7 @@
   </div>
 
   <!-- ===================== 公會成員（已復原版本：ASTAR唯讀 / MTEZ可編輯） ===================== -->
-  <div id="MembersPage" class="container-fluid py-4 d-none">
+  <div id="MembersPage" class="container py-4 d-none">
     <div class="d-flex align-items-center justify-content-between mb-2">
       <h3 class="mb-0"><b>👥 公會成員清單</b></h3>
     </div>
