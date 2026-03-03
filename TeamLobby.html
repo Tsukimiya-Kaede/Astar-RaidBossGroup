@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🍁Astar RaidBoss 招募牆 & 公會成員清單🍁-0415</title>
+  <title>🍁Astar&MTEZ RaidBoss 招募牆 & 公會成員清單🍁-0415</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -216,13 +216,13 @@
   <!-- ===================== 招募牆 ===================== -->
   <div id="RecruitPage" class="container py-4">
     <div class="d-flex align-items-center justify-content-between mb-2">
-      <h3 class="mb-0"><b>📣 RaidBoss 懸賞招募牆</b></h3>
+      <h3 class="mb-0"><b>📣 RaidBoss 隊伍招募牆</b></h3>
     </div>
 
     <div class="card shadow-sm mb-3">
       <div class="card-body">
         <h4 class="card-title mb-2">➡️ 使用說明</h4>
-        <p class="mb-1 text-muted">每一張懸賞紙就是一則招募。支援 Boss/狀態/關鍵字篩選；可新增/修改招募。</p>
+        <p class="mb-1 text-muted">若須招募隊員，請點擊【新增招募】將您要招募的訊息輸入在招募資料內，會依據您填寫的Boss類別，系統自動推播相對應的DC頻道。</p>
         <div id="recruitMsg" class="text-danger mt-2"></div>
       </div>
     </div>
@@ -276,7 +276,7 @@
     <div class="card shadow-sm mb-3">
       <div class="card-body">
         <div class="text-muted">
-          ✅ ASTAR / MTEZ 分頁顯示。ASTAR 唯讀；只有 MTEZ 可新增/修改（B/C/D/E/G/K）。
+          ✅ ASTAR / MTEZ 公會成員分頁顯示。
         </div>
         <div id="membersMsg" class="text-danger mt-2"></div>
       </div>
@@ -284,10 +284,10 @@
 
     <ul class="nav nav-pills nav-tabs-custom mb-3" role="tablist">
       <li class="nav-item" role="presentation">
-        <button id="tabAstar" class="nav-link tab-astar" type="button" role="tab">ASTAR（唯讀）</button>
+        <button id="tabAstar" class="nav-link tab-astar" type="button" role="tab">ASTAR</button>
       </li>
       <li class="nav-item" role="presentation">
-        <button id="tabMtez" class="nav-link tab-mtez active" type="button" role="tab">MTEZ（可編輯）</button>
+        <button id="tabMtez" class="nav-link tab-mtez active" type="button" role="tab">MTEZ</button>
       </li>
     </ul>
 
@@ -769,12 +769,22 @@ const ASTAR_SHEET_URL_FOR_MEMBER_PICKER = ASTAR_SHEET_URL;
 let astarCampMap = new Map();
 let astarCampLoaded = false;
 let astarCampLoading = null;
-function pickFirstCamp(raw){
+// ✅ 取出「所有營區」（支援：普拉/困拉/炎魔/訓練營/外援大大）
+// raw 例：普拉四營、炎魔一營、炎魔四營
+function extractAllCamps(raw){
   const txt = String(raw || '').trim();
-  const re = /(普拉[一二三四五六七八九十]營|困拉[一二三四五六七八九十]營|炎魔[一二三四五六七八九十]營|訓練營|外援大大)/;
-  const m = txt.match(re);
-  return m ? m[1] : '';
+  if (!txt) return [];
+  const re = /(普拉[一二三四五六七八九十]營|困拉[一二三四五六七八九十]營|炎魔[一二三四五六七八九十]營|訓練營|外援大大)/g;
+  const out = [];
+  const seen = new Set();
+  let m;
+  while ((m = re.exec(txt)) !== null) {
+    const v = m[1];
+    if (!seen.has(v)) { seen.add(v); out.push(v); }
+  }
+  return out;
 }
+
 async function ensureAstarCampData(){
   if (astarCampLoaded) return;
   if (astarCampLoading) return astarCampLoading;
@@ -789,21 +799,40 @@ async function ensureAstarCampData(){
         try{
           astarCampMap = new Map();
           if (!res.data || res.data.length < 2) { astarCampLoaded = true; resolve(); return; }
+
           const rows = res.data.slice(1);
+
           for (const r of rows){
             const name = safeText(r[1]).trim(); // B
             const code = safeText(r[2]).trim(); // C
             const job  = safeText(r[3]).trim(); // D
             const lv   = safeText(r[4]).trim(); // E
             const atk  = safeText(r[6]).trim(); // G
-            const camp = pickFirstCamp(r[9]);   // J
-            if (!name || !code || !camp) continue;
-            if (!astarCampMap.has(camp)) astarCampMap.set(camp, []);
-            astarCampMap.get(camp).push({ name, code, job, level: lv, attack: atk });
+
+            // ✅ 這裡改：抓「所有營區」
+            const camps = extractAllCamps(r[9]); // J（你的營區欄）
+
+            if (!name || !code || camps.length === 0) continue;
+
+            // ✅ 每個營區都放一份（避免多營區帶不出來）
+            for (const camp of camps){
+              if (!astarCampMap.has(camp)) astarCampMap.set(camp, []);
+              astarCampMap.get(camp).push({ name, code, job, level: lv, attack: atk });
+            }
           }
-          for (const arr of astarCampMap.values()){
-            arr.sort((a,b)=> (a.name||'').localeCompare(b.name||'','zh-Hant'));
+
+          // ✅ 排序 & 去重（同營區內避免同 code 重複）
+          for (const [camp, arr] of astarCampMap.entries()){
+            const byCode = new Map();
+            for (const x of arr){
+              const k = String(x.code || '').trim();
+              if (!k) continue;
+              byCode.set(k, x);
+            }
+            const clean = Array.from(byCode.values()).sort((a,b)=> (a.name||'').localeCompare(b.name||'','zh-Hant'));
+            astarCampMap.set(camp, clean);
           }
+
           astarCampLoaded = true;
           resolve();
         }catch(e){
@@ -819,6 +848,7 @@ async function ensureAstarCampData(){
       }
     });
   });
+
   return astarCampLoading;
 }
 
