@@ -210,7 +210,7 @@
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-      <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁Astar RaidBoss 招募牆 & 公會成員清單🍁</span>
+      <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁Astar MTEZ RaidBoss 招募牆 & 公會成員清單🍁</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <button id="btnGoRecruit" class="btn btn-outline-light btn-sm title">📣 招募牆</button>
         <button id="btnGoMembers" class="btn btn-outline-light btn-sm title">👥 公會成員</button>
@@ -1265,7 +1265,7 @@ function renderMemberTable(){
   $('#tabAstar').toggleClass('active', currentGuildTab === 'ASTAR');
   $('#tabMtez').toggleClass('active', currentGuildTab === 'MTEZ');
 
-  $('#guildTitle').text(currentGuildTab === 'ASTAR' ? '🏋️ ASTAR 成員（唯讀）' : '🏋️ MTEZ 成員（可編輯）');
+  $('#guildTitle').text(currentGuildTab === 'ASTAR' ? '🏋️ ASTAR 公會成員' : '🏋️ MTEZ 公會成員');
   $('#btnAddMember').toggle(currentGuildTab === 'MTEZ');
 
   const rows = getCurrentMembers();
