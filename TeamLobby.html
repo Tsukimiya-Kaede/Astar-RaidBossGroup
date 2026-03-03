@@ -198,13 +198,19 @@
 	.modal-backdrop{
 	  z-index: 11000 !important;
 	}	
+	.modal-backdrop{
+	  z-index: 11000 !important;
+	}
+	.modal{
+	  z-index: 11010 !important;
+	}
   </style>
 </head>
 
 <body class="bg-body">
   <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
     <div class="container-fluid">
-      <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁Astar RaidBoss 招募牆 & 公會成員清單🍁</span>
+      <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁Astar MTEZ RaidBoss 招募牆 & 公會成員清單🍁</span>
       <div class="ms-auto d-flex align-items-center gap-2">
         <button id="btnGoRecruit" class="btn btn-outline-light btn-sm title">📣 招募牆</button>
         <button id="btnGoMembers" class="btn btn-outline-light btn-sm title">👥 公會成員</button>
@@ -454,6 +460,8 @@ const MTEZ_SHEET_URL  = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ
 const GAS_MTEZ_URL = 'https://script.google.com/macros/s/AKfycbywkvtNs2_j3DdKkuvFsiV6oDcQ7D8r6WcdlSRtvHQSOlH5LBty93KUXiGwynqduOzx/exec';
 const GAS_MTEZ_ACTION = 'upsertMtezByCode';
 
+const GAS_ASTAR_URL    = 'https://script.google.com/macros/s/AKfycbxyVn1ergiTMpPWbLct7cQR2F_owsiMIr88A0dCiwWYbCo9l2qhQ0_LbYgvt-_aWct7/exec';
+const GAS_ASTAR_ACTION = 'updateAstarNoteByCode';
 /* =========================
    工具
 ========================= */
@@ -1257,7 +1265,7 @@ function renderMemberTable(){
   $('#tabAstar').toggleClass('active', currentGuildTab === 'ASTAR');
   $('#tabMtez').toggleClass('active', currentGuildTab === 'MTEZ');
 
-  $('#guildTitle').text(currentGuildTab === 'ASTAR' ? '🏋️ ASTAR 成員（唯讀）' : '🏋️ MTEZ 成員（可編輯）');
+  $('#guildTitle').text(currentGuildTab === 'ASTAR' ? '🏋️ ASTAR 公會成員' : '🏋️ MTEZ 公會成員');
   $('#btnAddMember').toggle(currentGuildTab === 'MTEZ');
 
   const rows = getCurrentMembers();
@@ -1266,7 +1274,8 @@ function renderMemberTable(){
     return;
   }
 
-  const canEdit = (currentGuildTab === 'MTEZ');
+  const canEditMtez  = (currentGuildTab === 'MTEZ');
+  const canEditAstar = (currentGuildTab === 'ASTAR');
 
   const html = rows.map(r=>`
     <tr>
@@ -1279,16 +1288,22 @@ function renderMemberTable(){
       <td class="small">${safeText(r.note) || '<span class="text-muted">—</span>'}</td>
       <td>
         ${
-          canEdit
-          ? `<button class="btn btn-outline-secondary btn-sm btn-edit-member"
-                data-name="${escapeAttr(r.name)}"
-                data-code="${escapeAttr(r.code)}"
-                data-job="${escapeAttr(r.job)}"
-                data-level="${escapeAttr(r.level)}"
-                data-attack="${escapeAttr(r.attack)}"
-                data-note="${escapeAttr(r.note)}">修改</button>`
-          : `<span class="text-muted">—</span>`
-        }
+			canEditMtez
+			  ? `<button class="btn btn-outline-secondary btn-sm btn-edit-member"
+					data-name="${escapeAttr(r.name)}"
+					data-code="${escapeAttr(r.code)}"
+					data-job="${escapeAttr(r.job)}"
+					data-level="${escapeAttr(r.level)}"
+					data-attack="${escapeAttr(r.attack)}"
+					data-note="${escapeAttr(r.note)}">修改</button>`
+			  : (canEditAstar
+				  ? `<button class="btn btn-outline-primary btn-sm btn-edit-astar-note"
+						data-name="${escapeAttr(r.name)}"
+						data-code="${escapeAttr(r.code)}"
+						data-note="${escapeAttr(r.note)}">修改備註</button>`
+				  : `<span class="text-muted">—</span>`
+				)
+		  }
       </td>
     </tr>
   `).join('');
@@ -1629,6 +1644,74 @@ $(document).on('click', '#astarPickInsert', function(){
   _astarInsertTargetTextarea.value = cur ? (cur + '\n' + text) : text;
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('astarPickModal')).hide();
+});
+
+// =========================
+// ✅ ASTAR：只修改備註（K 欄）
+// =========================
+function openAstarNoteEditor(values){
+  const overlay = createMemberEditor('修改 ASTAR 備註（K 欄）', `
+    <div class="small text-muted" style="grid-column:1 / -1;">
+      角色：<b>${safeText(values.name || '')}</b>　代碼：<span class="font-monospace">${safeText(values.code || '')}</span>
+    </div>
+    <label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
+      <span>備註（K）</span>
+      <textarea id="a_note" class="form-control" rows="4"></textarea>
+    </label>
+  `);
+
+  overlay.querySelector('#a_note').value = values.note || '';
+  overlay.querySelector('#btn_cancel').onclick = ()=>overlay.remove();
+
+  overlay.querySelector('#btn_save').onclick = async ()=>{
+    const code = String(values.code || '').trim();
+    const note = String(overlay.querySelector('#a_note').value || '').trim();
+
+    if (!code){
+      alert('角色代碼不可為空（用來定位要更新的列）');
+      return;
+    }
+
+    try{
+      setMemberBusy(overlay, true);
+
+      const form = new URLSearchParams();
+      form.set('action', GAS_ASTAR_ACTION);
+      form.set('code', code);
+      form.set('note', note);
+      form.set('updatedAt', nowISO());
+
+      const resp = await fetch(GAS_ASTAR_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString(),
+        cache:'no-store'
+      });
+
+      const text = await resp.text();
+      let json; try{ json = JSON.parse(text); } catch { throw new Error('ASTAR GAS 回傳非 JSON'); }
+      if (!resp.ok || json.status !== 'ok') throw new Error(json.message || '寫入失敗');
+
+      alert('備註更新成功！');
+      overlay.remove();
+      await reloadMembers();       // 重新抓表
+      currentGuildTab = 'ASTAR';   // 回到 ASTAR 分頁
+      renderMemberTable();
+    }catch(e){
+      console.error(e);
+      alert('送出失敗：' + e.message);
+      setMemberBusy(overlay, false);
+    }
+  };
+}
+
+// ASTAR：點「修改備註」
+$(document).on('click', '.btn-edit-astar-note', function(){
+  openAstarNoteEditor({
+    name: $(this).data('name'),
+    code: $(this).data('code'),
+    note: $(this).data('note')
+  });
 });
 
 /* =========================
