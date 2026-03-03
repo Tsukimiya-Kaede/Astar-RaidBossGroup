@@ -1305,12 +1305,12 @@ function renderMemberTable(){
 					data-job="${escapeAttr(r.job)}"
 					data-level="${escapeAttr(r.level)}"
 					data-attack="${escapeAttr(r.attack)}"
-					data-note="${escapeAttr(r.note)}">修改資料</button>`
+					data-note="${escapeAttr(r.note)}">修改</button>`
 			  : (canEditAstar
 				  ? `<button class="btn btn-outline-primary btn-edit-astar-note"
 						data-name="${escapeAttr(r.name)}"
 						data-code="${escapeAttr(r.code)}"
-						data-note="${escapeAttr(r.note)}">修改備註</button>`
+						data-note="${escapeAttr(r.note)}">修改</button>`
 				  : `<span class="text-muted">—</span>`
 				)
 		  }
