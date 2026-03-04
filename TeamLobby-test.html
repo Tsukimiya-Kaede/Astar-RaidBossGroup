@@ -576,7 +576,11 @@ function applyRecruitFilter(data){
     } else {
       if (tab === 'history') return false;
     }
-
+	// ✅ 現行招募：只顯示「招募中」
+	if (tab === 'active') {
+	  const s = String(x.status || '').trim();
+	  if (s !== '招募中') return false;
+	}
     if (bossF && String(x.boss||'').trim() !== bossF) return false;
     if (stF && String(x.status||'').trim() !== stF) return false;
 
@@ -891,6 +895,7 @@ function openRecruitEditor(values){
   const isNew = !!values.__isNew;
 
   const NEED_GROUPS = [
+    { cls:'need-softdark',  items:['所有敏職','所有法職','所有力職'] },
     { cls:'need-red',       items:['英雄','聖騎士','黑騎士'] },
     { cls:'need-blue',      items:['冰雷','火毒','主教'] },
     { cls:'need-green',     items:['箭神','神射手'] },
@@ -898,6 +903,13 @@ function openRecruitEditor(values){
     { cls:'need-softdark',  items:['拳霸','槍神'] },
     { cls:'need-softwhite', items:['初心者'] },
   ];
+
+	// ✅ 群組展開對照
+	const NEED_EXPAND = {
+	  '所有敏職': ['箭神','神射手','夜使者','暗影神偷','槍神'],
+	  '所有法職': ['冰雷','火毒','主教'],
+	  '所有力職': ['英雄','聖騎士','黑騎士','拳霸']
+	};
 
   const parseNeed = (raw)=>{
     const s = safeText(raw || '').trim();
@@ -1049,15 +1061,34 @@ function openRecruitEditor(values){
 
   // 需求：change 同步 preview（避免失效）
   const needPreview = overlay.querySelector('#r_need_preview');
-  const readNeedSelected = ()=> Array.from(overlay.querySelectorAll('.need-opt:checked')).map(el=>el.value);
+  const readNeedSelected = ()=> Array.from(overlay.querySelectorAll('.need-opt:checked'))
+  .map(el=>el.value)
+  .filter(v => !NEED_EXPAND[v]); // ✅ 過濾掉「所有敏職/法職/力職」
   const syncNeedPreview = ()=>{ needPreview.value = readNeedSelected().join('、'); };
   overlay.querySelectorAll('.need-chip').forEach(lbl=>{
     const cb = lbl.querySelector('input.need-opt');
     lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
     cb.addEventListener('change', ()=>{
-      lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
-      syncNeedPreview();
-    });
+	  lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
+
+	  const key = cb.value;
+
+	  // ✅ 如果點到「所有X職」，自動展開勾選對應職業
+	  if (NEED_EXPAND[key] && cb.checked) {
+		const targets = NEED_EXPAND[key];
+		overlay.querySelectorAll('input.need-opt').forEach(opt=>{
+		  if (targets.includes(opt.value)) {
+			opt.checked = true;
+			opt.closest('.need-chip')?.setAttribute('aria-checked','true');
+		  }
+		});
+	  }
+
+	  // ✅ 如果取消勾選「所有X職」，可選：是否也取消對應職業
+	  // 目前採用「不強制取消」，避免誤取消使用者已手動勾的職業
+
+	  syncNeedPreview();
+	});
   });
   syncNeedPreview();
   overlay.querySelector('#needAll').addEventListener('click', ()=>{
