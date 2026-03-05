@@ -139,6 +139,17 @@
 
             <div class="card">
               <div class="hd">
+                <div class="t">偵錯資訊（如果匯入失敗請看這裡）</div>
+                <div class="d">會顯示 GAS 回傳的原始內容（前 2,000 字）。常見問題：回傳 HTML（登入/權限頁）、CORS 被瀏覽器阻擋、或不是 JSON 格式。</div>
+              </div>
+              <div class="bd">
+                <div class="tiny">HTTP 狀態：<span id="httpStatus">-</span></div>
+                <pre id="rawResponse" style="margin:10px 0 0 0;white-space:pre-wrap;word-break:break-word;border:1px solid rgba(36,48,65,.85);border-radius:14px;padding:10px;background:#070a0e;min-height:90px">（尚無）</pre>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd">
                 <div class="t">篩選條件</div>
                 <div class="d">點選值可開/關，或使用「全選 / 清空」。</div>
               </div>
