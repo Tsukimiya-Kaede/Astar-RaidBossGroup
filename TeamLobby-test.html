@@ -893,7 +893,8 @@ async function ensureAstarCampData(){
 /* ===== 招募 Editor（含需求 chips + ASTAR 帶入 + MTEZ 勾選帶入）===== */
 function openRecruitEditor(values){
   const isNew = !!values.__isNew;
-
+  
+  const NEED_GROUPS = [
     .need-STR{ background:#DC1414; color:#FFFFFF; }
     .need-DEX{ background:#46AA46; color:#FFFFFF; }
     .need-INT{ background:#0064F0; color:#FFFFFF; }
@@ -906,10 +907,10 @@ function openRecruitEditor(values){
     .need-BEG{ background:#E1E1E1; color:#000000; }
 
 
-  const NEED_GROUPS = [
-    { cls:'need-STR', items:['All力職'] },
-    { cls:'need-DEX', items:['All敏職'] },
-    { cls:'need-INT', items:['All法職'] },
+
+    { cls:'need-STR', items:['所有力職'] },
+    { cls:'need-DEX', items:['所有敏職'] },
+    { cls:'need-INT', items:['所有法職'] },
     { cls:'need-BEG', items:['初心者'] },
     { cls:'need-SWO', items:['英雄','聖騎','黑騎'] },
     { cls:'need-MAG', items:['冰雷','火毒','主教'] },
