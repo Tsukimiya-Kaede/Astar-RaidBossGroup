@@ -187,8 +187,8 @@
   </div>
 
 <script>
-  const RECRUIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
-  const GAS_RECRUIT_URL   = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=1351875739#gid=1351875739';
+  const RECRUIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=1351875739#gid=1351875739';
+  const GAS_RECRUIT_URL   = 'https://script.google.com/macros/s/AKfycbxfP9isxLRDuF1SVUCsC4FvvwBXO5ncGNBzLNDidG4oX4Aufj5dKGbszQROb5uGonCt/exec';
 
   const FORM2_EXPECTED_FIELDS = [
     '您是哪位',
@@ -209,9 +209,21 @@
   }
 
   function buildFetchUrl(){
-    // 如果你的 GAS 需要參數指定「表單回覆 2」，可在這裡加：
-    // return $('gasUrl').value + '?sheet=' + encodeURIComponent('表單回覆 2');
-    return $('gasUrl').value;
+    return $('gasUrl').value.trim();
+  }
+
+  function isGoogleSheetUrl(u){
+    return /^https?:\/\/docs\.google\.com\/spreadsheets\//i.test(u);
+  }
+
+  function extractSheetId(u){
+    const m = String(u).match(/spreadsheets\/d\/([^/]+)/);
+    return m ? m[1] : null;
+  }
+
+  function extractGid(u){
+    const m = String(u).match(/[?&#]gid=(\d+)/);
+    return m ? m[1] : null;
   }
 
   function parseGASPayload(payload){
