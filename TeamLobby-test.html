@@ -894,16 +894,28 @@ async function ensureAstarCampData(){
 function openRecruitEditor(values){
   const isNew = !!values.__isNew;
 
+    .need-STR{ background:#DC1414; color:#FFFFFF; }
+    .need-DEX{ background:#46AA46; color:#FFFFFF; }
+    .need-INT{ background:#0064F0; color:#FFFFFF; }
+                                                  
+    .need-SWO{ background:#DC1414; color:#FFFFFF; }
+    .need-ARC{ background:#46AA46; color:#FFFFFF; }
+    .need-MAG{ background:#0064F0; color:#FFFFFF; }
+    .need-THI{ background:#A03CC8; color:#FFFFFF; }
+    .need-PIR{ background:#E16E00; color:#FFFFFF; }
+    .need-BEG{ background:#E1E1E1; color:#000000; }
+
+
   const NEED_GROUPS = [
-    { cls:'need-green', items:['所有敏職'] },
-    { cls:'need-blue',  items:['所有法職'] },
-    { cls:'need-red',   items:['所有力職'] },
-    { cls:'need-red',       items:['英雄','聖騎士','黑騎士'] },
-    { cls:'need-blue',      items:['冰雷','火毒','主教'] },
-    { cls:'need-green',     items:['箭神','神射手'] },
-    { cls:'need-purple',    items:['夜使者','暗影神偷'] },
-    { cls:'need-softdark',  items:['拳霸','槍神'] },
-    { cls:'need-softwhite', items:['初心者'] },
+    { cls:'need-STR', items:['All力職'] },
+    { cls:'need-DEX', items:['All敏職'] },
+    { cls:'need-INT', items:['All法職'] },
+    { cls:'need-BEG', items:['初心者'] },
+    { cls:'need-SWO', items:['英雄','聖騎','黑騎'] },
+    { cls:'need-MAG', items:['冰雷','火毒','主教'] },
+    { cls:'need-ARC', items:['箭神','神射手'] },
+    { cls:'need-THI', items:['夜使者','暗影神偷'] },
+    { cls:'need-PIR', items:['拳霸','槍神'] },
   ];
 
 	// ✅ 群組展開對照
