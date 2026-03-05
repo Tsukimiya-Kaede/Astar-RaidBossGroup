@@ -230,6 +230,17 @@
 	[data-bs-theme="dark"] #RecruitPage .bounty-paper .paper-divider{
 	  background: rgba(0,0,0,.18) !important;
 	}
+	
+	.need-STR{ background:#DC1414; color:#FFFFFF; }
+    .need-DEX{ background:#46AA46; color:#FFFFFF; }
+    .need-INT{ background:#0064F0; color:#FFFFFF; }
+
+    .need-SWO{ background:#DC1414; color:#FFFFFF; }
+    .need-ARC{ background:#46AA46; color:#FFFFFF; }
+    .need-MAG{ background:#0064F0; color:#FFFFFF; }
+    .need-THI{ background:#A03CC8; color:#FFFFFF; }
+    .need-PIR{ background:#E16E00; color:#FFFFFF; }
+    .need-BEG{ background:#E1E1E1; color:#000000; }
   </style>
 </head>
 
@@ -562,33 +573,45 @@ function parseRecruitTime(t){
 function applyRecruitFilter(data){
   const tab   = ($('#filterTab').val() || 'active').trim();
   const bossF = $('#filterBoss').val().trim();
-  const stF   = $('#filterStatus').val().trim();
+  const stF   = $('#filterStatus').val().trim(); // 重要：使用者手選狀態
   const kw    = $('#recruitSearchInput').val().trim().toLowerCase();
 
   const now = new Date();
 
   return (data||[]).filter(x=>{
+    const s  = String(x.status || '').trim();
     const dt = parseRecruitTime(x.time);
-    if (dt){
-      const isPast = dt.getTime() < now.getTime();
-      if (tab === 'history' && !isPast) return false;
-      if (tab === 'active'  &&  isPast) return false;
-    } else {
-      if (tab === 'history') return false;
-    }
-	// ✅ 現行招募：只顯示「招募中」
-	if (tab === 'active') {
-	  const s = String(x.status || '').trim();
-	  if (s !== '招募中') return false;
-	}
-    if (bossF && String(x.boss||'').trim() !== bossF) return false;
-    if (stF && String(x.status||'').trim() !== stF) return false;
 
+    // ===== 分頁判斷 =====
+    if (tab === 'active'){
+      // 現行：時間未到（或沒有時間就當現行）
+      if (dt && dt.getTime() < now.getTime()) return false;
+
+      // ✅ 原本你這裡硬擋「只顯示招募中」會害狀態篩選失效
+      // 改成：只有在「沒有選狀態篩選」時，才預設只顯示招募中
+      if (!stF && s !== '招募中') return false;
+    }
+
+    if (tab === 'history'){
+      // 歷史：時間已過 => 一定算歷史
+      // ✅ 或者狀態是 已滿/關閉 => 也算歷史（就算時間未到）
+      const isPast = dt ? (dt.getTime() < now.getTime()) : false;
+      const isClosedLike = (s === '已滿' || s === '關閉');
+
+      if (!isPast && !isClosedLike) return false;
+    }
+
+    // ===== Boss / 狀態篩選 =====
+    if (bossF && String(x.boss||'').trim() !== bossF) return false;
+    if (stF && s !== stF) return false;
+
+    // ===== 關鍵字搜尋 =====
     if (kw){
       const blob = [x.boss,x.time,x.status,x.need,x.members,x.guild,x.contact,x.note]
-        .map(s=>String(s||'').toLowerCase()).join(' ');
+        .map(v=>String(v||'').toLowerCase()).join(' ');
       if (!blob.includes(kw)) return false;
     }
+
     return true;
   });
 }
@@ -895,22 +918,22 @@ function openRecruitEditor(values){
   const isNew = !!values.__isNew;
 
   const NEED_GROUPS = [
-    { cls:'need-green', items:['所有敏職'] },
-    { cls:'need-blue',  items:['所有法職'] },
-    { cls:'need-red',   items:['所有力職'] },
-    { cls:'need-red',       items:['英雄','聖騎士','黑騎士'] },
-    { cls:'need-blue',      items:['冰雷','火毒','主教'] },
-    { cls:'need-green',     items:['箭神','神射手'] },
-    { cls:'need-purple',    items:['夜使者','暗影神偷'] },
-    { cls:'need-softdark',  items:['拳霸','槍神'] },
-    { cls:'need-softwhite', items:['初心者'] },
+    { cls:'need-STR', items:['All力職'] },
+    { cls:'need-DEX', items:['All敏職'] },
+    { cls:'need-INT', items:['All法職'] },
+    { cls:'need-BEG', items:['初心者'] },
+    { cls:'need-SWO', items:['英雄','聖騎','黑騎'] },
+    { cls:'need-MAG', items:['冰雷','火毒','主教'] },
+    { cls:'need-ARC', items:['箭神','神射手'] },
+    { cls:'need-THI', items:['夜使者','暗影神偷'] },
+    { cls:'need-PIR', items:['拳霸','槍神'] }
   ];
 
 	// ✅ 群組展開對照
 	const NEED_EXPAND = {
-	  '所有敏職': ['箭神','神射手','夜使者','暗影神偷','槍神'],
-	  '所有法職': ['冰雷','火毒','主教'],
-	  '所有力職': ['英雄','聖騎士','黑騎士','拳霸']
+	  'All敏職': ['箭神','神射手','夜使者','暗影神偷','槍神'],
+	  'All法職': ['冰雷','火毒','主教'],
+	  'All力職': ['英雄','聖騎','黑騎','拳霸']
 	};
 
   const parseNeed = (raw)=>{
