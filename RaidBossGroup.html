@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>公會 RaidBoss｜表單回覆 2 拖拉分析</title>
+  <style>
+    :root{--bg:#0b0f14;--card:#111827;--muted:#94a3b8;--text:#e5e7eb;--border:#243041;--primary:#60a5fa;--primary2:#93c5fd;--danger:#fb7185;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC","PingFang TC","Microsoft JhengHei",Arial;
+      background:linear-gradient(180deg,#0b0f14,#070a0e);color:var(--text)}
+    a{color:var(--primary2)}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px}
+    h1{font-size:22px;margin:0 0 6px 0}
+    .sub{color:var(--muted);font-size:13px;margin:0 0 16px 0}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:14px 0}
+    .btn{border:1px solid var(--border);background:#0f172a;color:var(--text);padding:10px 12px;border-radius:14px;cursor:pointer;font-weight:600}
+    .btn:hover{border-color:#334155}
+    .btn.primary{background:rgba(96,165,250,.18);border-color:rgba(96,165,250,.35)}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#0b1220;padding:8px 10px;border-radius:999px;color:var(--text);font-size:13px}
+    .pill input{transform:scale(1.05)}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:14px}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(17,24,39,.78);border:1px solid rgba(36,48,65,.9);border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+    .card .hd{padding:14px 14px 10px 14px;border-bottom:1px solid rgba(36,48,65,.75)}
+    .card .hd .t{font-weight:800}
+    .card .hd .d{color:var(--muted);font-size:12px;margin-top:4px}
+    .card .bd{padding:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .input{width:100%;border:1px solid var(--border);background:#0b1220;color:var(--text);padding:10px 12px;border-radius:14px;outline:none}
+    .input:focus{border-color:rgba(96,165,250,.55)}
+    .field{border:1px solid rgba(36,48,65,.9);background:#0b1220;border-radius:16px;padding:10px 10px;cursor:grab;user-select:none}
+    .field:active{cursor:grabbing}
+    .field .name{font-weight:700;font-size:13px}
+    .field .hint{margin-top:4px;color:var(--muted);font-size:12px}
+    .zones{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width: 980px){.zones{grid-template-columns:1fr}}
+    .zone{min-height:120px;border:1px dashed rgba(148,163,184,.35);border-radius:18px;padding:12px;background:rgba(11,18,32,.55)}
+    .zone.over{border-color:rgba(96,165,250,.7);box-shadow:0 0 0 2px rgba(96,165,250,.25) inset}
+    .zone .zt{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .zone .zt .name{font-weight:800}
+    .badge{font-size:12px;color:var(--muted);border:1px solid rgba(148,163,184,.25);padding:2px 8px;border-radius:999px}
+    .chip{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(36,48,65,.85);background:#0b1220;border-radius:14px;padding:8px 10px;margin:8px 0}
+    .chip .x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:14px}
+    .chip .x:hover{color:var(--text)}
+    .trash{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(251,113,133,.4);background:rgba(251,113,133,.08);padding:10px 12px;border-radius:18px}
+    .trash.over{box-shadow:0 0 0 2px rgba(251,113,133,.25) inset}
+    .filters{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    @media (max-width: 980px){.filters{grid-template-columns:1fr}}
+    .fblock{border:1px solid rgba(36,48,65,.85);background:#0b1220;border-radius:18px;padding:12px}
+    .fblock .ft{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .fblock .ft .nm{font-weight:800}
+    .fvals{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+    .fbtn{border:1px solid rgba(36,48,65,.9);background:#0b1220;color:var(--text);padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px}
+    .fbtn.on{background:rgba(96,165,250,.18);border-color:rgba(96,165,250,.35)}
+    .tablewrap{overflow:auto;border:1px solid rgba(36,48,65,.9);border-radius:18px;background:#0b1220}
+    table{border-collapse:collapse;width:100%;font-size:13px}
+    th,td{border-bottom:1px solid rgba(36,48,65,.75);padding:10px 10px;text-align:left;white-space:nowrap}
+    th{position:sticky;top:0;background:#0b1220;z-index:1}
+    tr:last-child td{border-bottom:0}
+    .muted{color:var(--muted)}
+    .tiny{font-size:12px;color:var(--muted)}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi .box{border:1px solid rgba(36,48,65,.85);background:#0b1220;border-radius:18px;padding:10px 12px}
+    .kpi .box .n{font-weight:900;font-size:16px}
+    .kpi .box .l{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>公會 RaidBoss｜表單回覆 2 拖拉分析（純 HTML 版）</h1>
+    <p class="sub">資料來源：Google 試算表（表單回覆 2）→ 由 GAS Web App 轉成 JSON → 本頁拖拉欄位做交叉表、篩選、匯出 CSV</p>
+
+    <div class="card">
+      <div class="hd">
+        <div class="t">資料來源設定</div>
+        <div class="d">預設用你提供的 GAS_RECRUIT_URL 拉資料。若 GAS 需要參數（例如 sheet / gid），可在下方調整。</div>
+      </div>
+      <div class="bd">
+        <div class="row" style="justify-content:space-between">
+          <div style="flex:1;min-width:280px">
+            <div class="tiny">Google Sheet（參考用）</div>
+            <div class="input" style="opacity:.85">RECRUIT_SHEET_URL: <span id="sheetUrl"></span></div>
+          </div>
+          <div style="flex:1;min-width:280px">
+            <div class="tiny">GAS Web App（實際抓資料）</div>
+            <input id="gasUrl" class="input" />
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="row">
+            <button class="btn primary" id="btnLoad">載入資料</button>
+            <button class="btn" id="btnExport">匯出目前交叉表 CSV</button>
+            <span class="pill"><input type="checkbox" id="distinct" /> <label for="distinct">以「您是哪位」去重計數</label></span>
+          </div>
+          <div class="kpi">
+            <div class="box"><div class="n" id="kpiTotal">0</div><div class="l">總筆數</div></div>
+            <div class="box"><div class="n" id="kpiFiltered">0</div><div class="l">篩選後筆數</div></div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="hd">
+              <div class="t">可用欄位（拖拉）</div>
+              <div class="d">把欄位拖到右側：列 / 欄 / 篩選。也可拖到「移除區」把已放置的欄位移掉。</div>
+            </div>
+            <div class="bd">
+              <input id="search" class="input" placeholder="搜尋欄位…" />
+              <div class="tiny" style="margin-top:10px">表單回覆 2 常見欄位：</div>
+              <div class="row" id="expected" style="margin:8px 0 12px 0"></div>
+              <div id="fieldList" style="display:grid;gap:10px"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="zones">
+              <div class="zone" id="zoneRows" data-zone="rows">
+                <div class="zt"><div class="name">列（Rows）</div><div class="badge" id="countRows">0</div></div>
+                <div class="tiny">例如：現在想參加的RaidBoss團、星期、時段</div>
+                <div id="rows"></div>
+              </div>
+              <div class="zone" id="zoneCols" data-zone="cols">
+                <div class="zt"><div class="name">欄（Columns）</div><div class="badge" id="countCols">0</div></div>
+                <div class="tiny">例如：是否需要公會幹部協助安排固團?</div>
+                <div id="cols"></div>
+              </div>
+              <div class="zone" id="zoneFilters" data-zone="filters">
+                <div class="zt"><div class="name">篩選（Filters）</div><div class="badge" id="countFilters">0</div></div>
+                <div class="tiny">拖進來後可勾選要保留的值</div>
+                <div id="filters"></div>
+              </div>
+            </div>
+
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <div class="muted" id="status">尚未載入資料</div>
+              <div class="trash" id="trash" data-zone="trash">🗑️ 拖到這裡移除欄位</div>
+            </div>
+
+            <div class="card">
+              <div class="hd">
+                <div class="t">篩選條件</div>
+                <div class="d">點選值可開/關，或使用「全選 / 清空」。</div>
+              </div>
+              <div class="bd">
+                <div id="filterPanel" class="filters"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd">
+                <div class="t">交叉表（Pivot）</div>
+                <div class="d">值：Count 或 Distinct Count</div>
+              </div>
+              <div class="bd">
+                <div class="tablewrap"><table id="pivotTable"></table></div>
+                <div class="tiny" style="margin-top:10px">小提醒：若 K~W 時段在試算表中是多欄（每個時段一欄），這裡會把它們視為多個欄位，你可以直接拖拉那些欄位做交叉分析。</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><div class="t">常用拖拉範例</div></div>
+              <div class="bd">
+                <div class="tiny">1) 看每個 Boss 團人數：列 →「現在想參加的RaidBoss團」</div>
+                <div class="tiny">2) 看需要幹部協助：列 → Boss，欄 →「是否需要公會幹部協助安排固團?」</div>
+                <div class="tiny">3) 找同伴偏好：篩選 →「是否有想跟哪位朋友/夥伴一起攻略Boss」再勾選</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tiny" style="margin-top:16px">部署：把這個檔案命名為 <b>index.html</b> 丟到 GitHub Repo，開啟 GitHub Pages 就能用（或放任何靜態主機）。</div>
+  </div>
+
+<script>
+  const RECRUIT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=1351875739#gid=1351875739';
+  const GAS_RECRUIT_URL   = 'https://script.google.com/macros/s/AKfycbxfP9isxLRDuF1SVUCsC4FvvwBXO5ncGNBzLNDidG4oX4Aufj5dKGbszQROb5uGonCt/exec';
+
+  const FORM2_EXPECTED_FIELDS = [
+    '您是哪位',
+    '現在想參加的RaidBoss團',
+    '是否需要公會幹部協助安排固團?',
+    '可固定參加RaidBoss團的時間段',
+    '是否有想跟哪位朋友/夥伴一起攻略Boss',
+  ];
+
+  const state = { data: [], fields: [], rows: [], cols: [], filters: [], filterSelected: {} };
+  const $ = (id) => document.getElementById(id);
+
+  $('sheetUrl').textContent = RECRUIT_SHEET_URL;
+  $('gasUrl').value = GAS_RECRUIT_URL;
+
+  function norm(s){
+    return String(s ?? '').trim().replace(/？/g,'?').replace(/\s+/g,' ');
+  }
+
+  function buildFetchUrl(){
+    // 如果你的 GAS 需要參數指定「表單回覆 2」，可在這裡加：
+    // return $('gasUrl').value + '?sheet=' + encodeURIComponent('表單回覆 2');
+    return $('gasUrl').value;
+  }
+
+  function parseGASPayload(payload){
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.data)) return payload.data;
+    if (payload && Array.isArray(payload.rows)) return payload.rows;
+    if (payload && Array.isArray(payload.result)) return payload.result;
+    return [];
+  }
+
+  function uniq(arr){ return Array.from(new Set(arr)); }
+  function setStatus(msg){ $('status').textContent = msg; }
+  function setKPIs(){ $('kpiTotal').textContent = state.data.length; }
+
+  function renderExpectedBadges(){
+    const box = $('expected');
+    box.innerHTML = '';
+    FORM2_EXPECTED_FIELDS.forEach(f => {
+      const ok = state.fields.some(x => norm(x) === norm(f));
+      const el = document.createElement('span');
+      el.className = 'badge';
+      el.style.borderColor = ok ? 'rgba(96,165,250,.35)' : 'rgba(148,163,184,.25)';
+      el.style.color = ok ? 'var(--primary2)' : 'var(--muted)';
+      el.textContent = f;
+      box.appendChild(el);
+    });
+  }
+
+  function hintForField(f){
+    const nf = norm(f);
+    if (nf.includes('時間') || nf.includes('K') || nf.includes('L') || nf.includes('M') || nf.includes('N') || nf.includes('O') || nf.includes('P') || nf.includes('Q') || nf.includes('R') || nf.includes('S') || nf.includes('T') || nf.includes('U') || nf.includes('V') || nf.includes('W')) {
+      return '可用時段欄位：常用於篩選/列/欄';
+    }
+    return '拖到右側開始分析';
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s){ return escapeHtml(s).replace(/`/g,'&#96;'); }
+
+  function renderFieldList(){
+    const q = $('search').value.trim().toLowerCase();
+    const used = new Set([...state.rows, ...state.cols, ...state.filters]);
+    const list = state.fields.filter(f => !used.has(f)).filter(f => !q || f.toLowerCase().includes(q));
+
+    const root = $('fieldList');
+    root.innerHTML = '';
+    if (!list.length){
+      const m = document.createElement('div');
+      m.className = 'muted';
+      m.textContent = '沒有可用欄位（或已全部被使用）';
+      root.appendChild(m);
+      return;
+    }
+
+    list.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'field';
+      el.draggable = true;
+      el.dataset.field = f;
+      el.innerHTML = '<div class="name">' + escapeHtml(f) + '</div><div class="hint">' + escapeHtml(hintForField(f)) + '</div>';
+      el.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', f);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      root.appendChild(el);
+    });
+  }
+
+  function chipHtml(f, zone){
+    return '<div class="chip"><div style="min-width:0"><div style="font-weight:800;font-size:13px;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(f) + '</div></div><button class="x" data-remove="' + escapeAttr(f) + '" data-zone="' + zone + '" title="移除">✕</button></div>';
+  }
+
+  function renderZoneChips(){
+    $('rows').innerHTML = state.rows.map(f => chipHtml(f,'rows')).join('');
+    $('cols').innerHTML = state.cols.map(f => chipHtml(f,'cols')).join('');
+    $('filters').innerHTML = state.filters.map(f => chipHtml(f,'filters')).join('');
+
+    $('countRows').textContent = state.rows.length;
+    $('countCols').textContent = state.cols.length;
+    $('countFilters').textContent = state.filters.length;
+
+    document.querySelectorAll('[data-remove]')?.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const field = btn.dataset.remove;
+        const zone = btn.dataset.zone;
+        removeFromZone(zone, field);
+      });
+    });
+  }
+
+  function removeFromZone(zone, field){
+    state[zone] = state[zone].filter(x => x !== field);
+    if (zone === 'filters') delete state.filterSelected[field];
+    sync();
+  }
+
+  function addToZone(zone, field){
+    ['rows','cols','filters'].forEach(z => { if (z !== zone) state[z] = state[z].filter(x => x !== field); });
+    if (!state[zone].includes(field)) state[zone].push(field);
+    if (zone === 'filters' && !state.filterSelected[field]) state.filterSelected[field] = new Set();
+    sync();
+  }
+
+  function setupDropZones(){
+    const zones = [ { id:'zoneRows', zone:'rows' }, { id:'zoneCols', zone:'cols' }, { id:'zoneFilters', zone:'filters' } ];
+    zones.forEach(z => {
+      const el = $(z.id);
+      el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('over'); });
+      el.addEventListener('dragleave', () => el.classList.remove('over'));
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.classList.remove('over');
+        const field = e.dataTransfer.getData('text/plain');
+        if (field) addToZone(z.zone, field);
+      });
+    });
+
+    const trash = $('trash');
+    trash.addEventListener('dragover', (e) => { e.preventDefault(); trash.classList.add('over'); });
+    trash.addEventListener('dragleave', () => trash.classList.remove('over'));
+    trash.addEventListener('drop', (e) => {
+      e.preventDefault();
+      trash.classList.remove('over');
+      const field = e.dataTransfer.getData('text/plain');
+      if (!field) return;
+      ['rows','cols','filters'].forEach(z => { if (state[z].includes(field)) removeFromZone(z, field); });
+      sync();
+    });
+  }
+
+  function valuesOfField(field){
+    return uniq(state.data.map(r => String(r[field] ?? '')).filter(v => v !== '')).sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  }
+
+  function renderFilterPanel(){
+    const root = $('filterPanel');
+    root.innerHTML = '';
+
+    if (!state.filters.length){
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.textContent = '（沒有篩選欄位）';
+      root.appendChild(d);
+      return;
+    }
+
+    state.filters.forEach(field => {
+      const all = valuesOfField(field);
+      const selected = state.filterSelected[field] || new Set();
+
+      const box = document.createElement('div');
+      box.className = 'fblock';
+
+      const head = document.createElement('div');
+      head.className = 'ft';
+      head.innerHTML = '<div class="nm">' + escapeHtml(field) + '</div>' +
+        '<div class="row" style="gap:8px">' +
+          '<button class="btn" style="padding:6px 10px" data-act="all" data-field="' + escapeAttr(field) + '">全選</button>' +
+          '<button class="btn" style="padding:6px 10px" data-act="none" data-field="' + escapeAttr(field) + '">清空</button>' +
+        '</div>';
+      box.appendChild(head);
+
+      const vals = document.createElement('div');
+      vals.className = 'fvals';
+
+      if (!all.length){
+        const m = document.createElement('div');
+        m.className = 'muted';
+        m.textContent = '（此欄位沒有可選值）';
+        vals.appendChild(m);
+      } else {
+        all.forEach(v => {
+          const btn = document.createElement('button');
+          btn.className = 'fbtn' + (selected.has(v) ? ' on' : '');
+          btn.textContent = v || '(空白)';
+          btn.title = '點擊切換';
+          btn.addEventListener('click', () => {
+            const set = state.filterSelected[field] || new Set();
+            if (set.has(v)) set.delete(v); else set.add(v);
+            state.filterSelected[field] = set;
+            sync();
+          });
+          vals.appendChild(btn);
+        });
+      }
+
+      box.appendChild(vals);
+      root.appendChild(box);
+    });
+
+    root.querySelectorAll('[data-act]')?.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const act = btn.dataset.act;
+        const field = btn.dataset.field;
+        const all = valuesOfField(field);
+        if (act === 'all') state.filterSelected[field] = new Set(all);
+        if (act === 'none') state.filterSelected[field] = new Set();
+        sync();
+      });
+    });
+  }
+
+  function applyFilters(rows){
+    if (!state.filters.length) return rows;
+    return rows.filter(r => state.filters.every(f => {
+      const sel = state.filterSelected[f];
+      if (!sel || sel.size === 0) return true;
+      return sel.has(String(r[f] ?? ''));
+    }));
+  }
+
+  function buildPivot(){
+    const filtered = applyFilters(state.data);
+    const rowsF = state.rows;
+    const colsF = state.cols;
+    const distinct = $('distinct').checked;
+
+    const rowKey = (r) => rowsF.length ? rowsF.map(k => String(r[k] ?? '')).join(' ⟂ ') : '(全部)';
+    const colKey = (r) => colsF.length ? colsF.map(k => String(r[k] ?? '')).join(' ⟂ ') : '(全部)';
+
+    const rowSet = new Set();
+    const colSet = new Set();
+    const mat = new Map();
+    const dmat = new Map();
+
+    for (const r of filtered){
+      const rk = rowKey(r);
+      const ck = colKey(r);
+      rowSet.add(rk);
+      colSet.add(ck);
+      const k = rk + '|||' + ck;
+      if (!distinct){
+        mat.set(k, (mat.get(k) || 0) + 1);
+      } else {
+        const uidField = '您是哪位';
+        const uid = r[uidField] ? (uidField + ':' + String(r[uidField])) : JSON.stringify(r);
+        if (!dmat.has(k)) dmat.set(k, new Set());
+        dmat.get(k).add(uid);
+      }
+    }
+
+    const rowKeys = Array.from(rowSet);
+    const colKeys = Array.from(colSet);
+
+    const table = rowKeys.map(rk => {
+      const obj = { __row: rk };
+      for (const ck of colKeys){
+        const k = rk + '|||' + ck;
+        obj[ck] = distinct ? (dmat.get(k)?.size || 0) : (mat.get(k) || 0);
+      }
+      return obj;
+    });
+
+    return { filteredCount: filtered.length, rowKeys, colKeys, table };
+  }
+
+  function renderPivot(){
+    const pivot = buildPivot();
+    $('kpiFiltered').textContent = pivot.filteredCount;
+
+    const table = $('pivotTable');
+    table.innerHTML = '';
+
+    const thead = document.createElement('thead');
+    const trh = document.createElement('tr');
+    const th0 = document.createElement('th');
+    th0.textContent = state.rows.length ? state.rows.join(' / ') : '(全部)';
+    trh.appendChild(th0);
+
+    pivot.colKeys.forEach(ck => {
+      const th = document.createElement('th');
+      th.textContent = state.cols.length ? ck : '(全部)';
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    pivot.table.forEach(r => {
+      const tr = document.createElement('tr');
+      const td0 = document.createElement('td');
+      td0.textContent = r.__row;
+      td0.style.fontWeight = '800';
+      tr.appendChild(td0);
+      pivot.colKeys.forEach(ck => {
+        const td = document.createElement('td');
+        td.textContent = r[ck];
+        td.style.fontVariantNumeric = 'tabular-nums';
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    window.__lastPivot = pivot;
+  }
+
+  function toCsv(rows){
+    if (!rows || !rows.length) return '';
+    const cols = Array.from(rows.reduce((set,r)=>{ Object.keys(r).forEach(k=>set.add(k)); return set; }, new Set()));
+    const esc = (v) => {
+      const s = (v === null || v === undefined) ? '' : String(v);
+      const t = s.replace(/\r?\n/g,' ');
+      if (/[\\",]/.test(t)) return '"' + t.replace(/\"/g,'""') + '"';
+      return t;
+    };
+    return [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+  }
+
+  function downloadText(filename, text){
+    const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function autoDefaults(){
+    const f = state.fields;
+    const boss = f.find(x => norm(x) === norm('現在想參加的RaidBoss團'));
+    const help = f.find(x => norm(x) === norm('是否需要公會幹部協助安排固團?'));
+    const friend = f.find(x => norm(x) === norm('是否有想跟哪位朋友/夥伴一起攻略Boss'));
+    state.rows = boss ? [boss] : [];
+    state.cols = help ? [help] : [];
+    state.filters = friend ? [friend] : [];
+    if (friend && !state.filterSelected[friend]) state.filterSelected[friend] = new Set();
+  }
+
+  function sync(){
+    renderExpectedBadges();
+    renderZoneChips();
+    renderFieldList();
+    renderFilterPanel();
+    renderPivot();
+  }
+
+  async function loadData(){
+    try{
+      setStatus('載入中…');
+      const url = buildFetchUrl();
+      const res = await fetch(url, { method:'GET' });
+      const payload = await res.json();
+      const rows = parseGASPayload(payload);
+
+      const normalized = rows.map(r => {
+        const out = {};
+        for (const k in (r||{})) out[norm(k)] = r[k];
+        return out;
+      });
+
+      state.data = normalized;
+      state.fields = uniq(normalized.flatMap(r => Object.keys(r||{})));
+
+      autoDefaults();
+      setKPIs();
+      setStatus('已載入 ' + state.data.length + ' 筆資料');
+      sync();
+    } catch (err){
+      console.error(err);
+      setStatus('載入失敗：請確認 GAS 回傳 JSON，且允許跨網域存取（CORS）。');
+    }
+  }
+
+  $('btnLoad').addEventListener('click', loadData);
+  $('btnExport').addEventListener('click', () => {
+    const pivot = window.__lastPivot;
+    if (!pivot || !pivot.table || pivot.table.length === 0){
+      alert('目前沒有交叉表可匯出');
+      return;
+    }
+    downloadText('pivot.csv', toCsv(pivot.table));
+  });
+  $('search').addEventListener('input', renderFieldList);
+  $('distinct').addEventListener('change', renderPivot);
+
+  setupDropZones();
+  renderExpectedBadges();
+  renderFieldList();
+  renderZoneChips();
+  renderFilterPanel();
+  renderPivot();
+</script>
+</body>
+</html>
