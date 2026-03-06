@@ -365,8 +365,8 @@
     <table class="table table-striped table-hover align-middle reset-content">
       <thead class="table-secondary">
         <tr>
-          <th style="width: 20%;">分類</th>
-          <th style="width: 20%;">名稱</th>
+          <th style="width: 15%;">分類</th>
+          <th style="width: 25%;">名稱</th>
           <th style="width: 25%;">關鍵字</th>
           <th style="width: 35%;">圖片 (點擊開啟大圖)</th>
         </tr>
@@ -1157,7 +1157,7 @@ function renderTable_OneP(data, searchWord = "")
         <td>
         ${r.link ? `
         <a href="https://drive.google.com/file/d/${r.link}/" target="_blank">
-        <img src="https://lh3.googleusercontent.com/d/${r.link}=h800?authuser=0" alt=${r.name} title=${r.name} height="200px;">
+        <img src="https://lh3.googleusercontent.com/d/${r.link}=h800?authuser=0" alt=${r.name} title=${r.name} width="350px;">
         </a>
         ` : '無圖片'}
         </td>
@@ -1177,7 +1177,7 @@ function renderTable_OneP(data, searchWord = "")
             <td>
             ${p.link ? `
             <a href="https://drive.google.com/file/d/${p.link}/" target="_blank">
-            <img src="https://lh3.googleusercontent.com/d/${p.link}=h800?authuser=0" alt=${p.name} title=${p.name} height="200px;">
+            <img src="https://lh3.googleusercontent.com/d/${p.link}=h800?authuser=0" alt=${p.name} title=${p.name} width="350px;">
             </a>
             ` : '無圖片'}
             </td>
