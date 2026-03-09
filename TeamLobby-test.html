@@ -354,6 +354,31 @@
 		min-height: 95px;
 	  }
 	}
+	
+	@media (max-width: 768px){
+	  /* 手機板招募卡只顯示 Boss + 時間 */
+	  #RecruitPage .paper-mobile-hide{
+		display: none !important;
+	  }
+
+	  #RecruitPage .bounty-paper{
+		padding: 12px 12px 10px;
+	  }
+
+	  #RecruitPage .paper-title{
+		font-size: .95rem;
+		align-items: center;
+	  }
+
+	  #RecruitPage .paper-time{
+		margin-top: 6px !important;
+		font-size: .88rem;
+	  }
+
+	  #RecruitPage .paper-meta{
+		font-size: .85rem;
+	  }
+	}	
   </style>
 </head>
 
@@ -888,36 +913,36 @@ function renderRecruitWall(data){
         <span class="tape right"></span>
 
         <div class="paper-title">
-          <span class="badge badge-boss ${bCls}">${safeText(r.boss)||'未填 Boss'}</span>
-          <span class="badge badge-status ${sCls}">${safeText(r.status)||'—'}</span>
-        </div>
+		  <span class="badge badge-boss ${bCls}">${safeText(r.boss)||'未填 Boss'}</span>
+		  <span class="badge badge-status ${sCls} paper-mobile-hide">${safeText(r.status)||'—'}</span>
+		</div>
 
-        <div class="paper-meta mt-1">
-          <span class="fw-bold">出團時間：</span>
-          <span class="font-monospace">${safeText(r.time)||'—'}</span>
-        </div>
+			<div class="paper-meta mt-1 paper-time">
+			  <span class="fw-bold">出團時間：</span>
+			  <span class="font-monospace">${safeText(r.time)||'—'}</span>
+			</div>
 
-        <div class="paper-divider"></div>
+			<div class="paper-divider paper-mobile-hide"></div>
 
-        <div class="paper-row"><div class="paper-k">需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
+			<div class="paper-row paper-mobile-hide"><div class="paper-k">需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
 
-        <div class="paper-row">
-          <div class="paper-k">成員</div>
-          <div class="paper-v">
-            ${
-              membersText
-                ? `<button type="button" class="btn btn-outline-primary btn-sm btn-show-members"
-                           data-members="${escapeAttr(membersText)}">查看（${membersCount}）</button>`
-                : `<span class="text-muted">（尚未填）</span>`
-            }
-          </div>
-        </div>
+			<div class="paper-row paper-mobile-hide">
+			  <div class="paper-k">成員</div>
+			  <div class="paper-v">
+				${
+				  membersText
+					? `<button type="button" class="btn btn-outline-primary btn-sm btn-show-members"
+							   data-members="${escapeAttr(membersText)}">查看（${membersCount}）</button>`
+					: `<span class="text-muted">（尚未填）</span>`
+				}
+			  </div>
+			</div>
 
-        <div class="paper-row"><div class="paper-k">公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
-        <div class="paper-row"><div class="paper-k">聯絡</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
-        <div class="paper-row"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
+			<div class="paper-row paper-mobile-hide"><div class="paper-k">公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
+			<div class="paper-row paper-mobile-hide"><div class="paper-k">聯絡</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
+			<div class="paper-row paper-mobile-hide"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
 
-        <div class="paper-actions">
+			<div class="paper-actions paper-mobile-hide">
           <button class="btn btn-outline-secondary btn-sm btn-edit-recruit"
             data-row="${r.rowIndex||0}"
             data-boss="${escapeAttr(r.boss)}"
