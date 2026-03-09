@@ -589,7 +589,7 @@ function applyRecruitFilter(data){
 
       // ✅ 原本你這裡硬擋「只顯示招募中」會害狀態篩選失效
       // 改成：只有在「沒有選狀態篩選」時，才預設只顯示招募中
-      if (!stF && s !== '招募中') return false;
+      if (s !== '招募中') return false;
     }
 
     if (tab === 'history'){
@@ -636,7 +636,7 @@ function loadRecruit(){
         recruitData = rows.map((r,i)=>({
           boss:    safeText(r[0]).trim(),
           time:    safeText(r[1]).trim(),
-          status:  safeText(r[2]).trim() || '招募中',
+          status:  safeText(r[2]).trim(),
           need:    safeText(r[3]).trim(),
           members: safeText(r[4]).trim(),
           guild:   safeText(r[5]).trim(),
