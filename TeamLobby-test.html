@@ -244,9 +244,7 @@
 	
 	/* ===== 招募行事曆 ===== */
 	.recruit-calendar-card{
-	  position: sticky;
-	  top: 68px;
-	  z-index: 10;
+	  border-radius: 16px;
 	}
 
 	.calendar-grid{
@@ -265,7 +263,7 @@
 	}
 
 	.calendar-cell{
-	  min-height: 120px;
+	  min-height: 140px;
 	  border: 1px solid rgba(0,0,0,.08);
 	  border-radius: 12px;
 	  padding: 6px;
@@ -385,64 +383,56 @@
       </div>
     </div>
 
-    <div class="row g-3 align-items-start">
-  <!-- 左：招募牆 -->
-  <div class="col-12 col-xl-8">
-    <div class="bounty-wall">
-      <div class="wall-header">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-          <button id="btnAddRecruit" class="btn btn-warning btn-sm fw-bold">新增招募</button>
-          <button id="btnReloadRecruit" class="btn btn-outline-secondary btn-sm">重新整理</button>
-        </div>
+  <div class="bounty-wall mb-3">
+  <div class="wall-header">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button id="btnAddRecruit" class="btn btn-warning btn-sm fw-bold">新增招募</button>
+      <button id="btnReloadRecruit" class="btn btn-outline-secondary btn-sm">重新整理</button>
+    </div>
 
-        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-          <select id="filterTab" class="form-select form-select-sm w-auto">
-            <option value="active">現行招募</option>
-            <option value="history">歷史紀錄</option>
-          </select>
+    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+      <select id="filterTab" class="form-select form-select-sm w-auto">
+        <option value="active">現行招募</option>
+        <option value="history">歷史紀錄</option>
+      </select>
 
-          <select id="filterBoss" class="form-select form-select-sm w-auto">
-            <option value="">全部 Boss</option>
-            <option value="拉圖斯">拉圖斯</option>
-            <option value="拉圖斯(困難)">拉圖斯(困難)</option>
-            <option value="殘暴炎魔">殘暴炎魔</option>
-            <option value="其他">其他</option>
-          </select>
+      <select id="filterBoss" class="form-select form-select-sm w-auto">
+        <option value="">全部 Boss</option>
+        <option value="拉圖斯">拉圖斯</option>
+        <option value="拉圖斯(困難)">拉圖斯(困難)</option>
+        <option value="殘暴炎魔">殘暴炎魔</option>
+        <option value="其他">其他</option>
+      </select>
 
-          <select id="filterStatus" class="form-select form-select-sm w-auto">
-            <option value="">全部狀態</option>
-            <option value="招募中">招募中</option>
-            <option value="已滿">已滿</option>
-            <option value="關閉">關閉</option>
-          </select>
+      <select id="filterStatus" class="form-select form-select-sm w-auto">
+        <option value="">全部狀態</option>
+        <option value="招募中">招募中</option>
+        <option value="已滿">已滿</option>
+        <option value="關閉">關閉</option>
+      </select>
 
-          <input id="recruitSearchInput" type="text" class="form-control form-control-sm w-auto"
-                 placeholder="搜尋：公會/聯絡/備註/成員" style="min-width:220px;">
-          <button id="recruitSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
-        </div>
-      </div>
-
-      <div class="wall-stage">
-        <div id="recruitWall" class="bounty-grid"></div>
-      </div>
+      <input id="recruitSearchInput" type="text" class="form-control form-control-sm w-auto"
+             placeholder="搜尋：公會/聯絡/備註/成員" style="min-width:220px;">
+      <button id="recruitSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
     </div>
   </div>
 
-  <!-- 右：招募行事曆 -->
-  <div class="col-12 col-xl-4">
-    <div class="card shadow-sm recruit-calendar-card">
-      <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
-        <div class="fw-bold">🗓️ 招募行事曆</div>
-        <div class="d-flex align-items-center gap-2">
-          <button id="btnCalendarPrev" class="btn btn-outline-secondary btn-sm">←</button>
-          <div id="calendarTitle" class="fw-bold text-center" style="min-width:120px;">—</div>
-          <button id="btnCalendarNext" class="btn btn-outline-secondary btn-sm">→</button>
-        </div>
-      </div>
-      <div class="card-body p-2">
-        <div id="recruitCalendar"></div>
-      </div>
+  <div class="wall-stage">
+    <div id="recruitWall" class="bounty-grid"></div>
+  </div>
+</div>
+
+<div class="card shadow-sm recruit-calendar-card">
+  <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+    <div class="fw-bold">🗓️ 招募行事曆</div>
+    <div class="d-flex align-items-center gap-2">
+      <button id="btnCalendarPrev" class="btn btn-outline-secondary btn-sm">←</button>
+      <div id="calendarTitle" class="fw-bold text-center" style="min-width:120px;">—</div>
+      <button id="btnCalendarNext" class="btn btn-outline-secondary btn-sm">→</button>
     </div>
+  </div>
+  <div class="card-body p-2">
+    <div id="recruitCalendar"></div>
   </div>
 </div>
 
