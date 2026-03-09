@@ -241,6 +241,121 @@
     .need-THI{ background:#A03CC8; color:#FFFFFF; }
     .need-PIR{ background:#E16E00; color:#FFFFFF; }
     .need-BEG{ background:#E1E1E1; color:#000000; }
+	
+	/* ===== 招募行事曆 ===== */
+	.recruit-calendar-card{
+	  position: sticky;
+	  top: 68px;
+	  z-index: 10;
+	}
+
+	.calendar-grid{
+	  display: grid;
+	  grid-template-columns: repeat(7, minmax(0, 1fr));
+	  gap: 6px;
+	}
+
+	.calendar-weekday{
+	  text-align: center;
+	  font-weight: 800;
+	  font-size: .85rem;
+	  padding: .4rem 0;
+	  border-radius: 8px;
+	  background: rgba(0,0,0,.05);
+	}
+
+	.calendar-cell{
+	  min-height: 120px;
+	  border: 1px solid rgba(0,0,0,.08);
+	  border-radius: 12px;
+	  padding: 6px;
+	  background: rgba(255,255,255,.88);
+	  display: flex;
+	  flex-direction: column;
+	  gap: 4px;
+	  overflow: hidden;
+	}
+
+	[data-bs-theme="dark"] .calendar-cell{
+	  background: rgba(255,255,255,.05);
+	  border-color: rgba(255,255,255,.12);
+	}
+
+	.calendar-cell.other-month{
+	  opacity: .35;
+	}
+
+	.calendar-cell.today{
+	  outline: 2px solid #0d6efd;
+	  outline-offset: -2px;
+	}
+
+	.calendar-daynum{
+	  font-weight: 900;
+	  font-size: .95rem;
+	  line-height: 1;
+	  margin-bottom: 4px;
+	}
+
+	.calendar-events{
+	  display: flex;
+	  flex-direction: column;
+	  gap: 4px;
+	}
+
+	.calendar-event{
+	  border-radius: 8px;
+	  padding: 4px 6px;
+	  font-size: .72rem;
+	  line-height: 1.25;
+	  border: 1px solid rgba(0,0,0,.08);
+	  background: rgba(13,110,253,.08);
+	  overflow: hidden;
+	}
+
+	.calendar-event .event-time{
+	  font-weight: 800;
+	}
+
+	.calendar-event .event-line{
+	  white-space: nowrap;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	}
+
+	.calendar-event.open{
+	  background: rgba(13,110,253,.12);
+	  border-color: rgba(13,110,253,.25);
+	}
+
+	.calendar-event.full{
+	  background: rgba(111,66,193,.12);
+	  border-color: rgba(111,66,193,.25);
+	}
+
+	.calendar-event.closed{
+	  background: rgba(108,117,125,.12);
+	  border-color: rgba(108,117,125,.25);
+	}
+
+	.calendar-more{
+	  font-size: .72rem;
+	  color: #6c757d;
+	  font-weight: 700;
+	}
+
+	@media (max-width: 1400px){
+	  .calendar-cell{ min-height: 105px; }
+	}
+
+	@media (max-width: 768px){
+	  .recruit-calendar-card{
+		position: static;
+	  }
+	  .calendar-cell{
+		min-height: 95px;
+	  }
+	}
   </style>
 </head>
 
@@ -270,6 +385,9 @@
       </div>
     </div>
 
+    <div class="row g-3 align-items-start">
+  <!-- 左：招募牆 -->
+  <div class="col-12 col-xl-8">
     <div class="bounty-wall">
       <div class="wall-header">
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -309,6 +427,24 @@
       </div>
     </div>
   </div>
+
+  <!-- 右：招募行事曆 -->
+  <div class="col-12 col-xl-4">
+    <div class="card shadow-sm recruit-calendar-card">
+      <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
+        <div class="fw-bold">🗓️ 招募行事曆</div>
+        <div class="d-flex align-items-center gap-2">
+          <button id="btnCalendarPrev" class="btn btn-outline-secondary btn-sm">←</button>
+          <div id="calendarTitle" class="fw-bold text-center" style="min-width:120px;">—</div>
+          <button id="btnCalendarNext" class="btn btn-outline-secondary btn-sm">→</button>
+        </div>
+      </div>
+      <div class="card-body p-2">
+        <div id="recruitCalendar"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- ===================== 公會成員（已復原版本：ASTAR唯讀 / MTEZ可編輯） ===================== -->
   <div id="MembersPage" class="container py-4 d-none">
@@ -556,11 +692,81 @@ function showMainPage(page){
 }
 $('#btnGoRecruit').on('click', ()=>showMainPage('recruit'));
 $('#btnGoMembers').on('click', ()=>showMainPage('members'));
+$('#btnCalendarPrev').on('click', function(){
+  calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+  renderRecruitCalendar(recruitData);
+});
 
+$('#btnCalendarNext').on('click', function(){
+  calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+  renderRecruitCalendar(recruitData);
+});
 /* =========================================================
    招募牆：讀取 + 渲染 + 查看成員（Modal）+ 新增/修改 Editor
 ========================================================= */
 let recruitData = [];
+let calendarCursor = new Date();
+
+function pad2(n){
+  return String(n).padStart(2, '0');
+}
+
+function formatDateKey(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+
+function parseRecruitDateParts(raw){
+  const s = String(raw || '').trim().replace(/\//g,'-');
+  if (!s) return null;
+
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if (!m) return null;
+
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  const hh = Number(m[4] || 0);
+  const mm = Number(m[5] || 0);
+
+  return {
+    year: y,
+    month: mo,
+    day: d,
+    hour: hh,
+    minute: mm,
+    dateKey: `${y}-${pad2(mo)}-${pad2(d)}`,
+    timeText: `${pad2(hh)}:${pad2(mm)}`
+  };
+}
+
+function groupRecruitByDate(data){
+  const map = new Map();
+
+  (data || []).forEach(item=>{
+    const p = parseRecruitDateParts(item.time);
+    if (!p) return;
+
+    if (!map.has(p.dateKey)) map.set(p.dateKey, []);
+    map.get(p.dateKey).push({
+      ...item,
+      __dateKey: p.dateKey,
+      __timeText: p.timeText,
+      __sortTime: `${pad2(p.hour)}:${pad2(p.minute)}`
+    });
+  });
+
+  for (const [k, arr] of map.entries()){
+    arr.sort((a,b)=>{
+      const ta = a.__sortTime || '';
+      const tb = b.__sortTime || '';
+      if (ta !== tb) return ta.localeCompare(tb);
+      return safeText(a.boss).localeCompare(safeText(b.boss), 'zh-Hant');
+    });
+    map.set(k, arr);
+  }
+
+  return map;
+}
 
 function parseRecruitTime(t){
   const s = String(t || '').trim().replace(/\//g,'-');
@@ -665,8 +871,10 @@ function renderRecruitWall(data){
   const filtered = applyRecruitFilter(data);
   if (!filtered.length){
     $('#recruitWall').html(`<div class="w-100 text-center py-5"><div class="text-white-50">牆上目前沒有符合的懸賞招募</div></div>`);
+    renderRecruitCalendar(data); // ✅ 即使沒有卡片，也要更新月曆
     return;
   }
+
   const statusRank = (s)=> (s==='招募中'?0:(s==='已滿'?1:2));
   const sorted = [...filtered].sort((a,b)=>{
     const ra = statusRank(safeText(a.status).trim());
@@ -736,6 +944,68 @@ function renderRecruitWall(data){
   }).join('');
 
   $('#recruitWall').html(html);
+  renderRecruitCalendar(data); // ✅ 同步更新月曆
+}
+function renderRecruitCalendar(data){
+  const filtered = applyRecruitFilter(data);
+  const grouped = groupRecruitByDate(filtered);
+
+  const base = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+  const year = base.getFullYear();
+  const month = base.getMonth();
+
+  $('#calendarTitle').text(`${year}年 ${month + 1}月`);
+
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = firstDay.getDay(); // 0=Sun
+  const gridStart = new Date(year, month, 1 - startWeekday);
+
+  const today = new Date();
+  const todayKey = formatDateKey(today);
+
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  let html = `
+    <div class="calendar-grid mb-2">
+      ${weekdays.map(w=>`<div class="calendar-weekday">${w}</div>`).join('')}
+    </div>
+    <div class="calendar-grid">
+  `;
+
+  for (let i = 0; i < 42; i++){
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+
+    const dateKey = formatDateKey(d);
+    const isOtherMonth = d.getMonth() !== month;
+    const isToday = dateKey === todayKey;
+    const events = grouped.get(dateKey) || [];
+
+    const eventHtml = events.slice(0, 3).map(ev=>{
+      const sCls = statusClass(ev.status);
+      return `
+        <div class="calendar-event ${sCls}" title="${escapeAttr(
+          `${safeText(ev.__timeText)} ${safeText(ev.boss)}｜${safeText(ev.status)}｜${safeText(ev.guild)}｜${safeText(ev.contact)}`
+        )}">
+          <div class="event-time">${safeText(ev.__timeText)}</div>
+          <div class="event-line">${safeText(ev.boss) || '未填 Boss'}</div>
+          <div class="event-line">${safeText(ev.status) || '—'}｜${safeText(ev.guild) || '—'}</div>
+        </div>
+      `;
+    }).join('');
+
+    html += `
+      <div class="calendar-cell ${isOtherMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}">
+        <div class="calendar-daynum">${d.getDate()}</div>
+        <div class="calendar-events">
+          ${eventHtml || ''}
+          ${events.length > 3 ? `<div class="calendar-more">還有 ${events.length - 3} 筆…</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  $('#recruitCalendar').html(html);
 }
 
 $('#filterTab, #filterBoss, #filterStatus').on('change', ()=>renderRecruitWall(recruitData));
