@@ -241,144 +241,6 @@
     .need-THI{ background:#A03CC8; color:#FFFFFF; }
     .need-PIR{ background:#E16E00; color:#FFFFFF; }
     .need-BEG{ background:#E1E1E1; color:#000000; }
-	
-	/* ===== 招募行事曆 ===== */
-	.recruit-calendar-card{
-	  border-radius: 16px;
-	}
-
-	.calendar-grid{
-	  display: grid;
-	  grid-template-columns: repeat(7, minmax(0, 1fr));
-	  gap: 6px;
-	}
-
-	.calendar-weekday{
-	  text-align: center;
-	  font-weight: 800;
-	  font-size: .85rem;
-	  padding: .4rem 0;
-	  border-radius: 8px;
-	  background: rgba(0,0,0,.05);
-	}
-
-	.calendar-cell{
-	  min-height: 140px;
-	  border: 1px solid rgba(0,0,0,.08);
-	  border-radius: 12px;
-	  padding: 6px;
-	  background: rgba(255,255,255,.88);
-	  display: flex;
-	  flex-direction: column;
-	  gap: 4px;
-	  overflow: hidden;
-	}
-
-	[data-bs-theme="dark"] .calendar-cell{
-	  background: rgba(255,255,255,.05);
-	  border-color: rgba(255,255,255,.12);
-	}
-
-	.calendar-cell.other-month{
-	  opacity: .35;
-	}
-
-	.calendar-cell.today{
-	  outline: 2px solid #0d6efd;
-	  outline-offset: -2px;
-	}
-
-	.calendar-daynum{
-	  font-weight: 900;
-	  font-size: .95rem;
-	  line-height: 1;
-	  margin-bottom: 4px;
-	}
-
-	.calendar-events{
-	  display: flex;
-	  flex-direction: column;
-	  gap: 4px;
-	}
-
-	.calendar-event{
-	  border-radius: 8px;
-	  padding: 4px 6px;
-	  font-size: .72rem;
-	  line-height: 1.25;
-	  border: 1px solid rgba(0,0,0,.08);
-	  background: rgba(13,110,253,.08);
-	  overflow: hidden;
-	}
-
-	.calendar-event .event-time{
-	  font-weight: 800;
-	}
-
-	.calendar-event .event-line{
-	  white-space: nowrap;
-	  overflow: hidden;
-	  text-overflow: ellipsis;
-	}
-
-	.calendar-event.open{
-	  background: rgba(13,110,253,.12);
-	  border-color: rgba(13,110,253,.25);
-	}
-
-	.calendar-event.full{
-	  background: rgba(111,66,193,.12);
-	  border-color: rgba(111,66,193,.25);
-	}
-
-	.calendar-event.closed{
-	  background: rgba(108,117,125,.12);
-	  border-color: rgba(108,117,125,.25);
-	}
-
-	.calendar-more{
-	  font-size: .72rem;
-	  color: #6c757d;
-	  font-weight: 700;
-	}
-
-	@media (max-width: 1400px){
-	  .calendar-cell{ min-height: 105px; }
-	}
-
-	@media (max-width: 768px){
-	  .recruit-calendar-card{
-		position: static;
-	  }
-	  .calendar-cell{
-		min-height: 95px;
-	  }
-	}
-	
-	@media (max-width: 768px){
-	  /* 手機板招募卡只顯示 Boss + 時間 */
-	  #RecruitPage .paper-mobile-hide{
-		display: none !important;
-	  }
-
-	  #RecruitPage .bounty-paper{
-		padding: 12px 12px 10px;
-	  }
-
-	  #RecruitPage .paper-title{
-		font-size: .95rem;
-		align-items: center;
-	  }
-
-	  #RecruitPage .paper-time{
-		margin-top: 6px !important;
-		font-size: .88rem;
-	  }
-
-	  #RecruitPage .paper-meta{
-		font-size: .85rem;
-	  }
-	}	
   </style>
 </head>
 
@@ -408,58 +270,45 @@
       </div>
     </div>
 
-  <div class="bounty-wall mb-3">
-  <div class="wall-header">
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-      <button id="btnAddRecruit" class="btn btn-warning btn-sm fw-bold">新增招募</button>
-      <button id="btnReloadRecruit" class="btn btn-outline-secondary btn-sm">重新整理</button>
-    </div>
+    <div class="bounty-wall">
+      <div class="wall-header">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button id="btnAddRecruit" class="btn btn-warning btn-sm fw-bold">新增招募</button>
+          <button id="btnReloadRecruit" class="btn btn-outline-secondary btn-sm">重新整理</button>
+        </div>
 
-    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-      <select id="filterTab" class="form-select form-select-sm w-auto">
-        <option value="active">現行招募</option>
-        <option value="history">歷史紀錄</option>
-      </select>
+        <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+          <select id="filterTab" class="form-select form-select-sm w-auto">
+            <option value="active">現行招募</option>
+            <option value="history">歷史紀錄</option>
+          </select>
 
-      <select id="filterBoss" class="form-select form-select-sm w-auto">
-        <option value="">全部 Boss</option>
-        <option value="拉圖斯">拉圖斯</option>
-        <option value="拉圖斯(困難)">拉圖斯(困難)</option>
-        <option value="殘暴炎魔">殘暴炎魔</option>
-        <option value="其他">其他</option>
-      </select>
+          <select id="filterBoss" class="form-select form-select-sm w-auto">
+            <option value="">全部 Boss</option>
+            <option value="拉圖斯">拉圖斯</option>
+            <option value="拉圖斯(困難)">拉圖斯(困難)</option>
+            <option value="殘暴炎魔">殘暴炎魔</option>
+            <option value="其他">其他</option>
+          </select>
 
-      <select id="filterStatus" class="form-select form-select-sm w-auto">
-        <option value="">全部狀態</option>
-        <option value="招募中">招募中</option>
-        <option value="已滿">已滿</option>
-        <option value="關閉">關閉</option>
-      </select>
+          <select id="filterStatus" class="form-select form-select-sm w-auto">
+            <option value="">全部狀態</option>
+            <option value="招募中">招募中</option>
+            <option value="已滿">已滿</option>
+            <option value="關閉">關閉</option>
+          </select>
 
-      <input id="recruitSearchInput" type="text" class="form-control form-control-sm w-auto"
-             placeholder="搜尋：公會/聯絡/備註/成員" style="min-width:220px;">
-      <button id="recruitSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
-    </div>
-  </div>
+          <input id="recruitSearchInput" type="text" class="form-control form-control-sm w-auto"
+                 placeholder="搜尋：公會/聯絡/備註/成員" style="min-width:220px;">
+          <button id="recruitSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
+        </div>
+      </div>
 
-  <div class="wall-stage">
-    <div id="recruitWall" class="bounty-grid"></div>
-  </div>
-</div>
-
-<div class="card shadow-sm recruit-calendar-card">
-  <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
-    <div class="fw-bold">🗓️ 招募行事曆</div>
-    <div class="d-flex align-items-center gap-2">
-      <button id="btnCalendarPrev" class="btn btn-outline-secondary btn-sm">←</button>
-      <div id="calendarTitle" class="fw-bold text-center" style="min-width:120px;">—</div>
-      <button id="btnCalendarNext" class="btn btn-outline-secondary btn-sm">→</button>
+      <div class="wall-stage">
+        <div id="recruitWall" class="bounty-grid"></div>
+      </div>
     </div>
   </div>
-  <div class="card-body p-2">
-    <div id="recruitCalendar"></div>
-  </div>
-</div>
 
   <!-- ===================== 公會成員（已復原版本：ASTAR唯讀 / MTEZ可編輯） ===================== -->
   <div id="MembersPage" class="container py-4 d-none">
@@ -707,129 +556,80 @@ function showMainPage(page){
 }
 $('#btnGoRecruit').on('click', ()=>showMainPage('recruit'));
 $('#btnGoMembers').on('click', ()=>showMainPage('members'));
-$('#btnCalendarPrev').on('click', function(){
-  calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
-  renderRecruitCalendar(recruitData);
-});
 
-$('#btnCalendarNext').on('click', function(){
-  calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
-  renderRecruitCalendar(recruitData);
-});
 /* =========================================================
    招募牆：讀取 + 渲染 + 查看成員（Modal）+ 新增/修改 Editor
 ========================================================= */
 let recruitData = [];
-let calendarCursor = new Date();
-
-function pad2(n){
-  return String(n).padStart(2, '0');
-}
-
-function formatDateKey(d){
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
-
-function parseRecruitDateParts(raw){
-  const s = String(raw || '').trim().replace(/\//g,'-');
-  if (!s) return null;
-
-  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
-  if (!m) return null;
-
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
-  const hh = Number(m[4] || 0);
-  const mm = Number(m[5] || 0);
-
-  return {
-    year: y,
-    month: mo,
-    day: d,
-    hour: hh,
-    minute: mm,
-    dateKey: `${y}-${pad2(mo)}-${pad2(d)}`,
-    timeText: `${pad2(hh)}:${pad2(mm)}`
-  };
-}
-
-function groupRecruitByDate(data){
-  const map = new Map();
-
-  (data || []).forEach(item=>{
-    const p = parseRecruitDateParts(item.time);
-    if (!p) return;
-
-    if (!map.has(p.dateKey)) map.set(p.dateKey, []);
-    map.get(p.dateKey).push({
-      ...item,
-      __dateKey: p.dateKey,
-      __timeText: p.timeText,
-      __sortTime: `${pad2(p.hour)}:${pad2(p.minute)}`
-    });
-  });
-
-  for (const [k, arr] of map.entries()){
-    arr.sort((a,b)=>{
-      const ta = a.__sortTime || '';
-      const tb = b.__sortTime || '';
-      if (ta !== tb) return ta.localeCompare(tb);
-      return safeText(a.boss).localeCompare(safeText(b.boss), 'zh-Hant');
-    });
-    map.set(k, arr);
-  }
-
-  return map;
-}
 
 function parseRecruitTime(t){
-  const s = String(t || '').trim().replace(/\//g,'-');
-  if (!s) return null;
-  const iso = s.includes('T') ? s : s.replace(' ', 'T');
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? null : d;
+  const raw = String(t || '').trim();
+  if (!raw) return null;
+
+  // 先把常見格式統一
+  let s = raw
+    .replace(/\//g, '-')
+    .replace(/年/g, '-')
+    .replace(/月/g, '-')
+    .replace(/日/g, '')
+    .replace(/：/g, ':')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // 支援格式：
+  // 2026-03-11 20:30
+  // 2026-3-1 8:05
+  // 2026-03-11
+  const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{1,2}))?$/);
+  if (!m) return null;
+
+  const y  = Number(m[1]);
+  const mo = Number(m[2]) - 1;
+  const d  = Number(m[3]);
+  const h  = Number(m[4] ?? 0);
+  const mi = Number(m[5] ?? 0);
+
+  const dt = new Date(y, mo, d, h, mi, 0, 0);
+  return isNaN(dt.getTime()) ? null : dt;
 }
 
 function applyRecruitFilter(data){
   const tab   = ($('#filterTab').val() || 'active').trim();
-  const bossF = $('#filterBoss').val().trim();
-  const stF   = $('#filterStatus').val().trim(); // 重要：使用者手選狀態
-  const kw    = $('#recruitSearchInput').val().trim().toLowerCase();
+  const bossF = ($('#filterBoss').val() || '').trim();
+  const stF   = ($('#filterStatus').val() || '').trim();
+  const kw    = ($('#recruitSearchInput').val() || '').trim().toLowerCase();
 
   const now = new Date();
 
-  return (data||[]).filter(x=>{
-    const s  = String(x.status || '').trim();
+  return (data || []).filter(x=>{
+    const s = String(x.status || '').trim();
     const dt = parseRecruitTime(x.time);
 
-    // ===== 分頁判斷 =====
-    if (tab === 'active'){
-      // 現行：時間未到（或沒有時間就當現行）
-      if (dt && dt.getTime() < now.getTime()) return false;
+    const isPast = dt ? (dt.getTime() < now.getTime()) : false;
+    const isClosedLike = (s === '已滿' || s === '關閉');
 
-      // ✅ 原本你這裡硬擋「只顯示招募中」會害狀態篩選失效
-      // 改成：只有在「沒有選狀態篩選」時，才預設只顯示招募中
+    // ===== 分頁規則 =====
+    if (tab === 'active') {
+      // 只顯示：未過期 + 招募中
+      if (isPast) return false;
       if (s !== '招募中') return false;
-    }
-
-    if (tab === 'history'){
-      // 歷史：時間已過 => 一定算歷史
-      // ✅ 或者狀態是 已滿/關閉 => 也算歷史（就算時間未到）
-      const isPast = dt ? (dt.getTime() < now.getTime()) : false;
-      const isClosedLike = (s === '已滿' || s === '關閉');
-
+    } else if (tab === 'history') {
+      // 只顯示：已過期 或 已滿/關閉
       if (!isPast && !isClosedLike) return false;
     }
 
-    // ===== Boss / 狀態篩選 =====
-    if (bossF && String(x.boss||'').trim() !== bossF) return false;
+    // ===== Boss 篩選 =====
+    if (bossF && String(x.boss || '').trim() !== bossF) return false;
+
+    // ===== 狀態篩選 =====
     if (stF && s !== stF) return false;
 
-    // ===== 關鍵字搜尋 =====
+    // ===== 關鍵字 =====
     if (kw){
-      const blob = [x.boss,x.time,x.status,x.need,x.members,x.guild,x.contact,x.note]
-        .map(v=>String(v||'').toLowerCase()).join(' ');
+      const blob = [
+        x.boss, x.time, x.status, x.need, x.members, x.guild, x.contact, x.note
+      ].map(v => String(v || '').toLowerCase()).join(' ');
+
       if (!blob.includes(kw)) return false;
     }
 
@@ -886,10 +686,8 @@ function renderRecruitWall(data){
   const filtered = applyRecruitFilter(data);
   if (!filtered.length){
     $('#recruitWall').html(`<div class="w-100 text-center py-5"><div class="text-white-50">牆上目前沒有符合的懸賞招募</div></div>`);
-    renderRecruitCalendar(data); // ✅ 即使沒有卡片，也要更新月曆
     return;
   }
-
   const statusRank = (s)=> (s==='招募中'?0:(s==='已滿'?1:2));
   const sorted = [...filtered].sort((a,b)=>{
     const ra = statusRank(safeText(a.status).trim());
@@ -913,36 +711,36 @@ function renderRecruitWall(data){
         <span class="tape right"></span>
 
         <div class="paper-title">
-		  <span class="badge badge-boss ${bCls}">${safeText(r.boss)||'未填 Boss'}</span>
-		  <span class="badge badge-status ${sCls} paper-mobile-hide">${safeText(r.status)||'—'}</span>
-		</div>
+          <span class="badge badge-boss ${bCls}">${safeText(r.boss)||'未填 Boss'}</span>
+          <span class="badge badge-status ${sCls}">${safeText(r.status)||'—'}</span>
+        </div>
 
-			<div class="paper-meta mt-1 paper-time">
-			  <span class="fw-bold">出團時間：</span>
-			  <span class="font-monospace">${safeText(r.time)||'—'}</span>
-			</div>
+        <div class="paper-meta mt-1">
+          <span class="fw-bold">出團時間：</span>
+          <span class="font-monospace">${safeText(r.time)||'—'}</span>
+        </div>
 
-			<div class="paper-divider paper-mobile-hide"></div>
+        <div class="paper-divider"></div>
 
-			<div class="paper-row paper-mobile-hide"><div class="paper-k">需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
+        <div class="paper-row"><div class="paper-k">需求</div><div class="paper-v">${safeText(r.need)||'<span class="text-muted">—</span>'}</div></div>
 
-			<div class="paper-row paper-mobile-hide">
-			  <div class="paper-k">成員</div>
-			  <div class="paper-v">
-				${
-				  membersText
-					? `<button type="button" class="btn btn-outline-primary btn-sm btn-show-members"
-							   data-members="${escapeAttr(membersText)}">查看（${membersCount}）</button>`
-					: `<span class="text-muted">（尚未填）</span>`
-				}
-			  </div>
-			</div>
+        <div class="paper-row">
+          <div class="paper-k">成員</div>
+          <div class="paper-v">
+            ${
+              membersText
+                ? `<button type="button" class="btn btn-outline-primary btn-sm btn-show-members"
+                           data-members="${escapeAttr(membersText)}">查看（${membersCount}）</button>`
+                : `<span class="text-muted">（尚未填）</span>`
+            }
+          </div>
+        </div>
 
-			<div class="paper-row paper-mobile-hide"><div class="paper-k">公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
-			<div class="paper-row paper-mobile-hide"><div class="paper-k">聯絡</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
-			<div class="paper-row paper-mobile-hide"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
+        <div class="paper-row"><div class="paper-k">公會</div><div class="paper-v"><span class="badge badge-guild">${safeText(r.guild)||'—'}</span></div></div>
+        <div class="paper-row"><div class="paper-k">聯絡</div><div class="paper-v">${safeText(r.contact)||'<span class="text-muted">—</span>'}</div></div>
+        <div class="paper-row"><div class="paper-k">備註</div><div class="paper-v">${safeText(r.note)||'<span class="text-muted">—</span>'}</div></div>
 
-			<div class="paper-actions paper-mobile-hide">
+        <div class="paper-actions">
           <button class="btn btn-outline-secondary btn-sm btn-edit-recruit"
             data-row="${r.rowIndex||0}"
             data-boss="${escapeAttr(r.boss)}"
@@ -959,68 +757,6 @@ function renderRecruitWall(data){
   }).join('');
 
   $('#recruitWall').html(html);
-  renderRecruitCalendar(data); // ✅ 同步更新月曆
-}
-function renderRecruitCalendar(data){
-  const filtered = applyRecruitFilter(data);
-  const grouped = groupRecruitByDate(filtered);
-
-  const base = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
-  const year = base.getFullYear();
-  const month = base.getMonth();
-
-  $('#calendarTitle').text(`${year}年 ${month + 1}月`);
-
-  const firstDay = new Date(year, month, 1);
-  const startWeekday = firstDay.getDay(); // 0=Sun
-  const gridStart = new Date(year, month, 1 - startWeekday);
-
-  const today = new Date();
-  const todayKey = formatDateKey(today);
-
-  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-  let html = `
-    <div class="calendar-grid mb-2">
-      ${weekdays.map(w=>`<div class="calendar-weekday">${w}</div>`).join('')}
-    </div>
-    <div class="calendar-grid">
-  `;
-
-  for (let i = 0; i < 42; i++){
-    const d = new Date(gridStart);
-    d.setDate(gridStart.getDate() + i);
-
-    const dateKey = formatDateKey(d);
-    const isOtherMonth = d.getMonth() !== month;
-    const isToday = dateKey === todayKey;
-    const events = grouped.get(dateKey) || [];
-
-    const eventHtml = events.slice(0, 3).map(ev=>{
-      const sCls = statusClass(ev.status);
-      return `
-        <div class="calendar-event ${sCls}" title="${escapeAttr(
-          `${safeText(ev.__timeText)} ${safeText(ev.boss)}｜${safeText(ev.status)}｜${safeText(ev.guild)}｜${safeText(ev.contact)}`
-        )}">
-          <div class="event-time">${safeText(ev.__timeText)}</div>
-          <div class="event-line">${safeText(ev.boss) || '未填 Boss'}</div>
-          <div class="event-line">${safeText(ev.status) || '—'}｜${safeText(ev.guild) || '—'}</div>
-        </div>
-      `;
-    }).join('');
-
-    html += `
-      <div class="calendar-cell ${isOtherMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}">
-        <div class="calendar-daynum">${d.getDate()}</div>
-        <div class="calendar-events">
-          ${eventHtml || ''}
-          ${events.length > 3 ? `<div class="calendar-more">還有 ${events.length - 3} 筆…</div>` : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  html += `</div>`;
-  $('#recruitCalendar').html(html);
 }
 
 $('#filterTab, #filterBoss, #filterStatus').on('change', ()=>renderRecruitWall(recruitData));
