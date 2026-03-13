@@ -171,30 +171,9 @@
 	.camp-toolbar .btn-sm{ padding:.1rem .5rem; }
 	
 	/* ===================== 打王排程 ===================== */
-	.schedule-calendar-header,
-	.schedule-calendar-grid{
-	  display:grid;
-	  grid-template-columns:repeat(7, minmax(0, 1fr));
-	  gap:8px;
-	}
-	.schedule-calendar-header > div{
-	  text-align:center;
-	  font-weight:700;
-	  padding:.4rem 0;
-	  border-radius:10px;
-	  background:rgba(0,0,0,.05);
-	}
-	.schedule-calendar-cell{
-	  min-height:120px;
-	  border:1px solid rgba(0,0,0,.08);
-	  border-radius:14px;
-	  padding:.55rem;
-	  background:var(--bs-body-bg);
-	  position:relative;
-	  cursor:pointer;
 	}
 	.schedule-calendar-cell.other-month{
-	  opacity:.4;
+	  opacity:.38;
 	}
 	.schedule-calendar-cell.selected{
 	  border-color:#0d6efd;
@@ -229,6 +208,14 @@
 	  text-overflow:ellipsis;
 	  background:rgba(13,110,253,.1);
 	}
+	.schedule-mini-item.match{
+	  background:rgba(220,53,69,.15);
+	  font-weight:700;
+	}
+	.schedule-mini-item.conflict{
+	  background:rgba(253,126,20,.18);
+	  font-weight:700;
+	}
 	.schedule-day-list{
 	  display:flex;
 	  flex-direction:column;
@@ -240,12 +227,28 @@
 	  padding:.8rem;
 	  background:rgba(0,0,0,.02);
 	}
+	.schedule-event-card.match{
+	  border-color:#dc3545;
+	  background:rgba(220,53,69,.06);
+	}
+	.schedule-event-card.conflict{
+	  border-color:#fd7e14;
+	  background:rgba(253,126,20,.08);
+	}
 	.schedule-member-hit{
 	  display:inline-block;
 	  padding:.15rem .45rem;
 	  border-radius:999px;
 	  background:rgba(220,53,69,.12);
 	  font-size:.8rem;
+	  margin:.15rem .25rem 0 0;
+	}
+	.schedule-summary-chip{
+	  display:inline-block;
+	  padding:.18rem .5rem;
+	  border-radius:999px;
+	  background:rgba(0,0,0,.06);
+	  font-size:.78rem;
 	  margin:.15rem .25rem 0 0;
 	}
   </style>
@@ -492,13 +495,7 @@
     </div>
     
   </div>
-
-<!-- ===================== 打王排程頁 ===================== -->
-<!-- 建議放在 RecruitPage / MembersPage 之後 -->
-<div id="SchedulePage" class="container py-4 d-none">
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <h3 class="mb-0"><b>🗓️ RaidBoss 打王排程</b></h3>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
+<!-- 打王排程 -->
       <button id="schedulePrevMonth" class="btn btn-outline-secondary btn-sm">◀ 上個月</button>
       <div id="scheduleMonthLabel" class="fw-bold px-2">2026 / 03</div>
       <button id="scheduleNextMonth" class="btn btn-outline-secondary btn-sm">下個月 ▶</button>
@@ -531,7 +528,7 @@
         </div>
       </div>
       <div class="small text-muted mt-2">
-        搜尋到的角色若出現在某日期，該日期卡片與日曆格會高亮；若同角色同日出現在多隊，會顯示衝突提醒。
+        可搜尋角色、代碼或營區；搜尋命中的日期會高亮。若同角色同一天出現在多個隊伍，會顯示衝突提醒。
       </div>
     </div>
   </div>
@@ -561,7 +558,6 @@
     </div>
   </div>
 </div>
-
 <script>
 // 放在全域（或 $(function(){ ... }) 裡面最上面一點）
 // ====== 修正 1：建立單一 Modal 實例 ======
@@ -907,6 +903,21 @@ $('#toggleTheme').on('click', function ()
   const isDark = html.getAttribute('data-bs-theme') === 'dark';
   html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
   $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
+});
+
+
+/* ==== 返回角色清單：擴充既有處理，讓兩個攻略頁都能返回 ==== */
+// 將你原本的 backToList 事件「替換」成下面這段（或直接覆寫）
+$(document).off('click', '#backToList').on('click', '#backToList', function () 
+{
+  $('#GuidePage').addClass('d-none');     // 隱藏清單
+  $('#homePage').removeClass('d-none');
+});
+
+$('#Guide').on('click', function () 
+{
+  $('#homePage').addClass('d-none');       // 隱藏清單
+  $('#GuidePage').removeClass('d-none');   // 顯示攻略
 });
 
 /* =========================
@@ -2038,9 +2049,7 @@ function readSelectedCamps(mountEl) {
   return Array.from(mountEl.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
 }
 
-
-
-function showMainPage(page){
+/* =========================
   $('#homePage').addClass('d-none');
   $('#GuidePage').addClass('d-none');
   $('#SchedulePage').addClass('d-none');
@@ -2054,305 +2063,22 @@ function showMainPage(page){
   }
 }
 
-$(document).on('click', '#btnGoSchedule', function () {
-  showMainPage('schedule');
+$(document).on('click', '#btnGoHome, #backToList', function(){
+  showMainSection('home');
 });
 
-$(document).on('click', '#Guide', function () {
-  showMainPage('guide');
+$(document).on('click', '#Guide', function(){
+  showMainSection('guide');
 });
 
-$(document).on('click', '#btnGoHome,'#backToList', function () {
-  showMainPage('home');
-});
-
-$('#scheduleSearchBtn').on('click', function(){
-  renderScheduleCalendar();
-});
-
-$('#scheduleSearchInput').on('keypress', function(e){
-  if (e.which === 13) renderScheduleCalendar();
-});
-
-$('#scheduleBossFilter, #scheduleCampFilter').on('change', function(){
-  renderScheduleCalendar();
-});
-
-$('#scheduleSearchClear').on('click', function(){
-  $('#scheduleSearchInput').val('');
-  $('#scheduleBossFilter').val('');
-  $('#scheduleCampFilter').val('');
-  renderScheduleCalendar();
-});
-
-$('#schedulePrevMonth').on('click', function(){
-  scheduleViewDate = new Date(scheduleViewDate.getFullYear(), scheduleViewDate.getMonth() - 1, 1);
-  selectedScheduleDate = null;
-  renderScheduleCalendar();
-});
-
-$('#scheduleNextMonth').on('click', function(){
-  scheduleViewDate = new Date(scheduleViewDate.getFullYear(), scheduleViewDate.getMonth() + 1, 1);
-  selectedScheduleDate = null;
-  renderScheduleCalendar();
-});
-
-$('#btnReloadSchedule').on('click', function(){
-  hydrateRaidSchedule();
-});
-
-$(document).on('click', '.schedule-calendar-cell', function(){
-  selectedScheduleDate = $(this).data('date');
+$(document).on('click', '#btnGoSchedule', function(){
+  showMainSection('schedule');
   renderScheduleCalendar();
 });
 
 /* =========================
-   初始化追加
+   排程事件
 ========================= */
-$(function(){
-  hydrateRaidSchedule();
-});
-
-const RAID_SCHEDULE_RAW = [
-  {
-    boss: '困難拉圖斯',
-    camp: '炎魔一營',
-    timeText: '2026-03-13 20:00',
-    note: '',
-    members: [
-      { name:'不敢吃香菜', code:'#KoJRK', job:'黑騎士' },
-      { name:'Huai', code:'#PiW4G', job:'主教' },
-      { name:'SHINee', code:'#o6cBR', job:'夜使者' }
-    ]
-  },
-  {
-    boss: '普力特拉',
-    camp: '普拉一營',
-    timeText: '2026-03-14 21:30',
-    note: '',
-    members: [
-      { name:'遲來的深情比草賤', code:'#awy0J', job:'夜使者' },
-      { name:'情到深處人孤獨', code:'#vpCPO', job:'拳霸' }
-    ]
-  },
-  {
-    boss: '殘暴炎魔',
-    camp: '炎魔六營',
-    timeText: '2026-03-15 21:00',
-    note: '',
-    members: [
-      { name:'遲來的深情比草賤', code:'#awy0J', job:'夜使者' },
-      { name:'大圈仔', code:'#GnuiM', job:'夜使者' }
-    ]
-  }
-];
-
-let raidScheduleData = [];
-let scheduleViewDate = new Date(2026, 2, 1);
-let selectedScheduleDate = null;
-
-function normalizeText(s){
-  return String(s || '').trim().toLowerCase();
-}
-
-function parseScheduleDateTime(raw){
-  const m = String(raw || '').trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})$/);
-  if (!m) return null;
-  return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0, 0);
-}
-
-function ymdLocal(date){
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function hhmmLocal(date){
-  return `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-}
-
-function hydrateRaidSchedule(){
-  raidScheduleData = RAID_SCHEDULE_RAW.map((x, idx) => {
-    const dt = parseScheduleDateTime(x.timeText);
-    return {
-      id: idx + 1,
-      boss: x.boss,
-      camp: x.camp,
-      timeText: x.timeText,
-      note: x.note || '',
-      members: x.members || [],
-      dt,
-      dateKey: dt ? ymdLocal(dt) : '',
-      timeOnly: dt ? hhmmLocal(dt) : ''
-    };
-  }).filter(x => x.dt);
-
-  renderScheduleFilterOptions();
-  renderScheduleCalendar();
-}
-
-function renderScheduleFilterOptions(){
-  const bossList = [...new Set(raidScheduleData.map(x => x.boss))];
-  const campList = [...new Set(raidScheduleData.map(x => x.camp))];
-
-  $('#scheduleBossFilter').html(
-    '<option value="">全部 Boss</option>' +
-    bossList.map(x => `<option value="${x}">${x}</option>`).join('')
-  );
-
-  $('#scheduleCampFilter').html(
-    '<option value="">全部營區</option>' +
-    campList.map(x => `<option value="${x}">${x}</option>`).join('')
-  );
-}
-
-function getScheduleKeyword(){
-  return normalizeText($('#scheduleSearchInput').val());
-}
-
-function getScheduleFilteredData(){
-  const kw = getScheduleKeyword();
-  const boss = $('#scheduleBossFilter').val() || '';
-  const camp = $('#scheduleCampFilter').val() || '';
-
-  return raidScheduleData.filter(item => {
-    if (boss && item.boss !== boss) return false;
-    if (camp && item.camp !== camp) return false;
-    if (!kw) return true;
-
-    const memberBlob = item.members.map(m => `${m.name} ${m.code} ${m.job}`).join(' ');
-    const blob = `${item.boss} ${item.camp} ${item.timeText} ${item.note} ${memberBlob}`.toLowerCase();
-    return blob.includes(kw);
-  });
-}
-
-function getDateMatchInfo(dateKey){
-  const kw = getScheduleKeyword();
-  const sameDay = getScheduleFilteredData().filter(x => x.dateKey === dateKey);
-
-  let hasMatch = false;
-  if (kw) {
-    sameDay.forEach(item => {
-      const memberBlob = item.members.map(m => `${m.name} ${m.code} ${m.job}`).join(' ').toLowerCase();
-      if (memberBlob.includes(kw) || normalizeText(item.camp).includes(kw)) {
-        hasMatch = true;
-      }
-    });
-  }
-
-  const memberCount = new Map();
-  sameDay.forEach(item => {
-    item.members.forEach(m => {
-      const key = normalizeText(m.code || m.name);
-      memberCount.set(key, (memberCount.get(key) || 0) + 1);
-    });
-  });
-
-  const hasConflict = [...memberCount.values()].some(v => v >= 2);
-
-  return {
-    events: sameDay.sort((a,b)=>a.dt-b.dt),
-    hasMatch,
-    hasConflict
-  };
-}
-
-function renderScheduleCalendar(){
-  const year = scheduleViewDate.getFullYear();
-  const month = scheduleViewDate.getMonth();
-  $('#scheduleMonthLabel').text(`${year} / ${String(month + 1).padStart(2, '0')}`);
-
-  const firstDay = new Date(year, month, 1);
-  const firstWeekDay = firstDay.getDay();
-  const gridStart = new Date(year, month, 1 - firstWeekDay);
-
-  const cells = [];
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
-    const dateKey = ymdLocal(d);
-    const info = getDateMatchInfo(dateKey);
-    const isOtherMonth = d.getMonth() !== month;
-    const isSelected = selectedScheduleDate === dateKey;
-
-    const cls = [
-      'schedule-calendar-cell',
-      isOtherMonth ? 'other-month' : '',
-      isSelected ? 'selected' : '',
-      info.hasConflict ? 'has-conflict' : '',
-      (!info.hasConflict && info.hasMatch) ? 'has-match' : ''
-    ].filter(Boolean).join(' ');
-
-    const miniHtml = info.events.slice(0, 3).map(evt => `
-      <div class="schedule-mini-item">${evt.timeOnly} ${evt.camp}</div>
-    `).join('');
-
-    cells.push(`
-      <div class="${cls}" data-date="${dateKey}">
-        <div class="schedule-day-number">${d.getDate()}</div>
-        <div class="schedule-mini-list">${miniHtml || '<div class="text-muted small">—</div>'}</div>
-      </div>
-    `);
-  }
-
-  $('#scheduleCalendarGrid').html(cells.join(''));
-
-  if (!selectedScheduleDate && raidScheduleData.length) {
-    selectedScheduleDate = raidScheduleData[0].dateKey;
-  }
-
-  renderScheduleDayList();
-}
-
-function renderScheduleDayList(){
-  if (!selectedScheduleDate) {
-    $('#selectedDateLabel').text('請點選日期');
-    $('#scheduleDayList').html('<div class="text-muted">尚未選擇日期</div>');
-    return;
-  }
-
-  const info = getDateMatchInfo(selectedScheduleDate);
-  $('#selectedDateLabel').text(selectedScheduleDate);
-
-  if (!info.events.length) {
-    $('#scheduleDayList').html('<div class="text-muted">此日期沒有安排</div>');
-    return;
-  }
-
-  const html = info.events.map(evt => `
-    <div class="schedule-event-card">
-      <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-        <div>
-          <div class="fw-bold">${evt.camp}</div>
-          <div class="small text-muted">${evt.boss}</div>
-        </div>
-        <div class="text-end">
-          <div class="fw-bold">${evt.timeOnly}</div>
-          ${evt.note ? `<div class="small text-danger">${evt.note}</div>` : ''}
-        </div>
-      </div>
-      <div class="small mt-2"><b>成員：</b></div>
-      <div class="small">
-        ${evt.members.map(m => `${m.name}${m.code ? `（${m.code}）` : ''} ${m.job || ''}`).join('<br>')}
-      </div>
-    </div>
-  `).join('');
-
-  $('#scheduleDayList').html(html);
-}
-
-$(document).on('click', '#btnGoSchedule', function () {
-  showMainPage('schedule');
-});
-
-$(document).on('click', '#Guide', function () {
-  showMainPage('guide');
-});
-
-$(document).on('click', '#btnGoHome,'#backToList', function () {
-  showMainPage('home');
-});
-
 $(document).on('click', '#scheduleSearchBtn', function(){
   renderScheduleCalendar();
 });
@@ -2385,7 +2111,9 @@ $(document).on('click', '#scheduleNextMonth', function(){
 });
 
 $(document).on('click', '#btnReloadSchedule', function(){
-  hydrateRaidSchedule();
+  buildScheduleData();
+  fillScheduleFilters();
+  renderScheduleCalendar();
 });
 
 $(document).on('click', '.schedule-calendar-cell', function(){
@@ -2393,8 +2121,12 @@ $(document).on('click', '.schedule-calendar-cell', function(){
   renderScheduleCalendar();
 });
 
+/* =========================
+   初始化
+========================= */
 $(function(){
-  hydrateRaidSchedule();
+  buildScheduleData();
+  fillScheduleFilters();
 });
 </script>
 
