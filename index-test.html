@@ -260,7 +260,7 @@
 	  <!-- 打王排程 -->
 	  <button id="btnGoSchedule" class="btn btn-outline-light btn-sm title">🗓️ 打王排程</button>
       <!-- 小夥伴清單 -->
-      <button id="backToList" class="btn btn-outline-light btn-sm title">👨‍👩‍👧‍👦 公會小夥伴</button>
+      <button id="btnGoHome" class="btn btn-outline-light btn-sm title">👨‍👩‍👧‍👦 公會小夥伴</button>
 	  <!-- 跨公會組隊招募網站  -->
       <a href="https://tsukimiya-kaede.github.io/Astar-RaidBossGroup/TeamLobby.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="RaidBoss組隊招募">📣 RaidBoss 隊伍招募</a>
       <!-- 遊戲攻略 -->
@@ -2038,41 +2038,7 @@ function readSelectedCamps(mountEl) {
   return Array.from(mountEl.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
 }
 
-/* =========================
-      other.members.forEach(m => {
-        const key = normalizeText(m.code || m.name);
-        if (!keySet.has(key)) keySet.set(key, 0);
-        keySet.set(key, keySet.get(key) + 1);
-      });
-    });
-    const ownConflicts = evt.members.filter(m => (keySet.get(normalizeText(m.code || m.name)) || 0) >= 2);
 
-    const cardCls = ownConflicts.length ? 'conflict' : (matched.length ? 'match' : '');
-
-    return `
-      <div class="schedule-event-card ${cardCls}">
-        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-          <div>
-            <div class="fw-bold">${evt.camp}</div>
-            <div class="small text-muted">${evt.boss}</div>
-          </div>
-          <div class="text-end">
-            <div class="fw-bold">${evt.timeOnly}</div>
-            ${evt.note ? `<div class="small text-danger">${evt.note}</div>` : ''}
-          </div>
-        </div>
-
-        <div class="small mt-2"><b>成員：</b></div>
-        <div class="small">${evt.members.map(m => `${m.name}${m.code ? `（${m.code}）` : ''} ${m.job || ''}`).join('<br>')}</div>
-
-        ${matched.length ? `<div class="mt-2"><div class="small fw-bold text-danger">搜尋命中</div>${matched.map(x=>`<span class="schedule-member-hit">${x}</span>`).join('')}</div>` : ''}
-        ${ownConflicts.length ? `<div class="mt-2"><div class="small fw-bold text-warning">同日重複出團</div>${ownConflicts.map(m=>`<span class="schedule-member-hit">${m.name}${m.code ? `（${m.code}）` : ''}</span>`).join('')}</div>` : ''}
-      </div>
-    `;
-  }).join('');
-
-  $('#scheduleDayList').html(html);
-}
 
 function showMainPage(page){
   $('#homePage').addClass('d-none');
@@ -2096,7 +2062,7 @@ $(document).on('click', '#Guide', function () {
   showMainPage('guide');
 });
 
-$(document).on('click', '#backToList', function () {
+$(document).on('click', '#btnGoHome,'#backToList', function () {
   showMainPage('home');
 });
 
@@ -2383,7 +2349,7 @@ $(document).on('click', '#Guide', function () {
   showMainPage('guide');
 });
 
-$(document).on('click', '#backToList', function () {
+$(document).on('click', '#btnGoHome,'#backToList', function () {
   showMainPage('home');
 });
 
