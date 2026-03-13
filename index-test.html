@@ -171,7 +171,7 @@
 	.camp-toolbar .btn-sm{ padding:.1rem .5rem; }
 	
 	/* ===================== 打王排程 ===================== */
-	}
+	
 	.schedule-calendar-cell.other-month{
 	  opacity:.38;
 	}
@@ -496,6 +496,10 @@
     
   </div>
 <!-- 打王排程 -->
+<div id="SchedulePage" class="container py-4 d-none">
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h3 class="mb-0"><b>🗓️ 打王排程</b></h3>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
       <button id="schedulePrevMonth" class="btn btn-outline-secondary btn-sm">◀ 上個月</button>
       <div id="scheduleMonthLabel" class="fw-bold px-2">2026 / 03</div>
       <button id="scheduleNextMonth" class="btn btn-outline-secondary btn-sm">下個月 ▶</button>
@@ -1562,6 +1566,164 @@ function openEditor(values, onSave) {
     return Array.from(selectorBox.querySelectorAll('span.badge.active'))
       .map(el => el.dataset.value || el.textContent.trim());
   }
+  const RAID_SCHEDULE_RAW = [
+  {
+    boss: '困難拉圖斯',
+    camp: '炎魔一營',
+    timeText: '2026-03-13 20:00',
+    note: '',
+    members: [
+      { name:'不敢吃香菜', code:'#KoJRK', job:'黑騎士' },
+      { name:'Huai', code:'#PiW4G', job:'主教' },
+      { name:'SHINee', code:'#o6cBR', job:'夜使者' }
+    ]
+  },
+  {
+    boss: '普力特拉',
+    camp: '普拉一營',
+    timeText: '2026-03-14 21:30',
+    note: '',
+    members: [
+      { name:'遲來的深情比草賤', code:'#awy0J', job:'夜使者' },
+      { name:'情到深處人孤獨', code:'#vpCPO', job:'拳霸' }
+    ]
+  }
+];
+
+let raidScheduleData = [];
+let scheduleViewDate = new Date(2026, 2, 1);
+let selectedScheduleDate = null;
+
+function parseScheduleDateTime(raw){
+  const m = String(raw || '').trim().match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})$/);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], 0, 0);
+}
+
+function formatYmd(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function formatHm(date){
+  return `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+}
+
+function buildScheduleData(){
+  raidScheduleData = RAID_SCHEDULE_RAW.map((item, idx) => {
+    const dt = parseScheduleDateTime(item.timeText);
+    return {
+      id: idx + 1,
+      boss: item.boss || '',
+      camp: item.camp || '',
+      note: item.note || '',
+      timeText: item.timeText || '',
+      members: item.members || [],
+      dt,
+      dateKey: dt ? formatYmd(dt) : '',
+      timeOnly: dt ? formatHm(dt) : ''
+    };
+  }).filter(x => x.dt);
+}
+
+function fillScheduleFilters(){
+  const bosses = [...new Set(raidScheduleData.map(x => x.boss))];
+  const camps  = [...new Set(raidScheduleData.map(x => x.camp))];
+
+  $('#scheduleBossFilter').html(
+    '<option value=\"\">全部 Boss</option>' +
+    bosses.map(x => `<option value=\"${x}\">${x}</option>`).join('')
+  );
+
+  $('#scheduleCampFilter').html(
+    '<option value=\"\">全部營區</option>' +
+    camps.map(x => `<option value=\"${x}\">${x}</option>`).join('')
+  );
+}
+
+function renderScheduleCalendar(){
+  const year = scheduleViewDate.getFullYear();
+  const month = scheduleViewDate.getMonth();
+  $('#scheduleMonthLabel').text(`${year} / ${String(month + 1).padStart(2, '0')}`);
+
+  const firstDay = new Date(year, month, 1);
+  const firstWeekDay = firstDay.getDay();
+  const startDate = new Date(year, month, 1 - firstWeekDay);
+
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
+    const dateKey = formatYmd(d);
+    const dayEvents = raidScheduleData.filter(x => x.dateKey === dateKey);
+
+    const isOtherMonth = d.getMonth() !== month;
+    const isSelected = selectedScheduleDate === dateKey;
+
+    const cls = [
+      'schedule-calendar-cell',
+      isOtherMonth ? 'other-month' : '',
+      isSelected ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+
+    const miniHtml = dayEvents.map(evt => `
+      <div class="schedule-mini-item">${evt.timeOnly} ${evt.camp}</div>
+    `).join('');
+
+    cells.push(`
+      <div class="${cls}" data-date="${dateKey}">
+        <div class="schedule-day-number">${d.getDate()}</div>
+        <div class="schedule-mini-list">${miniHtml || '<div class="text-muted small">—</div>'}</div>
+      </div>
+    `);
+  }
+
+  $('#scheduleCalendarGrid').html(cells.join(''));
+
+  if (!selectedScheduleDate && raidScheduleData.length) {
+    selectedScheduleDate = raidScheduleData[0].dateKey;
+  }
+
+  renderScheduleDayList();
+}
+
+function renderScheduleDayList(){
+  if (!selectedScheduleDate) {
+    $('#selectedDateLabel').text('請點選日期');
+    $('#scheduleDayList').html('<div class="text-muted">尚未選擇日期</div>');
+    return;
+  }
+
+  $('#selectedDateLabel').text(selectedScheduleDate);
+  const events = raidScheduleData.filter(x => x.dateKey === selectedScheduleDate);
+
+  if (!events.length) {
+    $('#scheduleDayList').html('<div class="text-muted">此日期沒有安排</div>');
+    return;
+  }
+
+  const html = events.map(evt => `
+    <div class="schedule-event-card">
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+        <div>
+          <div class="fw-bold">${evt.camp}</div>
+          <div class="small text-muted">${evt.boss}</div>
+        </div>
+        <div class="text-end">
+          <div class="fw-bold">${evt.timeOnly}</div>
+          ${evt.note ? `<div class="small text-danger">${evt.note}</div>` : ''}
+        </div>
+      </div>
+      <div class="small mt-2"><b>成員：</b></div>
+      <div class="small">
+        ${evt.members.map(m => `${m.name}${m.code ? `（${m.code}）` : ''} ${m.job || ''}`).join('<br>')}
+      </div>
+    </div>
+  `).join('');
+
+  $('#scheduleDayList').html(html);
+}
   renderCampSelector();
 
   const btnCancel = overlay.querySelector('#btn_cancel');
@@ -2050,6 +2212,9 @@ function readSelectedCamps(mountEl) {
 }
 
 /* =========================
+   頁面切換：首頁 / 攻略 / 排程
+========================= */
+function showMainSection(page){
   $('#homePage').addClass('d-none');
   $('#GuidePage').addClass('d-none');
   $('#SchedulePage').addClass('d-none');
