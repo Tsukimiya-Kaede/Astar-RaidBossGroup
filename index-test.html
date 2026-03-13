@@ -1177,7 +1177,21 @@ function renderTable(data) {
   });
 }
 
+function normalizeText(v){
+  return String(v || '').trim().toLowerCase();
+}
 
+function getScheduleKeyword(){
+  return normalizeText($('#scheduleSearchInput').val());
+}
+
+function getScheduleSelectedBoss(){
+  return String($('#scheduleBossFilter').val() || '').trim();
+}
+
+function getScheduleSelectedCamp(){
+  return String($('#scheduleCampFilter').val() || '').trim();
+}
 /* =========================
    分頁切換（★ 新增）
 ========================= */
@@ -1614,13 +1628,14 @@ function formatHm(date){
 function buildScheduleData(){
   raidScheduleData = RAID_SCHEDULE_RAW.map((item, idx) => {
     const dt = parseScheduleDateTime(item.timeText);
+
     return {
       id: idx + 1,
       boss: item.boss || '',
       camp: item.camp || '',
       note: item.note || '',
       timeText: item.timeText || '',
-      members: item.members || [],
+      members: Array.isArray(item.members) ? item.members : [],
       dt,
       dateKey: dt ? formatYmd(dt) : '',
       timeOnly: dt ? formatHm(dt) : ''
@@ -1629,23 +1644,99 @@ function buildScheduleData(){
 }
 
 function fillScheduleFilters(){
-  const bosses = [...new Set(raidScheduleData.map(x => x.boss))];
-  const camps  = [...new Set(raidScheduleData.map(x => x.camp))];
+  const currentBoss = getScheduleSelectedBoss();
+  const currentCamp = getScheduleSelectedCamp();
+
+  const bosses = [...new Set(raidScheduleData.map(x => x.boss).filter(Boolean))];
+  const camps  = [...new Set(raidScheduleData.map(x => x.camp).filter(Boolean))];
 
   $('#scheduleBossFilter').html(
-    '<option value=\"\">全部 Boss</option>' +
-    bosses.map(x => `<option value=\"${x}\">${x}</option>`).join('')
+    '<option value="">全部 Boss</option>' +
+    bosses.map(x => `<option value="${x}">${x}</option>`).join('')
   );
 
   $('#scheduleCampFilter').html(
-    '<option value=\"\">全部營區</option>' +
-    camps.map(x => `<option value=\"${x}\">${x}</option>`).join('')
+    '<option value="">全部營區</option>' +
+    camps.map(x => `<option value="${x}">${x}</option>`).join('')
   );
+
+  $('#scheduleBossFilter').val(currentBoss);
+  $('#scheduleCampFilter').val(currentCamp);
+}
+
+function getScheduleFilteredData(){
+  const kw   = getScheduleKeyword();
+  const boss = getScheduleSelectedBoss();
+  const camp = getScheduleSelectedCamp();
+
+  return raidScheduleData.filter(item => {
+    if (boss && item.boss !== boss) return false;
+    if (camp && item.camp !== camp) return false;
+
+    if (!kw) return true;
+
+    const memberBlob = item.members
+      .map(m => `${m.name || ''} ${m.code || ''} ${m.job || ''}`)
+      .join(' ');
+
+    const blob = [
+      item.boss,
+      item.camp,
+      item.note,
+      item.timeText,
+      memberBlob
+    ].join(' ').toLowerCase();
+
+    return blob.includes(kw);
+  });
+}
+
+function getDateMatchInfo(dateKey){
+  const kw = getScheduleKeyword();
+  const dayEvents = getScheduleFilteredData()
+    .filter(x => x.dateKey === dateKey)
+    .sort((a,b) => a.dt - b.dt);
+
+  let hasMatch = false;
+
+  if (kw) {
+    for (const evt of dayEvents) {
+      const memberBlob = evt.members
+        .map(m => `${m.name || ''} ${m.code || ''} ${m.job || ''}`)
+        .join(' ')
+        .toLowerCase();
+
+      const evtBlob = `${evt.boss} ${evt.camp} ${evt.note} ${evt.timeText} ${memberBlob}`.toLowerCase();
+
+      if (evtBlob.includes(kw)) {
+        hasMatch = true;
+        break;
+      }
+    }
+  }
+
+  const counter = new Map();
+  dayEvents.forEach(evt => {
+    evt.members.forEach(m => {
+      const key = normalizeText(m.code || m.name);
+      if (!key) return;
+      counter.set(key, (counter.get(key) || 0) + 1);
+    });
+  });
+
+  const hasConflict = [...counter.values()].some(v => v >= 2);
+
+  return {
+    events: dayEvents,
+    hasMatch,
+    hasConflict
+  };
 }
 
 function renderScheduleCalendar(){
   const year = scheduleViewDate.getFullYear();
   const month = scheduleViewDate.getMonth();
+
   $('#scheduleMonthLabel').text(`${year} / ${String(month + 1).padStart(2, '0')}`);
 
   const firstDay = new Date(year, month, 1);
@@ -1653,10 +1744,11 @@ function renderScheduleCalendar(){
   const startDate = new Date(year, month, 1 - firstWeekDay);
 
   const cells = [];
+
   for (let i = 0; i < 42; i++) {
     const d = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
     const dateKey = formatYmd(d);
-    const dayEvents = raidScheduleData.filter(x => x.dateKey === dateKey);
+    const info = getDateMatchInfo(dateKey);
 
     const isOtherMonth = d.getMonth() !== month;
     const isSelected = selectedScheduleDate === dateKey;
@@ -1664,12 +1756,19 @@ function renderScheduleCalendar(){
     const cls = [
       'schedule-calendar-cell',
       isOtherMonth ? 'other-month' : '',
-      isSelected ? 'selected' : ''
+      isSelected ? 'selected' : '',
+      info.hasConflict ? 'has-conflict' : '',
+      (!info.hasConflict && info.hasMatch) ? 'has-match' : ''
     ].filter(Boolean).join(' ');
 
-    const miniHtml = dayEvents.map(evt => `
-      <div class="schedule-mini-item">${evt.timeOnly} ${evt.camp}</div>
-    `).join('');
+    const miniHtml = info.events.slice(0, 3).map(evt => {
+      let miniCls = 'schedule-mini-item';
+
+      if (info.hasConflict) miniCls += ' conflict';
+      else if (info.hasMatch) miniCls += ' match';
+
+      return `<div class="${miniCls}">${evt.timeOnly} ${evt.camp}</div>`;
+    }).join('');
 
     cells.push(`
       <div class="${cls}" data-date="${dateKey}">
@@ -1681,8 +1780,9 @@ function renderScheduleCalendar(){
 
   $('#scheduleCalendarGrid').html(cells.join(''));
 
-  if (!selectedScheduleDate && raidScheduleData.length) {
-    selectedScheduleDate = raidScheduleData[0].dateKey;
+  const filtered = getScheduleFilteredData();
+  if ((!selectedScheduleDate || !getDateMatchInfo(selectedScheduleDate).events.length) && filtered.length) {
+    selectedScheduleDate = filtered[0].dateKey;
   }
 
   renderScheduleDayList();
@@ -1695,32 +1795,86 @@ function renderScheduleDayList(){
     return;
   }
 
+  const info = getDateMatchInfo(selectedScheduleDate);
   $('#selectedDateLabel').text(selectedScheduleDate);
-  const events = raidScheduleData.filter(x => x.dateKey === selectedScheduleDate);
 
-  if (!events.length) {
-    $('#scheduleDayList').html('<div class="text-muted">此日期沒有安排</div>');
+  if (!info.events.length) {
+    $('#scheduleDayList').html('<div class="text-muted">此日期沒有符合條件的安排</div>');
     return;
   }
 
-  const html = events.map(evt => `
-    <div class="schedule-event-card">
-      <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-        <div>
-          <div class="fw-bold">${evt.camp}</div>
-          <div class="small text-muted">${evt.boss}</div>
+  const kw = getScheduleKeyword();
+
+  const html = info.events.map(evt => {
+    const memberCounter = new Map();
+
+    info.events.forEach(otherEvt => {
+      otherEvt.members.forEach(m => {
+        const key = normalizeText(m.code || m.name);
+        if (!key) return;
+        memberCounter.set(key, (memberCounter.get(key) || 0) + 1);
+      });
+    });
+
+    const matchedMembers = evt.members.filter(m => {
+      if (!kw) return false;
+      const blob = `${m.name || ''} ${m.code || ''} ${m.job || ''}`.toLowerCase();
+      return blob.includes(kw);
+    });
+
+    const ownConflicts = evt.members.filter(m => {
+      const key = normalizeText(m.code || m.name);
+      return key && (memberCounter.get(key) || 0) >= 2;
+    });
+
+    let cardCls = '';
+    if (ownConflicts.length) cardCls = 'conflict';
+    else if (matchedMembers.length) cardCls = 'match';
+
+    return `
+      <div class="schedule-event-card ${cardCls}">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+          <div>
+            <div class="fw-bold">${evt.camp}</div>
+            <div class="small text-muted">${evt.boss}</div>
+          </div>
+          <div class="text-end">
+            <div class="fw-bold">${evt.timeOnly}</div>
+            ${evt.note ? `<div class="small text-danger">${evt.note}</div>` : ''}
+          </div>
         </div>
-        <div class="text-end">
-          <div class="fw-bold">${evt.timeOnly}</div>
-          ${evt.note ? `<div class="small text-danger">${evt.note}</div>` : ''}
+
+        <div class="mb-2">
+          <span class="schedule-summary-chip">成員 ${evt.members.length} 人</span>
+          ${matchedMembers.length ? `<span class="schedule-summary-chip">搜尋命中 ${matchedMembers.length} 人</span>` : ''}
+          ${ownConflicts.length ? `<span class="schedule-summary-chip">重複出團 ${ownConflicts.length} 人</span>` : ''}
         </div>
+
+        <div class="small mt-2"><b>成員：</b></div>
+        <div class="small">
+          ${evt.members.map(m => `${m.name}${m.code ? `（${m.code}）` : ''} ${m.job || ''}`).join('<br>')}
+        </div>
+
+        ${
+          matchedMembers.length
+            ? `<div class="mt-2">
+                 <div class="small fw-bold text-danger">搜尋命中</div>
+                 ${matchedMembers.map(m => `<span class="schedule-member-hit">${m.name}${m.code ? `（${m.code}）` : ''}</span>`).join('')}
+               </div>`
+            : ''
+        }
+
+        ${
+          ownConflicts.length
+            ? `<div class="mt-2">
+                 <div class="small fw-bold text-warning">同日重複出團</div>
+                 ${ownConflicts.map(m => `<span class="schedule-member-hit">${m.name}${m.code ? `（${m.code}）` : ''}</span>`).join('')}
+               </div>`
+            : ''
+        }
       </div>
-      <div class="small mt-2"><b>成員：</b></div>
-      <div class="small">
-        ${evt.members.map(m => `${m.name}${m.code ? `（${m.code}）` : ''} ${m.job || ''}`).join('<br>')}
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   $('#scheduleDayList').html(html);
 }
@@ -2292,6 +2446,7 @@ $(document).on('click', '.schedule-calendar-cell', function(){
 $(function(){
   buildScheduleData();
   fillScheduleFilters();
+  showMainSection('home');
 });
 </script>
 
