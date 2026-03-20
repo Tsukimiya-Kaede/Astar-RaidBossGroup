@@ -485,7 +485,7 @@
       const shared = state.room?.board || [];
       const wrongMap = getWrongSet();
       boardBody.innerHTML = '';
-      for(let floor = 1; floor <= 10; floor++){
+      for(let floor = 10; floor >= 1; floor--){
         const tr = document.createElement('tr');
         const floorTd = document.createElement('td');
         floorTd.className = 'floor-cell';
