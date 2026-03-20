@@ -112,6 +112,64 @@
     }
     .toast.show{opacity:1; transform:none}
     .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+
+    @media (max-width: 640px){
+      .wrap{padding:12px}
+      .card{padding:14px}
+      .hero{margin-bottom:12px}
+      h1{font-size:24px}
+      .sub{font-size:13px}
+      .status{gap:12px}
+      .status .row{width:100%}
+      .status .row:last-child button{flex:1}
+      .grid[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+      .board{overflow:visible}
+      table{
+        min-width:0;
+        width:100%;
+        border-spacing:0;
+      }
+      thead{display:none}
+      tbody{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+      tbody tr{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:8px;
+        background:#0b1324;
+        border:1px solid var(--border);
+        border-radius:14px;
+        padding:10px;
+      }
+      td.floor-cell{
+        grid-column:1 / -1;
+        width:auto;
+        padding:10px 12px;
+        border-radius:10px;
+        font-size:14px;
+      }
+      td.pick{
+        min-width:0;
+        width:100%;
+        padding:14px 6px;
+        border-radius:12px;
+      }
+      td.pick .num{font-size:16px}
+      td.pick .submark{font-size:11px; margin-top:6px}
+      .marker{
+        width:100%;
+        justify-content:center;
+        gap:6px;
+        padding:6px 8px;
+        font-size:11px;
+        margin-top:6px;
+      }
+      .marker .dot{width:10px; height:10px}
+      .footer{font-size:12px; line-height:1.6}
+    }
   </style>
 </head>
 <body>
