@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJPQ Tool 多人連線版</title>
+  <script src="./config.js"></script>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#121a2b; --panel2:#182238; --text:#eef3ff; --muted:#9fb0d1;
+      --border:#2a3857; --accent:#7aa2ff; --danger:#ff7b7b; --ok:#59d39c; --warn:#ffd166;
+      --red:#ff6b6b; --blue:#5aa9ff; --green:#4fd18b; --yellow:#f3c84b;
+    }
+    * { box-sizing: border-box; }
+    body{
+      margin:0; font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
+      background:linear-gradient(180deg,#08101d,#0e1526 45%,#0a1120);
+      color:var(--text);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:24px;}
+    .hero{display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:18px;}
+    h1{margin:0; font-size:clamp(28px,4vw,40px)}
+    .sub{color:var(--muted); margin-top:8px}
+    .card{
+      background:rgba(18,26,43,.92); border:1px solid var(--border); border-radius:18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      padding:18px;
+    }
+    .grid{display:grid; gap:16px}
+    .top-grid{grid-template-columns: 1.1fr 1.4fr}
+    @media (max-width: 980px){ .top-grid{grid-template-columns:1fr} }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .field{display:flex; flex-direction:column; gap:8px; flex:1; min-width:180px}
+    label{font-size:13px; color:var(--muted)}
+    input{
+      width:100%; background:#0b1324; color:var(--text); border:1px solid var(--border);
+      border-radius:12px; padding:12px 14px; outline:none;
+    }
+    input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,162,255,.15)}
+    button{
+      border:0; border-radius:12px; padding:12px 16px; cursor:pointer; color:white;
+      background:#2b61ff; font-weight:700;
+    }
+    button.secondary{background:#263149}
+    button.ghost{background:transparent; border:1px solid var(--border)}
+    button.warn{background:#8e5b00}
+    button.danger{background:#8a2f36}
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .hidden{display:none !important}
+    .status{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin:12px 0 4px;
+    }
+    .pill{
+      padding:8px 12px; border-radius:999px; background:#0b1324; border:1px solid var(--border);
+      color:var(--muted); font-size:14px;
+    }
+    .pill strong{color:var(--text)}
+    .colors{display:flex; gap:10px; flex-wrap:wrap}
+    .color-btn{
+      width:44px; height:44px; border-radius:999px; border:3px solid transparent; position:relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    }
+    .color-btn.selected{border-color:white}
+    .color-btn.taken::after{
+      content:""; position:absolute; inset:8px; border-radius:999px; border:3px solid rgba(255,255,255,.95);
+      transform:rotate(45deg);
+    }
+    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+    .legend-item{
+      display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px;
+      background:#0b1324; border:1px solid var(--border); padding:8px 10px; border-radius:999px;
+    }
+    .dot{width:14px; height:14px; border-radius:999px}
+    .board{overflow:auto; margin-top:8px}
+    table{width:100%; border-collapse:separate; border-spacing:10px 10px; min-width:720px}
+    th{font-size:13px; color:var(--muted); font-weight:700}
+    td.floor-cell{
+      width:90px; text-align:center; color:var(--muted); font-weight:700;
+      background:#0b1324; border:1px solid var(--border); border-radius:12px; padding:14px 12px;
+    }
+    td.pick{
+      position:relative; min-width:120px; text-align:center; user-select:none;
+      background:#101a2f; border:1px solid var(--border); border-radius:14px; padding:18px 14px; cursor:pointer;
+      transition:.15s transform ease,.15s border-color ease,.15s background ease;
+    }
+    td.pick:hover{transform:translateY(-1px); border-color:#4560a3; background:#12203c}
+    td.pick .num{font-size:18px; font-weight:800}
+    td.pick .submark{margin-top:8px; font-size:12px; color:var(--muted)}
+    td.pick.shared-red{box-shadow: inset 0 0 0 2px var(--red)}
+    td.pick.shared-blue{box-shadow: inset 0 0 0 2px var(--blue)}
+    td.pick.shared-green{box-shadow: inset 0 0 0 2px var(--green)}
+    td.pick.shared-yellow{box-shadow: inset 0 0 0 2px var(--yellow)}
+    td.pick.private-wrong{
+      background:
+        linear-gradient(135deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
+        linear-gradient(45deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
+        #101a2f;
+    }
+    .marker{
+      display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:999px;
+      background:rgba(255,255,255,.05); margin-top:8px; font-size:12px; font-weight:700;
+    }
+    .marker .dot{width:12px; height:12px}
+    .hint{color:var(--muted); font-size:13px; line-height:1.6}
+    .footer{margin-top:16px; color:var(--muted); font-size:13px}
+    code{background:#0b1324; padding:2px 6px; border-radius:6px}
+    .toast{
+      position:fixed; right:20px; bottom:20px; background:#0b1324; border:1px solid var(--border);
+      border-radius:14px; padding:12px 14px; color:var(--text); box-shadow:0 12px 30px rgba(0,0,0,.35);
+      opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s ease;
+    }
+    .toast.show{opacity:1; transform:none}
+    .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>RJPQ Tool 多人連線版</h1>
+        <div class="sub">羅密歐與茱麗葉組隊任務平台協作工具｜一頁式前端 + WebSocket 房間同步</div>
+      </div>
+      <div class="pill" id="connPill">連線狀態：<strong id="connState">未連線</strong></div>
+    </div>
+
+    <div id="lobbyView" class="grid top-grid">
+      <div class="card">
+        <h2 style="margin-top:0">建立房間</h2>
+        <div class="grid">
+          <div class="field">
+            <label>房號</label>
+            <input id="createRoomCode" placeholder="例如：rj-001" />
+          </div>
+          <div class="field">
+            <label>房間密碼（可留空）</label>
+            <input id="createRoomPassword" placeholder="選填" />
+          </div>
+          <div class="row">
+            <button id="createRoomBtn">建立並進入</button>
+            <button id="randomRoomBtn" class="secondary">隨機房號</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0">加入房間</h2>
+        <div class="grid">
+          <div class="field">
+            <label>房號</label>
+            <input id="joinRoomCode" placeholder="輸入房號或直接開啟 #/房號" />
+          </div>
+          <div class="field">
+            <label>房間密碼（若有）</label>
+            <input id="joinRoomPassword" placeholder="選填" />
+          </div>
+          <div class="row">
+            <button id="joinRoomBtn">加入房間</button>
+          </div>
+          <div class="hint">
+            你也可以直接分享網址 <code class="inline-code">#/房號</code> 給隊友。<br>
+            前端預設會嘗試連到目前網域的 WebSocket 後端；也可點右上角設定自訂伺服器位址。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="roomView" class="hidden">
+      <div class="card">
+        <div class="status">
+          <div class="row">
+            <div class="pill">房號：<strong id="roomCodeText"></strong></div>
+            <div class="pill">你的連線 ID：<strong id="clientIdText"></strong></div>
+            <div class="pill">在線人數：<strong id="memberCountText">0</strong></div>
+          </div>
+          <div class="row">
+            <button id="copyRoomBtn" class="secondary">複製房間資訊</button>
+            <button id="clearSharedBtn" class="warn">清空共享標記</button>
+            <button id="leaveRoomBtn" class="danger">離開房間</button>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:14px">
+          <div>
+            <h3 style="margin:0 0 8px 0">選擇顏色</h3>
+            <div class="colors" id="colorPicker"></div>
+            <div class="legend" id="memberLegend"></div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 8px 0">操作說明</h3>
+            <div class="hint">
+              左鍵：設定/取消你的共享正解。<br>
+              右鍵：設定/取消你自己的私人錯誤標記。<br>
+              每層共享標記只允許每個顏色一個位置；顏色不可重複選取。
+            </div>
+          </div>
+        </div>
+
+        <div class="board">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:90px">樓層</th>
+                <th>門 1</th>
+                <th>門 2</th>
+                <th>門 3</th>
+                <th>門 4</th>
+              </tr>
+            </thead>
+            <tbody id="boardBody"></tbody>
+          </table>
+        </div>
+
+        <div class="footer">
+          部署方式：把本頁放到任何靜態主機；再用 Node.js 啟動 WebSocket 伺服器。預設前端會連到同網域下的 <code>/ws</code>。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const COLORS = {
+      red: { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff6b6b' },
+      blue: { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#5aa9ff' },
+      green: { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#4fd18b' },
+      yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim() || '#f3c84b' },
+    };
+
+    const state = {
+      ws: null,
+      connected: false,
+      clientId: '',
+      roomCode: '',
+      roomPassword: '',
+      me: { color: null },
+      room: null,
+      localWrong: loadLocalWrong(),
+      wsUrl: loadWsUrl(),
+      pendingJoin: null,
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const boardBody = $('#boardBody');
+
+    function showToast(text){
+      const toast = $('#toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function normalizeRoomCode(s){
+      return (s || '').trim().toLowerCase().replace(/\s+/g, '-');
+    }
+
+    function randomRoomCode(){
+      return 'rj-' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function normalizeBackendUrl(url){
+      if(!url) return '';
+      url = String(url).trim().replace(/\/$/, '');
+      if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      return url;
+    }
+
+    function wsDefaultUrl(){
+      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
+      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
+      if(fromQuery) return fromQuery.replace(/^http/i, m => m.toLowerCase() === 'https' ? 'wss' : 'ws') + '/ws';
+      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
+      const target = saved || configured;
+      if(target) return target.replace(/^http/i, m => m.toLowerCase() === 'https' ? 'wss' : 'ws') + '/ws';
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${proto}//${location.host}/ws`;
+    }
+
+    function loadWsUrl(){
+      return wsDefaultUrl();
+    }
+
+    function saveWsUrl(url){
+      const normalized = normalizeBackendUrl(url);
+      if(normalized) localStorage.setItem('rjpq_backend_url', normalized);
+      else localStorage.removeItem('rjpq_backend_url');
+      state.wsUrl = loadWsUrl();
+      renderBackendSettings();
+    }
+
+    function currentBackendHttpUrl(){
+      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
+      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
+      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
+      return fromQuery || saved || configured || '';
+    }
+
+    function renderBackendSettings(){
+      const input = $('#backendUrl');
+      const hint = $('#backendHint');
+      if(input) input.value = currentBackendHttpUrl();
+      const active = currentBackendHttpUrl();
+      hint.textContent = active
+        ? `目前會連到：${active}（WebSocket: ${state.wsUrl}）`
+        : `目前未指定後端，將嘗試連到同網域：${state.wsUrl}`;
+    }
+
+    function loadLocalWrong(){
+      try { return JSON.parse(localStorage.getItem('rjpq_local_wrong') || '{}'); } catch { return {}; }
+    }
+
+    function persistLocalWrong(){
+      localStorage.setItem('rjpq_local_wrong', JSON.stringify(state.localWrong));
+    }
+
+    function roomWrongKey(){
+      return state.roomCode || '_lobby';
+    }
+
+    function getWrongSet(){
+      if(!state.localWrong[roomWrongKey()]) state.localWrong[roomWrongKey()] = {};
+      return state.localWrong[roomWrongKey()];
+    }
+
+    function updateHash(){
+      if(state.roomCode) location.hash = '#/' + encodeURIComponent(state.roomCode);
+      else history.replaceState(null, '', location.pathname + location.search);
+    }
+
+    function setConnectionState(text, ok=false){
+      $('#connState').textContent = text;
+      $('#connPill').style.borderColor = ok ? 'rgba(89,211,156,.4)' : '';
+      $('#connPill').style.color = ok ? '#c9ffe7' : '';
+    }
+
+    function connectWs(){
+      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) return;
+      try {
+        const ws = new WebSocket(state.wsUrl);
+        state.ws = ws;
+        setConnectionState('連線中...');
+        ws.onopen = () => {
+          state.connected = true;
+          setConnectionState('已連線', true);
+          if(state.pendingJoin){
+            ws.send(JSON.stringify(state.pendingJoin));
+          }
+        };
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          handleMessage(msg);
+        };
+        ws.onclose = () => {
+          state.connected = false;
+          setConnectionState('已斷線');
+          setTimeout(() => {
+            if(state.roomCode) connectWs();
+          }, 1200);
+        };
+        ws.onerror = () => {
+          setConnectionState('連線失敗');
+        };
+      } catch (e){
+        console.error(e);
+        setConnectionState('連線失敗');
+      }
+    }
+
+    function send(type, data={}){
+      const payload = { type, ...data };
+      if(state.ws && state.ws.readyState === WebSocket.OPEN){
+        state.ws.send(JSON.stringify(payload));
+      } else {
+        state.pendingJoin = payload;
+        connectWs();
+      }
+    }
+
+    function joinOrCreate(mode){
+      const roomCode = normalizeRoomCode(mode === 'create' ? $('#createRoomCode').value : $('#joinRoomCode').value);
+      const password = (mode === 'create' ? $('#createRoomPassword').value : $('#joinRoomPassword').value) || '';
+      if(!roomCode){
+        showToast('請輸入房號');
+        return;
+      }
+      state.roomCode = roomCode;
+      state.roomPassword = password;
+      updateHash();
+      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password };
+      connectWs();
+      if(state.connected) send(state.pendingJoin.type, { roomCode, password });
+    }
+
+    function handleMessage(msg){
+      switch(msg.type){
+        case 'welcome':
+          state.clientId = msg.clientId;
+          $('#clientIdText').textContent = msg.clientId.slice(0, 8);
+          break;
+        case 'room_state':
+          state.room = msg.room;
+          state.me.color = msg.yourColor || state.me.color || null;
+          renderRoom();
+          break;
+        case 'joined_room':
+          state.roomCode = msg.roomCode;
+          state.roomPassword = state.roomPassword || '';
+          updateHash();
+          showRoomView();
+          showToast('已進入房間');
+          break;
+        case 'error':
+          showToast(msg.message || '發生錯誤');
+          break;
+        case 'left_room':
+          leaveRoomLocal(false);
+          break;
+      }
+    }
+
+    function showRoomView(){
+      $('#lobbyView').classList.add('hidden');
+      $('#roomView').classList.remove('hidden');
+    }
+
+    function showLobbyView(){
+      $('#roomView').classList.add('hidden');
+      $('#lobbyView').classList.remove('hidden');
+    }
+
+    function leaveRoomLocal(sendMsg=true){
+      if(sendMsg && state.roomCode) send('leave_room', { roomCode: state.roomCode });
+      state.roomCode = '';
+      state.roomPassword = '';
+      state.me.color = null;
+      state.room = null;
+      updateHash();
+      showLobbyView();
+    }
+
+    function renderRoom(){
+      if(!state.room) return;
+      showRoomView();
+      $('#roomCodeText').textContent = state.room.code;
+      $('#clientIdText').textContent = state.clientId ? state.clientId.slice(0, 8) : '-';
+      $('#memberCountText').textContent = String(state.room.memberCount || 0);
+
+      const picker = $('#colorPicker');
+      picker.innerHTML = '';
+      const taken = state.room.colors || {};
+      Object.entries(COLORS).forEach(([key, meta]) => {
+        const holder = taken[key];
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        if(state.me.color === key) btn.classList.add('selected');
+        if(holder && holder !== state.clientId) btn.classList.add('taken');
+        btn.style.background = meta.hex;
+        btn.title = holder && holder !== state.clientId ? `${meta.label}（已被選取）` : meta.label;
+        btn.disabled = !!holder && holder !== state.clientId;
+        btn.onclick = () => send('select_color', { roomCode: state.roomCode, color: key });
+        picker.appendChild(btn);
+      });
+
+      const legend = $('#memberLegend');
+      legend.innerHTML = '';
+      const members = state.room.members || [];
+      members.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = m.color ? COLORS[m.color].hex : '#777';
+        const text = document.createElement('span');
+        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? '（你）' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
+        item.append(dot, text);
+        legend.appendChild(item);
+      });
+
+      renderBoard();
+    }
+
+    function renderBoard(){
+      const shared = state.room?.board || [];
+      const wrongMap = getWrongSet();
+      boardBody.innerHTML = '';
+      for(let floor = 1; floor <= 10; floor++){
+        const tr = document.createElement('tr');
+        const floorTd = document.createElement('td');
+        floorTd.className = 'floor-cell';
+        floorTd.textContent = `第 ${floor} 層`;
+        tr.appendChild(floorTd);
+
+        for(let door = 1; door <= 4; door++){
+          const td = document.createElement('td');
+          td.className = 'pick';
+          const floorData = shared[floor - 1] || {};
+          let occupantColor = null;
+          let occupantId = null;
+          Object.entries(floorData).forEach(([color, pickDoor]) => {
+            if(pickDoor === door){
+              occupantColor = color;
+              occupantId = state.room.members?.find(m => m.color === color)?.clientId || '';
+            }
+          });
+          if(occupantColor) td.classList.add(`shared-${occupantColor}`);
+          const wrongKey = `${floor}-${door}`;
+          if(wrongMap[wrongKey]) td.classList.add('private-wrong');
+
+          td.innerHTML = `<div class="num">${door}</div>`;
+          if(occupantColor){
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            dot.style.background = COLORS[occupantColor].hex;
+            const label = document.createElement('span');
+            label.textContent = `${COLORS[occupantColor].label}${occupantId === state.clientId ? '（你）' : ''}`;
+            marker.append(dot, label);
+            td.appendChild(marker);
+          } else if(wrongMap[wrongKey]) {
+            const sub = document.createElement('div');
+            sub.className = 'submark';
+            sub.textContent = '私人錯誤';
+            td.appendChild(sub);
+          } else {
+            const sub = document.createElement('div');
+            sub.className = 'submark';
+            sub.textContent = '未標記';
+            td.appendChild(sub);
+          }
+
+          td.onclick = () => {
+            if(!state.me.color){
+              showToast('請先選擇顏色');
+              return;
+            }
+            send('toggle_shared', { roomCode: state.roomCode, floor, door });
+          };
+          td.oncontextmenu = (e) => {
+            e.preventDefault();
+            togglePrivateWrong(floor, door);
+          };
+          tr.appendChild(td);
+        }
+        boardBody.appendChild(tr);
+      }
+    }
+
+    function togglePrivateWrong(floor, door){
+      const wrongMap = getWrongSet();
+      const key = `${floor}-${door}`;
+      if(wrongMap[key]) delete wrongMap[key];
+      else wrongMap[key] = true;
+      persistLocalWrong();
+      renderBoard();
+    }
+
+    async function copyRoomInfo(){
+      const info = [
+        `Code: ${state.roomCode}`,
+        `Password: ${state.roomPassword || '(none)'}`,
+        `Link: ${location.origin}${location.pathname}#/${encodeURIComponent(state.roomCode)}`
+      ].join('\n');
+      try{
+        await navigator.clipboard.writeText(info);
+        showToast('已複製房間資訊');
+      }catch{
+        showToast('複製失敗');
+      }
+    }
+
+    function applyHashAutoJoin(){
+      const m = location.hash.match(/^#\/(.+)$/);
+      if(!m) return;
+      const code = decodeURIComponent(m[1]);
+      $('#joinRoomCode').value = code;
+    }
+
+    // settings via keyboard
+    window.addEventListener('keydown', (e) => {
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === ','){
+        const next = prompt('輸入後端 HTTP/HTTPS 網址', currentBackendHttpUrl() || '');
+        if(next){
+          saveWsUrl(next.trim());
+          showToast('已更新後端網址');
+        }
+      }
+    });
+
+    $('#createRoomBtn').onclick = () => joinOrCreate('create');
+    $('#joinRoomBtn').onclick = () => joinOrCreate('join');
+    $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
+    $('#copyRoomBtn').onclick = copyRoomInfo;
+    $('#clearSharedBtn').onclick = () => send('clear_shared', { roomCode: state.roomCode });
+    $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
+
+
+    $('#saveBackendBtn').onclick = () => {
+      saveWsUrl($('#backendUrl').value);
+      showToast('已儲存後端網址');
+      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)){
+        state.ws.close();
+      }
+    };
+    $('#resetBackendBtn').onclick = () => {
+      saveWsUrl('');
+      showToast('已重設後端網址');
+    };
+
+    renderBackendSettings();
+
+    applyHashAutoJoin();
+    if($('#joinRoomCode').value) showToast('已從網址帶入房號');
+  </script>
+</body>
+</html>
