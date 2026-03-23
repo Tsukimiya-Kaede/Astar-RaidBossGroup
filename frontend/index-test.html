@@ -10,35 +10,30 @@
       --bg:#0b1220; --panel:#121a2b; --panel2:#182238; --text:#eef3ff; --muted:#9fb0d1;
       --border:#2a3857; --accent:#7aa2ff; --danger:#ff7b7b; --ok:#59d39c; --warn:#ffd166;
       --red:#ff6b6b; --blue:#5aa9ff; --green:#4fd18b; --yellow:#f3c84b;
+      --red2:#FF969650; --blue2:#9696FF50; --green2:#96FF9650; --yellow2:#FFFF9650;
     }
     * { box-sizing: border-box; }
     html, body{
-      height:100%;
-      overflow:hidden;
-    }
-    body{
-      margin:0; font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
+      margin:0; padding:0; width:100%; min-height:100%;
+      overflow-x:hidden; overflow-y:hidden;
+      font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
       background:linear-gradient(180deg,#08101d,#0e1526 45%,#0a1120);
       color:var(--text);
     }
-    .wrap{
-      max-width:1200px; margin:0 auto; padding:24px;
-      height:100dvh; overflow:hidden;
-      display:flex; flex-direction:column;
-    }
-    .hero{display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:18px;}
-    h1{margin:0; font-size:clamp(28px,4vw,40px)}
+    body{ position:relative; }
+    .wrap{max-width:1200px; margin:0 auto; padding:16px 18px 20px;}
+    .hero{display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:14px;}
+    h1{margin:0; font-size:clamp(24px,4vw,36px)}
     .sub{color:var(--muted); margin-top:8px}
     .card{
       background:rgba(18,26,43,.92); border:1px solid var(--border); border-radius:18px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-      padding:18px;
+      box-shadow:0 12px 30px rgba(0,0,0,.25); padding:16px;
     }
     .grid{display:grid; gap:16px}
-    .top-grid{grid-template-columns: 1.1fr 1.4fr}
+    .top-grid{grid-template-columns:1.1fr 1.4fr}
     @media (max-width: 980px){ .top-grid{grid-template-columns:1fr} }
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .field{display:flex; flex-direction:column; gap:8px; flex:1; min-width:180px}
+    .row{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+    .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:160px}
     label{font-size:13px; color:var(--muted)}
     input{
       width:100%; background:#0b1324; color:var(--text); border:1px solid var(--border);
@@ -46,7 +41,7 @@
     }
     input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,162,255,.15)}
     button{
-      border:0; border-radius:12px; padding:12px 16px; cursor:pointer; color:white;
+      border:0; border-radius:12px; padding:11px 14px; cursor:pointer; color:white;
       background:#2b61ff; font-weight:700;
     }
     button.secondary{background:#263149}
@@ -56,17 +51,17 @@
     button:disabled{opacity:.5; cursor:not-allowed}
     .hidden{display:none !important}
     .status{
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-      margin:12px 0 4px;
+      display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;
+      margin:4px 0;
     }
     .pill{
       padding:8px 12px; border-radius:999px; background:#0b1324; border:1px solid var(--border);
       color:var(--muted); font-size:14px;
     }
     .pill strong{color:var(--text)}
-    .colors{display:flex; gap:10px; flex-wrap:wrap}
+    .colors{display:flex; gap:8px; flex-wrap:wrap}
     .color-btn{
-      width:44px; height:44px; border-radius:999px; border:3px solid transparent; position:relative;
+      width:40px; height:40px; border-radius:999px; border:3px solid transparent; position:relative;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
     }
     .color-btn.selected{border-color:white}
@@ -74,31 +69,83 @@
       content:""; position:absolute; inset:8px; border-radius:999px; border:3px solid rgba(255,255,255,.95);
       transform:rotate(45deg);
     }
-    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+    .legend{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;}
     .legend-item{
-      display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px;
+      display:flex; align-items:center; gap:6px; color:var(--muted); font-size:14px;
       background:#0b1324; border:1px solid var(--border); padding:8px 10px; border-radius:999px;
     }
     .dot{width:14px; height:14px; border-radius:999px}
-    .board{overflow:auto; margin-top:8px}
-    table{width:100%; border-collapse:separate; border-spacing:10px 10px; min-width:720px}
+    .hint{color:var(--muted); font-size:13px; line-height:1.6}
+    .footer{margin-top:14px; color:var(--muted); font-size:13px}
+    code{background:#0b1324; padding:2px 6px; border-radius:6px}
+    .toast{
+      position:fixed; right:20px; bottom:20px; background:#0b1324; border:1px solid var(--border);
+      border-radius:14px; padding:12px 14px; color:var(--text); box-shadow:0 12px 30px rgba(0,0,0,.35);
+      opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s ease; z-index:99999;
+    }
+    .toast.show{opacity:1; transform:none}
+    .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+
+    .floating-launcher{
+      position:fixed; right:18px; bottom:18px; z-index:9000;
+      display:none;
+      box-shadow:0 12px 28px rgba(0,0,0,.35);
+      border-radius:999px;
+      padding:14px 18px;
+    }
+    .floating-launcher.show{display:inline-flex; align-items:center; justify-content:center;}
+
+    .floating-panel{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform:translate(-50%, -50%);
+      width:min(92vw, 430px);
+      max-height:min(86vh, 760px);
+      z-index:9500;
+      display:none;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background:rgba(18,26,43,.98);
+      box-shadow:0 24px 60px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .floating-panel.show{display:flex; flex-direction:column;}
+    .floating-header{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:12px 14px; background:#0f1729; border-bottom:1px solid var(--border);
+      cursor:move; user-select:none;
+    }
+    .floating-title{font-weight:800;}
+    .floating-actions{display:flex; gap:8px;}
+    .floating-body{
+      padding:12px; overflow:hidden; display:flex; flex-direction:column; gap:10px;
+    }
+    .floating-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.28); z-index:9400; display:none;
+    }
+    .floating-overlay.show{display:block;}
+
+    .board-shell{width:100%; overflow:hidden;}
+    table{width:100%; border-collapse:separate; border-spacing:6px 6px; table-layout:fixed;}
     th{font-size:13px; color:var(--muted); font-weight:700}
     td.floor-cell{
-      width:90px; text-align:center; color:var(--muted); font-weight:700;
-      background:#0b1324; border:1px solid var(--border); border-radius:12px; padding:14px 12px;
+      width:38px; text-align:center; color:var(--muted); font-weight:700;
+      background:#0b1324; border:1px solid var(--border); border-radius:10px; padding:1px 0 4px;
+      height:40px;
     }
     td.pick{
-      position:relative; min-width:120px; text-align:center; user-select:none;
-      background:#101a2f; border:1px solid var(--border); border-radius:14px; padding:18px 14px; cursor:pointer;
+      position:relative; text-align:center; user-select:none;
+      background:#101a2f; border:1px solid var(--border); border-radius:10px; padding:1px 0 4px; cursor:pointer;
       transition:.15s transform ease,.15s border-color ease,.15s background ease;
+      height:40px;
     }
     td.pick:hover{transform:translateY(-1px); border-color:#4560a3; background:#12203c}
-    td.pick .num{font-size:18px; font-weight:800}
-    td.pick .submark{margin-top:8px; font-size:12px; color:var(--muted)}
-    td.pick.shared-red{box-shadow: inset 0 0 0 2px var(--red)}
-    td.pick.shared-blue{box-shadow: inset 0 0 0 2px var(--blue)}
-    td.pick.shared-green{box-shadow: inset 0 0 0 2px var(--green)}
-    td.pick.shared-yellow{box-shadow: inset 0 0 0 2px var(--yellow)}
+    td.pick .submark{
+      display:inline-flex; align-items:center; justify-content:center; width:100%;
+      gap:6px; padding:0 4px; border-radius:999px;
+      background:rgba(255,255,255,0); margin-top:0; font-size:12px; font-weight:700; color:var(--muted);
+    }
     td.pick.private-wrong{
       background:
         linear-gradient(135deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
@@ -106,124 +153,20 @@
         #101a2f;
     }
     .marker{
-      display:inline-flex; align-items:center; gap:8px; padding:7px 10px; border-radius:999px;
-      background:rgba(255,255,255,.05); margin-top:8px; font-size:12px; font-weight:700;
+      display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:0 6px; border-radius:999px;
+      background:rgba(0,0,0,.12); font-size:12px; font-weight:700; color:#fff;
+      width:100%;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
-    .marker .dot{width:12px; height:12px}
-    .hint{color:var(--muted); font-size:13px; line-height:1.6}
-    .footer{margin-top:16px; color:var(--muted); font-size:13px}
-    code{background:#0b1324; padding:2px 6px; border-radius:6px}
-    .toast{
-      position:fixed; right:20px; bottom:20px; background:#0b1324; border:1px solid var(--border);
-      border-radius:14px; padding:12px 14px; color:var(--text); box-shadow:0 12px 30px rgba(0,0,0,.35);
-      opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s ease;
-    }
-    .toast.show{opacity:1; transform:none}
-    .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
 
-    .floating-panel{
-      position:fixed;
-      top:16px;
-      right:16px;
-      z-index:2147483647;
-      width:min(320px, calc(100vw - 24px));
-      background:rgba(10,18,32,.96);
-      border:1px solid var(--border);
-      border-radius:16px;
-      box-shadow:0 18px 42px rgba(0,0,0,.42);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
-      user-select:none;
-    }
-    .floating-head{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:8px; padding:12px 14px; cursor:move;
-      background:rgba(255,255,255,.03);
-      border-bottom:1px solid rgba(255,255,255,.06);
-    }
-    .floating-title{font-weight:800; font-size:14px}
-    .floating-body{padding:12px 14px; display:grid; gap:10px}
-    .floating-info{
-      display:grid; grid-template-columns:1fr 1fr; gap:8px;
-    }
-    .floating-pill{
-      background:#0b1324; border:1px solid var(--border); border-radius:12px;
-      padding:8px 10px; font-size:12px; color:var(--muted);
-    }
-    .floating-pill strong{display:block; margin-top:4px; color:var(--text); font-size:13px}
-    .floating-actions{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px}
-    .floating-actions button{padding:10px 8px; font-size:13px}
-    .floating-note{font-size:12px; color:var(--muted); line-height:1.5}
-    .floating-toggle{
-      width:32px; height:32px; border-radius:10px; padding:0;
-      display:inline-flex; align-items:center; justify-content:center;
-      background:#263149;
-    }
-    .floating-panel.collapsed .floating-body{display:none}
-
-
-    @media (max-width: 640px){
+    @media (max-width: 520px){
       .wrap{padding:12px}
       .card{padding:14px}
-      .hero{margin-bottom:12px}
-      h1{font-size:24px}
-      .sub{font-size:13px}
-      .status{gap:12px}
-      .status .row{width:100%}
-      .status .row:last-child button{flex:1}
-      .grid[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
-      .board{overflow:visible}
-      table{
-        min-width:0;
-        width:100%;
-        border-spacing:0;
-      }
-      thead{display:none}
-      tbody{
-        display:flex;
-        flex-direction:column;
-        gap:12px;
-      }
-      tbody tr{
-        display:grid;
-        grid-template-columns:repeat(4, minmax(0, 1fr));
-        gap:8px;
-        background:#0b1324;
-        border:1px solid var(--border);
-        border-radius:14px;
-        padding:10px;
-      }
-      td.floor-cell{
-        grid-column:1 / -1;
-        width:auto;
-        padding:10px 12px;
-        border-radius:10px;
-        font-size:14px;
-      }
-      td.pick{
-        min-width:0;
-        width:100%;
-        padding:14px 6px;
-        border-radius:12px;
-      }
-      td.pick .num{font-size:16px}
-      td.pick .submark{font-size:11px; margin-top:6px}
-      .marker{
-        width:100%;
-        justify-content:center;
-        gap:6px;
-        padding:6px 8px;
-        font-size:11px;
-        margin-top:6px;
-      }
-      .marker .dot{width:10px; height:10px}
-      .footer{font-size:12px; line-height:1.6}
-      .floating-panel{
-        top:auto;
-        right:12px;
-        bottom:12px;
-        width:min(300px, calc(100vw - 24px));
-      }
+      .floating-panel{width:min(96vw, 420px);}
+      .floating-body{padding:10px}
+      table{border-spacing:4px 6px;}
+      td.pick, td.floor-cell{height:42px;}
+      .marker{font-size:11px;}
     }
   </style>
 </head>
@@ -231,7 +174,7 @@
   <div class="wrap">
     <div class="hero">
       <div>
-        <h1>RJPQ Tool 多人連線版 Astar公會製作</h1>
+        <h1>RJPQ Tool 多人連線版 Astar 公會</h1>
         <div class="sub">羅密歐與茱麗葉組隊任務平台協作工具</div>
       </div>
       <div class="pill" id="connPill">連線狀態：<strong id="connState">未連線</strong></div>
@@ -271,8 +214,7 @@
             <button id="joinRoomBtn">加入房間</button>
           </div>
           <div class="hint">
-            你也可以直接分享網址 <code class="inline-code">#/房號</code> 給隊友。<br>
-            前端預設會嘗試連到目前網域的 WebSocket 後端；也可點右上角設定自訂伺服器位址。
+            你也可以直接分享網址 <code class="inline-code">#/房號</code> 給隊友。
           </div>
         </div>
       </div>
@@ -287,6 +229,7 @@
             <div class="pill">在線人數：<strong id="memberCountText">0</strong></div>
           </div>
           <div class="row">
+            <button id="openBoardBtn">開啟平台面板</button>
             <button id="copyRoomBtn" class="secondary">複製房間資訊</button>
             <button id="clearSharedBtn" class="warn">清空共享標記</button>
             <button id="leaveRoomBtn" class="danger">離開房間</button>
@@ -297,69 +240,71 @@
           <div>
             <h3 style="margin:0 0 8px 0">選擇顏色</h3>
             <div class="colors" id="colorPicker"></div>
-            <div class="legend" id="memberLegend"></div>
           </div>
           <div>
-            <h3 style="margin:0 0 8px 0">操作說明</h3>
+            <h3 style="margin:0 0 4px 0">操作說明</h3>
             <div class="hint">
               左鍵：設定/取消你的共享正解。<br>
               右鍵：設定/取消你自己的私人錯誤標記。<br>
+              按「開啟平台面板」才會跳出 10 層平台。<br>
               每層共享標記只允許每個顏色一個位置；顏色不可重複選取。
             </div>
           </div>
         </div>
 
-        <div class="board">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:90px">樓層</th>
-                <th>門 1</th>
-                <th>門 2</th>
-                <th>門 3</th>
-                <th>門 4</th>
-              </tr>
-            </thead>
-            <tbody id="boardBody"></tbody>
-          </table>
-        </div>
+        <div class="legend" id="memberLegend"></div>
 
         <div class="footer">
-          有任何使用問題請聯繫Neight奈特
+          平台表格已改成按鈕叫出式懸浮面板，不會一開始常駐顯示。<br>
+          有任何使用問題請聯繫 Neight奈特 ❤
         </div>
       </div>
     </div>
   </div>
 
-
-  <div id="floatingPanel" class="floating-panel hidden">
-    <div id="floatingHead" class="floating-head">
-      <div class="floating-title">懸浮控制窗</div>
-      <button id="floatingToggleBtn" class="floating-toggle secondary" type="button">－</button>
+  <button id="floatingLauncher" class="floating-launcher">開啟平台</button>
+  <div id="floatingOverlay" class="floating-overlay"></div>
+  <div id="floatingPanel" class="floating-panel">
+    <div id="floatingHeader" class="floating-header">
+      <div class="floating-title">平台選擇面板</div>
+      <div class="floating-actions">
+        <button id="floatingCopyBtn" class="secondary">複製</button>
+        <button id="floatingClearBtn" class="warn">清空</button>
+        <button id="closeBoardBtn" class="danger">關閉</button>
+      </div>
     </div>
     <div class="floating-body">
-      <div class="floating-info">
-        <div class="floating-pill">房號<strong id="floatingRoomCode">-</strong></div>
-        <div class="floating-pill">連線<strong id="floatingConnState">未連線</strong></div>
+      <div class="board-shell">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px">樓層</th>
+              <th>　</th>
+              <th>　</th>
+              <th>　</th>
+              <th>　</th>
+            </tr>
+          </thead>
+          <tbody id="boardBody"></tbody>
+        </table>
       </div>
-      <div class="floating-actions">
-        <button id="floatingCopyBtn" class="secondary" type="button">複製</button>
-        <button id="floatingClearBtn" class="warn" type="button">清空</button>
-        <button id="floatingLeaveBtn" class="danger" type="button">離開</button>
-      </div>
-      <div class="floating-note">這是頁內最高層懸浮控制窗，不會被本頁其他元素覆蓋。</div>
     </div>
   </div>
-
 
   <div id="toast" class="toast"></div>
 
   <script>
     const COLORS = {
-      red: { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff6b6b' },
-      blue: { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#5aa9ff' },
-      green: { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#4fd18b' },
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff6b6b' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#5aa9ff' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#4fd18b' },
       yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim() || '#f3c84b' },
+    };
+    const COLORS2 = {
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red2').trim() || '#FF969650' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue2').trim() || '#9696FF50' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green2').trim() || '#96FF9650' },
+      yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow2').trim() || '#FFFF9650' },
     };
 
     const state = {
@@ -416,31 +361,6 @@
       return wsDefaultUrl();
     }
 
-    function saveWsUrl(url){
-      const normalized = normalizeBackendUrl(url);
-      if(normalized) localStorage.setItem('rjpq_backend_url', normalized);
-      else localStorage.removeItem('rjpq_backend_url');
-      state.wsUrl = loadWsUrl();
-      renderBackendSettings();
-    }
-
-    function currentBackendHttpUrl(){
-      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
-      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
-      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
-      return fromQuery || saved || configured || '';
-    }
-
-    function renderBackendSettings(){
-      const input = $('#backendUrl');
-      const hint = $('#backendHint');
-      if(input) input.value = currentBackendHttpUrl();
-      const active = currentBackendHttpUrl();
-      hint.textContent = active
-        ? `目前會連到：${active}（WebSocket: ${state.wsUrl}）`
-        : `目前未指定後端，將嘗試連到同網域：${state.wsUrl}`;
-    }
-
     function loadLocalWrong(){
       try { return JSON.parse(localStorage.getItem('rjpq_local_wrong') || '{}'); } catch { return {}; }
     }
@@ -467,8 +387,6 @@
       $('#connState').textContent = text;
       $('#connPill').style.borderColor = ok ? 'rgba(89,211,156,.4)' : '';
       $('#connPill').style.color = ok ? '#c9ffe7' : '';
-      const floatingConn = $('#floatingConnState');
-      if(floatingConn) floatingConn.textContent = text;
     }
 
     function connectWs(){
@@ -559,14 +477,14 @@
     function showRoomView(){
       $('#lobbyView').classList.add('hidden');
       $('#roomView').classList.remove('hidden');
-      $('#floatingPanel')?.classList.remove('hidden');
-      renderFloatingPanel();
+      $('#floatingLauncher').classList.add('show');
     }
 
     function showLobbyView(){
       $('#roomView').classList.add('hidden');
       $('#lobbyView').classList.remove('hidden');
-      $('#floatingPanel')?.classList.add('hidden');
+      closeBoardPanel();
+      $('#floatingLauncher').classList.remove('show');
     }
 
     function leaveRoomLocal(sendMsg=true){
@@ -576,21 +494,12 @@
       state.me.color = null;
       state.room = null;
       updateHash();
-      renderFloatingPanel();
       showLobbyView();
-    }
-
-    function renderFloatingPanel(){
-      const roomEl = $('#floatingRoomCode');
-      if(roomEl) roomEl.textContent = state.roomCode || '-';
-      const connEl = $('#floatingConnState');
-      if(connEl) connEl.textContent = $('#connState')?.textContent || '未連線';
     }
 
     function renderRoom(){
       if(!state.room) return;
       showRoomView();
-      renderFloatingPanel();
       $('#roomCodeText').textContent = state.room.code;
       $('#clientIdText').textContent = state.clientId ? state.clientId.slice(0, 8) : '-';
       $('#memberCountText').textContent = String(state.room.memberCount || 0);
@@ -621,7 +530,7 @@
         dot.className = 'dot';
         dot.style.background = m.color ? COLORS[m.color].hex : '#777';
         const text = document.createElement('span');
-        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? '（你）' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
+        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
         item.append(dot, text);
         legend.appendChild(item);
       });
@@ -637,7 +546,7 @@
         const tr = document.createElement('tr');
         const floorTd = document.createElement('td');
         floorTd.className = 'floor-cell';
-        floorTd.textContent = `第 ${floor} 層`;
+        floorTd.textContent = `${floor}`;
         tr.appendChild(floorTd);
 
         for(let door = 1; door <= 4; door++){
@@ -652,30 +561,25 @@
               occupantId = state.room.members?.find(m => m.color === color)?.clientId || '';
             }
           });
-          if(occupantColor) td.classList.add(`shared-${occupantColor}`);
-          const wrongKey = `${floor}-${door}`;
-          if(wrongMap[wrongKey]) td.classList.add('private-wrong');
 
-          td.innerHTML = `<div class="num">${door}</div>`;
+          const wrongKey = `${floor}-${door}`;
+
           if(occupantColor){
             const marker = document.createElement('div');
             marker.className = 'marker';
-            const dot = document.createElement('span');
-            dot.className = 'dot';
-            dot.style.background = COLORS[occupantColor].hex;
-            const label = document.createElement('span');
-            label.textContent = `${COLORS[occupantColor].label}${occupantId === state.clientId ? '（你）' : ''}`;
-            marker.append(dot, label);
+            marker.textContent = occupantId === state.clientId ? '你' : COLORS[occupantColor].label;
+            td.style.background = occupantId === state.clientId ? COLORS[occupantColor].hex : COLORS2[occupantColor].hex;
             td.appendChild(marker);
           } else if(wrongMap[wrongKey]) {
+            td.classList.add('private-wrong');
             const sub = document.createElement('div');
             sub.className = 'submark';
-            sub.textContent = '私人錯誤';
+            sub.textContent = '　　　';
             td.appendChild(sub);
           } else {
             const sub = document.createElement('div');
             sub.className = 'submark';
-            sub.textContent = '未標記';
+            sub.textContent = '　　　';
             td.appendChild(sub);
           }
 
@@ -726,45 +630,91 @@
       $('#joinRoomCode').value = code;
     }
 
-    // settings via keyboard
-    window.addEventListener('keydown', (e) => {
-      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === ','){
-        const next = prompt('輸入後端 HTTP/HTTPS 網址', currentBackendHttpUrl() || '');
-        if(next){
-          saveWsUrl(next.trim());
-          showToast('已更新後端網址');
-        }
+    function openBoardPanel(){
+      $('#floatingPanel').classList.add('show');
+      $('#floatingOverlay').classList.add('show');
+      renderBoard();
+    }
+
+    function closeBoardPanel(){
+      $('#floatingPanel').classList.remove('show');
+      $('#floatingOverlay').classList.remove('show');
+    }
+
+    const handleClearShared = () => {
+      if(confirm('確認清除共享標記？')){
+        send('clear_shared', { roomCode: state.roomCode });
       }
-    });
+    };
 
     $('#createRoomBtn').onclick = () => joinOrCreate('create');
     $('#joinRoomBtn').onclick = () => joinOrCreate('join');
     $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
     $('#copyRoomBtn').onclick = copyRoomInfo;
-    $('#clearSharedBtn').onclick = () => send('clear_shared', { roomCode: state.roomCode });
+    $('#clearSharedBtn').onclick = handleClearShared;
     $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
+    $('#openBoardBtn').onclick = openBoardPanel;
+    $('#floatingLauncher').onclick = openBoardPanel;
+    $('#floatingOverlay').onclick = closeBoardPanel;
+    $('#closeBoardBtn').onclick = closeBoardPanel;
+    $('#floatingCopyBtn').onclick = copyRoomInfo;
+    $('#floatingClearBtn').onclick = handleClearShared;
 
+    // draggable floating panel
+    (function enableDrag(){
+      const panel = $('#floatingPanel');
+      const header = $('#floatingHeader');
+      let dragging = false;
+      let startX = 0, startY = 0, baseLeft = 0, baseTop = 0;
 
-    if($('#saveBackendBtn')){
-      $('#saveBackendBtn').onclick = () => {
-        saveWsUrl($('#backendUrl').value);
-        showToast('已儲存後端網址');
-        if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)){
-          state.ws.close();
-        }
-      };
-    }
-    if($('#resetBackendBtn')){
-      $('#resetBackendBtn').onclick = () => {
-        saveWsUrl('');
-        showToast('已重設後端網址');
-      };
-    }
+      header.addEventListener('mousedown', (e) => {
+        dragging = true;
+        const rect = panel.getBoundingClientRect();
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
+        panel.style.transform = 'none';
+        startX = e.clientX;
+        startY = e.clientY;
+        baseLeft = rect.left;
+        baseTop = rect.top;
+        e.preventDefault();
+      });
 
-    if($('#backendHint')) renderBackendSettings();
+      window.addEventListener('mousemove', (e) => {
+        if(!dragging) return;
+        const left = Math.max(8, Math.min(window.innerWidth - panel.offsetWidth - 8, baseLeft + (e.clientX - startX)));
+        const top = Math.max(8, Math.min(window.innerHeight - panel.offsetHeight - 8, baseTop + (e.clientY - startY)));
+        panel.style.left = left + 'px';
+        panel.style.top = top + 'px';
+      });
 
-    initFloatingPanel();
-    renderFloatingPanel();
+      window.addEventListener('mouseup', () => dragging = false);
+
+      header.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        dragging = true;
+        const rect = panel.getBoundingClientRect();
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
+        panel.style.transform = 'none';
+        startX = t.clientX;
+        startY = t.clientY;
+        baseLeft = rect.left;
+        baseTop = rect.top;
+      }, { passive:true });
+
+      window.addEventListener('touchmove', (e) => {
+        if(!dragging) return;
+        const t = e.touches[0];
+        const left = Math.max(8, Math.min(window.innerWidth - panel.offsetWidth - 8, baseLeft + (t.clientX - startX)));
+        const top = Math.max(8, Math.min(window.innerHeight - panel.offsetHeight - 8, baseTop + (t.clientY - startY)));
+        panel.style.left = left + 'px';
+        panel.style.top = top + 'px';
+      }, { passive:true });
+
+      window.addEventListener('touchend', () => dragging = false);
+    })();
+
     applyHashAutoJoin();
     if($('#joinRoomCode').value) showToast('已從網址帶入房號');
   </script>
