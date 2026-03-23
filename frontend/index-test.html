@@ -9,16 +9,11 @@
     :root{
       --bg:#0b1220; --panel:#121a2b; --panel2:#182238; --text:#eef3ff; --muted:#9fb0d1;
       --border:#2a3857; --accent:#7aa2ff; --danger:#ff7b7b; --ok:#59d39c; --warn:#ffd166;
-      --red:   #ff6b6b; 
-	  --blue:  #5aa9ff; 
-	  --green: #4fd18b; 
-	  --yellow:#f3c84b;
-      --red2:   #FF969650; 
-	  --blue2:  #9696FF50; 
-	  --green2: #96FF9650; 
-	  --yellow2:#FFFF9650;
+      --red:#ff6b6b; --blue:#5aa9ff; --green:#4fd18b; --yellow:#f3c84b;
+      --red2:#FF969650; --blue2:#9696FF50; --green2:#96FF9650; --yellow2:#FFFF9650;
     }
     * { box-sizing: border-box; }
+    html, body { overflow-x:hidden; }
     body{
       margin:0; font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
       background:linear-gradient(180deg,#08101d,#0e1526 45%,#0a1120);
@@ -79,13 +74,13 @@
       background:#0b1324; border:1px solid var(--border); padding:8px 10px; border-radius:999px;
     }
     .dot{width:14px; height:14px; border-radius:999px}
-    .board{overflow:auto;}
-    table{width:100%; border-collapse:separate; border-spacing:6px 6px; min-width:240px}
+    .board{overflow:visible;}
+    table{width:100%; border-collapse:separate; border-spacing:6px 6px; min-width:240px; table-layout:fixed}
     th{font-size:13px; color:var(--muted); font-weight:700}
     td.floor-cell{
       width:30px; text-align:center; color:var(--muted); font-weight:700;
       background:#0b1324; border:1px solid var(--border); border-radius:10px; padding:1px 0px 4px 0px;
-	  justify-content: center; align-items: center; height: 40px;
+      justify-content: center; align-items: center; height: 40px;
     }
     td.pick{
       position:relative; min-width:0px; text-align:center; user-select:none;
@@ -94,17 +89,11 @@
       justify-content: center; align-items: center; height: 40px;
     }
     td.pick:hover{transform:translateY(-1px); border-color:#4560a3; background:#12203c}
-    td.pick .num{font-size:18px; font-weight:800}
     td.pick .submark{
-	  display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
-      background:rgba(255,255,255,.00); margin-top:0px; font-size:12px; font-weight:700; color:var(--muted); 
-	  justify-content:center; align-items:center; width: 100%; 
-	  }
-    td.pick.shared-red{box-shadow:    inset 0 0 0 1px var(--red)}
-    td.pick.shared-blue{box-shadow:   inset 0 0 0 1px var(--blue)}
-    td.pick.shared-green{box-shadow:  inset 0 0 0 1px var(--green)}
-    td.pick.shared-yellow{box-shadow: inset 0 0 0 1px var(--yellow)}
-	
+      display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
+      background:rgba(255,255,255,.00); margin-top:0px; font-size:12px; font-weight:700; color:var(--muted);
+      justify-content:center; align-items:center; width: 100%;
+    }
     td.pick.private-wrong{
       background:
         linear-gradient(135deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
@@ -113,10 +102,9 @@
     }
     .marker{
       display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
-      background:rgba(255,255,255,.05); margin-top:0px; font-size:12px; font-weight:700; color:#FFFFFF64; 
-	  justify-content:center; align-items:center; width: 45%; 
+      background:rgba(255,255,255,.05); margin-top:0px; font-size:12px; font-weight:700; color:#FFFFFF64;
+      justify-content:center; align-items:center; width: 45%;
     }
-    .marker .dot{width:12px; height:12px}
     .hint{color:var(--muted); font-size:13px; line-height:1.6}
     .footer{margin-top:16px; color:var(--muted); font-size:13px}
     code{background:#0b1324; padding:2px 6px; border-radius:6px}
@@ -139,17 +127,9 @@
       .status .row:last-child button{flex:1}
       .grid[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
       .board{overflow:visible}
-      table{
-        min-width:0;
-        width:100%;
-        border-spacing:0;
-      }
+      table{min-width:0; width:100%; border-spacing:0;}
       thead{display:none}
-      tbody{
-        display:flex;
-        flex-direction:column;
-        gap:12px;
-      }
+      tbody{display:flex; flex-direction:column; gap:12px;}
       tbody tr{
         display:grid;
         grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -172,7 +152,6 @@
         padding:14px 6px;
         border-radius:12px;
       }
-      td.pick .num{font-size:16px}
       td.pick .submark{font-size:11px; margin-top:6px}
       .marker{
         width:100%;
@@ -182,7 +161,6 @@
         font-size:11px;
         margin-top:6px;
       }
-      .marker .dot{width:10px; height:10px}
       .footer{font-size:12px; line-height:1.6}
     }
   </style>
@@ -247,10 +225,9 @@
             <div class="pill">在線人數：<strong id="memberCountText">0</strong></div>
           </div>
           <div class="row">
-            <button id="copyRoomBtn" class="secondary" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  複製房間資訊</button>
-            <button id="clearSharedBtn" class="warn"   style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  清空共享標記</button>
-            <button id="leaveRoomBtn" class="danger"   style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  離開房間</button>
-			
+            <button id="copyRoomBtn" class="secondary" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">複製房間資訊</button>
+            <button id="clearSharedBtn" class="warn" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">清空共享標記</button>
+            <button id="leaveRoomBtn" class="danger" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">離開房間</button>
           </div>
         </div>
 
@@ -258,7 +235,6 @@
           <div>
             <h3 style="margin:0 0 8px 0">選擇顏色</h3>
             <div class="colors" id="colorPicker"></div>
-														
           </div>
           <div>
             <h3 style="margin:0 0 4px 0">操作說明</h3>
@@ -269,10 +245,10 @@
             </div>
           </div>
         </div>
-		<div class="legend" id="memberLegend"></div>
+        <div class="legend" id="memberLegend"></div>
 
         <div class="board" style="width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; margin-left: auto; margin-right: auto;">
-          <table> 
+          <table>
             <thead>
               <tr>
                 <th style="width:50px">樓層</th>
@@ -284,9 +260,8 @@
             </thead>
             <tbody id="boardBody"></tbody>
           </table>
-		  
-		  <button id="clearSharedBtn2" class="warn"   style="width:100%; height:40px; display:inline-flex; justify-content:center; align-items:center;">  清空共享標記</button>
-		  
+
+          <button id="clearSharedBtn2" class="warn" style="width:100%; height:40px; display:inline-flex; justify-content:center; align-items:center;">清空共享標記</button>
         </div>
 
         <div class="footer">
@@ -300,15 +275,15 @@
 
   <script>
     const COLORS = {
-      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim()    || '#ff6b6b' },
-      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()   || '#5aa9ff' },
-      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim()  || '#4fd18b' },
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#ff6b6b' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#5aa9ff' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#4fd18b' },
       yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim() || '#f3c84b' },
     };
     const COLORS2 = {
-      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red2').trim()    || '#FF969650' },
-      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue2').trim()   || '#9696FF50' },
-      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green2').trim()  || '#96FF9650' },
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red2').trim() || '#FF969650' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue2').trim() || '#9696FF50' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green2').trim() || '#96FF9650' },
       yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow2').trim() || '#FFFF9650' },
     };
 
@@ -323,6 +298,7 @@
       localWrong: loadLocalWrong(),
       wsUrl: loadWsUrl(),
       pendingJoin: null,
+      autoJoinAttempted: false,
     };
 
     const $ = (sel) => document.querySelector(sel);
@@ -362,9 +338,7 @@
       return `${proto}//${location.host}/ws`;
     }
 
-    function loadWsUrl(){
-      return wsDefaultUrl();
-    }
+    function loadWsUrl(){ return wsDefaultUrl(); }
 
     function saveWsUrl(url){
       const normalized = normalizeBackendUrl(url);
@@ -385,10 +359,12 @@
       const input = $('#backendUrl');
       const hint = $('#backendHint');
       if(input) input.value = currentBackendHttpUrl();
-      const active = currentBackendHttpUrl();
-      hint.textContent = active
-        ? `目前會連到：${active}（WebSocket: ${state.wsUrl}）`
-        : `目前未指定後端，將嘗試連到同網域：${state.wsUrl}`;
+      if(hint){
+        const active = currentBackendHttpUrl();
+        hint.textContent = active
+          ? `目前會連到：${active}（WebSocket: ${state.wsUrl}）`
+          : `目前未指定後端，將嘗試連到同網域：${state.wsUrl}`;
+      }
     }
 
     function loadLocalWrong(){
@@ -399,9 +375,7 @@
       localStorage.setItem('rjpq_local_wrong', JSON.stringify(state.localWrong));
     }
 
-    function roomWrongKey(){
-      return state.roomCode || '_lobby';
-    }
+    function roomWrongKey(){ return state.roomCode || '_lobby'; }
 
     function getWrongSet(){
       if(!state.localWrong[roomWrongKey()]) state.localWrong[roomWrongKey()] = {};
@@ -409,8 +383,22 @@
     }
 
     function updateHash(){
-      if(state.roomCode) location.hash = '#/' + encodeURIComponent(state.roomCode);
-      else history.replaceState(null, '', location.pathname + location.search);
+      if(state.roomCode) {
+        const url = new URL(location.href);
+        url.hash = '#/' + encodeURIComponent(state.roomCode);
+        history.replaceState(null, '', url.toString());
+      } else {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    }
+
+    function buildShareLink(){
+      const url = new URL(location.href);
+      url.hash = '#/' + encodeURIComponent(state.roomCode);
+      if(state.roomPassword) url.searchParams.set('pwd', state.roomPassword);
+      else url.searchParams.delete('pwd');
+      url.searchParams.set('autojoin', '1');
+      return url.toString();
     }
 
     function setConnectionState(text, ok=false){
@@ -559,9 +547,8 @@
         const text = document.createElement('span');
         text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
         text.style.display = 'inline-flex';
-        text.style.alignItems = 'center';     // 垂直置中
-        text.style.justifyContent = 'center'; // 水平置中
-        //text.style.width = '56px'
+        text.style.alignItems = 'center';
+        text.style.justifyContent = 'center';
         item.append(dot, text);
         legend.appendChild(item);
       });
@@ -577,12 +564,10 @@
         const tr = document.createElement('tr');
         const floorTd = document.createElement('td');
         floorTd.className = 'floor-cell';
-        //floorTd.textContent = `第 ${floor} 層`;
-		floorTd.textContent = `${floor}`;
+        floorTd.textContent = `${floor}`;
         tr.appendChild(floorTd);
 
-        for(let door = 1; door <= 4; door++)
-		{
+        for(let door = 1; door <= 4; door++){
           const td = document.createElement('td');
           td.className = 'pick';
           const floorData = shared[floor - 1] || {};
@@ -594,52 +579,26 @@
               occupantId = state.room.members?.find(m => m.color === color)?.clientId || '';
             }
           });
-		  
-          //if(occupantColor) td.classList.add(`shared-${occupantColor}`);
-          const wrongKey = `${floor}-${door}`;
-																   
 
-          //td.innerHTML = `<div class="num">${door}</div>`;
-          if(occupantColor)
-		  {
+          const wrongKey = `${floor}-${door}`;
+
+          if(occupantColor){
             const marker = document.createElement('div');
             marker.className = 'marker';
-            //const dot = document.createElement('span');
-            //dot.className = 'dot';
-            //dot.style.background = COLORS[occupantColor].hex;
-			// 中間條狀寫法
-			//marker.style.background = COLORS2[occupantColor].hex;
-            //const label = document.createElement('span');
-			//label.textContent = '　　　';
-            //marker.append(label);
-			////
-			// 完整填滿寫法
-			marker.textContent = '　　　';
-			marker.style.opacity = '0.0';
-			td.style.background = occupantId === state.clientId ? COLORS[occupantColor].hex : COLORS2[occupantColor].hex;
-			// td.style.opacity = '0.5';
-			////
-			
-            //label.textContent = `${COLORS[occupantColor].label}${occupantId === state.clientId ? ' (你)' : ''}`;
-									  
+            marker.textContent = '　　　';
+            marker.style.opacity = '0.0';
+            td.style.background = occupantId === state.clientId ? COLORS[occupantColor].hex : COLORS2[occupantColor].hex;
             td.appendChild(marker);
-          } 
-		  else if(wrongMap[wrongKey]) 
-		  {
-		    // 移下來節省效能
-            if(wrongMap[wrongKey]) td.classList.add('private-wrong');
-			
+          } else if(wrongMap[wrongKey]) {
+            td.classList.add('private-wrong');
             const sub = document.createElement('div');
             sub.className = 'submark';
             sub.textContent = '　　　';
             td.appendChild(sub);
-          } 
-		  else 
-		  {
+          } else {
             const sub = document.createElement('div');
             sub.className = 'submark';
-            //sub.textContent = '未標記';
-			sub.textContent = '　　　';
+            sub.textContent = '　　　';
             td.appendChild(sub);
           }
 
@@ -670,14 +629,15 @@
     }
 
     async function copyRoomInfo(){
+      const directLink = buildShareLink();
       const info = [
         `Code: ${state.roomCode}`,
         `Password: ${state.roomPassword || '(none)'}`,
-        `Link: ${location.origin}${location.pathname}#/${encodeURIComponent(state.roomCode)}`
+        `Link: ${directLink}`
       ].join('\n');
       try{
         await navigator.clipboard.writeText(info);
-        showToast('已複製房間資訊');
+        showToast('已複製可直接進房的連結');
       }catch{
         showToast('複製失敗');
       }
@@ -687,10 +647,18 @@
       const m = location.hash.match(/^#\/(.+)$/);
       if(!m) return;
       const code = decodeURIComponent(m[1]);
+      const params = new URLSearchParams(location.search);
+      const pwd = params.get('pwd') || '';
       $('#joinRoomCode').value = code;
+      $('#joinRoomPassword').value = pwd;
+
+      const autojoin = params.get('autojoin') === '1';
+      if(autojoin && !state.autoJoinAttempted){
+        state.autoJoinAttempted = true;
+        setTimeout(() => joinOrCreate('join'), 80);
+      }
     }
 
-    // settings via keyboard
     window.addEventListener('keydown', (e) => {
       if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === ','){
         const next = prompt('輸入後端 HTTP/HTTPS 網址', currentBackendHttpUrl() || '');
@@ -701,41 +669,42 @@
       }
     });
 
-	const handleClearShared = () => 
-	{
-        if (confirm('確認清除共享標記？')) 
-		{
-            send('clear_shared', { roomCode: state.roomCode });
-        }
+    const handleClearShared = () => {
+      if (confirm('確認清除共享標記？')) {
+        send('clear_shared', { roomCode: state.roomCode });
+      }
     };
 
     $('#createRoomBtn').onclick = () => joinOrCreate('create');
     $('#joinRoomBtn').onclick = () => joinOrCreate('join');
     $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
     $('#copyRoomBtn').onclick = copyRoomInfo;
-    //$('#clearSharedBtn').onclick = () => send('clear_shared', { roomCode: state.roomCode });
     $('#clearSharedBtn').onclick = handleClearShared;
     $('#clearSharedBtn2').onclick = handleClearShared;
     $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
-	
 
+    if($('#saveBackendBtn')){
+      $('#saveBackendBtn').onclick = () => {
+        saveWsUrl($('#backendUrl').value);
+        showToast('已儲存後端網址');
+        if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)){
+          state.ws.close();
+        }
+      };
+    }
 
-    $('#saveBackendBtn').onclick = () => {
-      saveWsUrl($('#backendUrl').value);
-      showToast('已儲存後端網址');
-      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)){
-        state.ws.close();
-      }
-    };
-    $('#resetBackendBtn').onclick = () => {
-      saveWsUrl('');
-      showToast('已重設後端網址');
-    };
+    if($('#resetBackendBtn')){
+      $('#resetBackendBtn').onclick = () => {
+        saveWsUrl('');
+        showToast('已重設後端網址');
+      };
+    }
 
     renderBackendSettings();
-
     applyHashAutoJoin();
-    if($('#joinRoomCode').value) showToast('已從網址帶入房號');
+    if($('#joinRoomCode').value && new URLSearchParams(location.search).get('autojoin') !== '1'){
+      showToast('已從網址帶入房號');
+    }
   </script>
 </body>
 </html>
