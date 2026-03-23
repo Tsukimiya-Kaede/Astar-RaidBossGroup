@@ -1,364 +1,741 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RJPQ Tool</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJPQ Tool 多人連線版 Astar公會製作</title>
   <script src="./config.js"></script>
   <style>
     :root{
-      --bg:#0f1220; --panel:#171b2e; --panel2:#202743; --text:#edf2ff; --muted:#9ca8c7;
-      --line:#2f385f; --accent:#87a7ff; --danger:#ff7d7d;
-      --red:#ff6b6b; --blue:#4da3ff; --green:#59d98e; --yellow:#f5cc52;
+      --bg:#0b1220; --panel:#121a2b; --panel2:#182238; --text:#eef3ff; --muted:#9fb0d1;
+      --border:#2a3857; --accent:#7aa2ff; --danger:#ff7b7b; --ok:#59d39c; --warn:#ffd166;
+      --red:   #ff6b6b; 
+	  --blue:  #5aa9ff; 
+	  --green: #4fd18b; 
+	  --yellow:#f3c84b;
+      --red2:   #FF969650; 
+	  --blue2:  #9696FF50; 
+	  --green2: #96FF9650; 
+	  --yellow2:#FFFF9650;
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
-    body{min-height:100vh}
-    .app{max-width:1120px;margin:0 auto;padding:12px;overflow-x:hidden}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 12px 30px rgba(0,0,0,.2)}
-    .stack{display:grid;gap:12px}
-    h1{font-size:24px;margin:0 0 4px}
-    .sub{color:var(--muted);font-size:14px}
-    .topbar{display:grid;gap:12px}
-    .controls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
-    .controls .wide{grid-column:span 2}
-    input,button{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 12px;font-size:14px}
-    button{cursor:pointer;font-weight:700}
-    button:hover{filter:brightness(1.05)}
-    .ghost{background:transparent}
-    .statusline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .badge{padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px}
-    .ok{color:#85ffac}
-    .bad{color:#ff9c9c}
-    .players{display:flex;flex-wrap:wrap;gap:8px}
-    .player{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:8px 10px;border-radius:999px}
-    .dot{width:12px;height:12px;border-radius:999px;border:1px solid rgba(255,255,255,.35)}
-    .dot.red{background:var(--red)} .dot.blue{background:var(--blue)} .dot.green{background:var(--green)} .dot.yellow{background:var(--yellow)}
-    .colors{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-    .color-btn.active{outline:2px solid #fff}
-    .color-btn[disabled]{opacity:.35;cursor:not-allowed}
-    .board{display:grid;gap:10px;overflow-x:hidden}
-    .floor{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px}
-    .floorhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-    .floor-title{font-weight:800}
-    .platforms{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-    .cell{position:relative;min-width:0;min-height:132px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);padding:8px;display:grid;grid-template-rows:auto 1fr auto;gap:8px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-    .cell:hover{border-color:#55649d}
-    .cell-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
-    .cell-num{font-weight:800}
-    .hint{color:var(--muted);font-size:12px}
-    .chips{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
-    .chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.15);font-size:12px;line-height:1}
-    .chip.success{background:rgba(135,167,255,.14)}
-    .chip.fail{background:rgba(255,125,125,.12)}
-    .chip b{font-weight:800}
-    .chip .mark{font-size:11px;opacity:.85}
-    .legend{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px}
-    .footer-note{font-size:12px;color:var(--muted)}
-    .hidden{display:none!important}
-    @media (max-width:900px){
-      .controls{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .controls .wide{grid-column:span 2}
+    * { box-sizing: border-box; }
+    body{
+      margin:0; font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
+      background:linear-gradient(180deg,#08101d,#0e1526 45%,#0a1120);
+      color:var(--text);
     }
-    @media (max-width:640px){
-      .app{padding:10px}
-      .controls,.colors{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .platforms{grid-template-columns:repeat(4,minmax(0,1fr))}
-      .cell{min-height:122px;padding:7px}
-      .chip{font-size:11px;padding:5px 7px}
-      input,button{font-size:16px}
+    .wrap{max-width:1200px; margin:0 auto; padding:24px;}
+    .hero{display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:18px;}
+    h1{margin:0; font-size:clamp(28px,4vw,40px)}
+    .sub{color:var(--muted); margin-top:8px}
+    .card{
+      background:rgba(18,26,43,.92); border:1px solid var(--border); border-radius:18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      padding:18px;
+    }
+    .grid{display:grid; gap:16px}
+    .top-grid{grid-template-columns: 1.1fr 1.4fr}
+    @media (max-width: 980px){ .top-grid{grid-template-columns:1fr} }
+    .row{display:flex; gap:3px 6px; flex-wrap:wrap; align-items:center}
+    .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:180px}
+    label{font-size:13px; color:var(--muted)}
+    input{
+      width:100%; background:#0b1324; color:var(--text); border:1px solid var(--border);
+      border-radius:12px; padding:12px 14px; outline:none;
+    }
+    input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,162,255,.15)}
+    button{
+      border:0; border-radius:12px; padding:12px 16px; cursor:pointer; color:white;
+      background:#2b61ff; font-weight:700;
+    }
+    button.secondary{background:#263149}
+    button.ghost{background:transparent; border:1px solid var(--border)}
+    button.warn{background:#8e5b00}
+    button.danger{background:#8a2f36}
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .hidden{display:none !important}
+    .status{
+      display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;
+      margin:4px 0 4px;
+    }
+    .pill{
+      padding:8px 12px; border-radius:999px; background:#0b1324; border:1px solid var(--border);
+      color:var(--muted); font-size:14px;
+    }
+    .pill strong{color:var(--text)}
+    .colors{display:flex; gap:6px; flex-wrap:wrap}
+    .color-btn{
+      width:40px; height:40px; border-radius:999px; border:3px solid transparent; position:relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
+    }
+    .color-btn.selected{border-color:white}
+    .color-btn.taken::after{
+      content:""; position:absolute; inset:8px; border-radius:999px; border:3px solid rgba(255,255,255,.95);
+      transform:rotate(45deg);
+    }
+    .legend{display:flex; gap:3px 6px; flex-wrap:wrap;}
+    .legend-item{
+      display:flex; align-items:center; gap:6px; color:var(--muted); font-size:14px;
+      background:#0b1324; border:1px solid var(--border); padding:8px 10px; border-radius:999px;
+    }
+    .dot{width:14px; height:14px; border-radius:999px}
+    .board{overflow:auto;}
+    table{width:100%; border-collapse:separate; border-spacing:6px 6px; min-width:240px}
+    th{font-size:13px; color:var(--muted); font-weight:700}
+    td.floor-cell{
+      width:30px; text-align:center; color:var(--muted); font-weight:700;
+      background:#0b1324; border:1px solid var(--border); border-radius:10px; padding:1px 0px 4px 0px;
+	  justify-content: center; align-items: center; height: 40px;
+    }
+    td.pick{
+      position:relative; min-width:0px; text-align:center; user-select:none;
+      background:#101a2f; border:1px solid var(--border); border-radius:10px; padding:1px 0px 4px 0px; cursor:pointer;
+      transition:.15s transform ease,.15s border-color ease,.15s background ease;
+      justify-content: center; align-items: center; height: 40px;
+    }
+    td.pick:hover{transform:translateY(-1px); border-color:#4560a3; background:#12203c}
+    td.pick .num{font-size:18px; font-weight:800}
+    td.pick .submark{
+	  display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
+      background:rgba(255,255,255,.00); margin-top:0px; font-size:12px; font-weight:700; color:var(--muted); 
+	  justify-content:center; align-items:center; width: 100%; 
+	  }
+    td.pick.shared-red{box-shadow:    inset 0 0 0 1px var(--red)}
+    td.pick.shared-blue{box-shadow:   inset 0 0 0 1px var(--blue)}
+    td.pick.shared-green{box-shadow:  inset 0 0 0 1px var(--green)}
+    td.pick.shared-yellow{box-shadow: inset 0 0 0 1px var(--yellow)}
+	
+    td.pick.private-wrong{
+      background:
+        linear-gradient(135deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
+        linear-gradient(45deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
+        #101a2f;
+    }
+    .marker{
+      display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
+      background:rgba(255,255,255,.05); margin-top:0px; font-size:12px; font-weight:700; color:#FFFFFF64; 
+	  justify-content:center; align-items:center; width: 45%; 
+    }
+    .marker .dot{width:12px; height:12px}
+    .hint{color:var(--muted); font-size:13px; line-height:1.6}
+    .footer{margin-top:16px; color:var(--muted); font-size:13px}
+    code{background:#0b1324; padding:2px 6px; border-radius:6px}
+    .toast{
+      position:fixed; right:20px; bottom:20px; background:#0b1324; border:1px solid var(--border);
+      border-radius:14px; padding:12px 14px; color:var(--text); box-shadow:0 12px 30px rgba(0,0,0,.35);
+      opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s ease;
+    }
+    .toast.show{opacity:1; transform:none}
+    .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+
+    @media (max-width: 360px){
+      .wrap{padding:12px}
+      .card{padding:14px}
+      .hero{margin-bottom:12px}
+      h1{font-size:24px}
+      .sub{font-size:13px}
+      .status{gap:12px}
+      .status .row{width:100%}
+      .status .row:last-child button{flex:1}
+      .grid[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+      .board{overflow:visible}
+      table{
+        min-width:0;
+        width:100%;
+        border-spacing:0;
+      }
+      thead{display:none}
+      tbody{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+      tbody tr{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:8px;
+        background:#0b1324;
+        border:1px solid var(--border);
+        border-radius:14px;
+        padding:10px;
+      }
+      td.floor-cell{
+        grid-column:1 / -1;
+        width:auto;
+        padding:10px 12px;
+        border-radius:10px;
+        font-size:14px;
+      }
+      td.pick{
+        min-width:0;
+        width:100%;
+        padding:14px 6px;
+        border-radius:12px;
+      }
+      td.pick .num{font-size:16px}
+      td.pick .submark{font-size:11px; margin-top:6px}
+      .marker{
+        width:100%;
+        justify-content:center;
+        gap:6px;
+        padding:6px 8px;
+        font-size:11px;
+        margin-top:6px;
+      }
+      .marker .dot{width:10px; height:10px}
+      .footer{font-size:12px; line-height:1.6}
     }
   </style>
 </head>
 <body>
-<div class="app stack">
-  <section class="panel stack">
-    <div>
-      <h1>RJPQ 平台協作工具</h1>
-      <div class="sub">手機與桌機都不出現橫向拖拉軸。左鍵切換成功標記，右鍵或長按切換 XX 標記，現在兩者都會同步給全房間。</div>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>RJPQ Tool 多人連線版 Astar 公會製作</h1>
+        <div class="sub">羅密歐與茱麗葉組隊任務平台協作工具</div>
+      </div>
+      <div class="pill" id="connPill">連線狀態：<strong id="connState">未連線</strong></div>
     </div>
 
-    <div class="controls">
-      <input id="backendUrl" class="wide" placeholder="後端網址">
-      <input id="roomCode" placeholder="房號">
-      <input id="roomPassword" placeholder="房間密碼">
-      <input id="displayName" placeholder="你的名字">
-      <button id="joinBtn">加入 / 建立房間</button>
-      <button id="copyBtn" class="ghost">複製房間資訊</button>
-    </div>
-
-    <div class="colors">
-      <button class="color-btn" data-color="red">紅色</button>
-      <button class="color-btn" data-color="blue">藍色</button>
-      <button class="color-btn" data-color="green">綠色</button>
-      <button class="color-btn" data-color="yellow">黃色</button>
-    </div>
-
-    <div class="statusline">
-      <span class="badge" id="connBadge">連線狀態：未連線</span>
-      <span class="badge" id="roomBadge">房間：未加入</span>
-      <button id="clearBtn">清空共享 / XX 標記</button>
-    </div>
-
-    <div class="players" id="players"></div>
-    <div class="legend">
-      <span>成功：藍色風格籤</span>
-      <span>XX：紅色風格籤</span>
-      <span>每個標記都會顯示顏色與名字，其他隊友能看出是誰做的。</span>
-    </div>
-  </section>
-
-  <section class="board" id="board"></section>
-  <div class="footer-note">提示：在手機上長按平台可切換 XX；桌機可右鍵切換 XX。</div>
-</div>
-
-<script>
-const state = {
-  ws: null,
-  connected: false,
-  room: null,
-  yourClientId: null,
-  selectedColor: "",
-  longPressTimer: null
-};
-
-const backendInput = document.getElementById("backendUrl");
-const roomCodeInput = document.getElementById("roomCode");
-const roomPasswordInput = document.getElementById("roomPassword");
-const displayNameInput = document.getElementById("displayName");
-const connBadge = document.getElementById("connBadge");
-const roomBadge = document.getElementById("roomBadge");
-const playersEl = document.getElementById("players");
-const boardEl = document.getElementById("board");
-const colorButtons = [...document.querySelectorAll(".color-btn")];
-
-backendInput.value = (window.RJPQ_CONFIG && window.RJPQ_CONFIG.backendUrl) || localStorage.getItem("rjpq_backend_url") || "http://localhost:8080";
-roomCodeInput.value = location.hash.replace(/^#\/?/, "") || localStorage.getItem("rjpq_room_code") || "";
-roomPasswordInput.value = localStorage.getItem("rjpq_room_password") || "";
-displayNameInput.value = localStorage.getItem("rjpq_display_name") || "";
-
-function saveLocal() {
-  localStorage.setItem("rjpq_backend_url", backendInput.value.trim());
-  localStorage.setItem("rjpq_room_code", roomCodeInput.value.trim());
-  localStorage.setItem("rjpq_room_password", roomPasswordInput.value);
-  localStorage.setItem("rjpq_display_name", displayNameInput.value.trim());
-}
-
-function setConn(text, ok=false){
-  connBadge.textContent = "連線狀態：" + text;
-  connBadge.classList.toggle("ok", ok);
-  connBadge.classList.toggle("bad", !ok);
-}
-
-function wsUrlFromBackend(url){
-  const clean = url.replace(/\/+$/, "");
-  return clean.replace(/^http:\/\//i, "ws://").replace(/^https:\/\//i, "wss://");
-}
-
-function connectAndJoin(){
-  saveLocal();
-  const backendUrl = backendInput.value.trim();
-  const roomCode = roomCodeInput.value.trim();
-  const password = roomPasswordInput.value;
-  if (!backendUrl || !roomCode) return alert("請先輸入後端網址與房號");
-  location.hash = "/" + roomCode;
-  roomBadge.textContent = "房間：" + roomCode;
-  setConn("連線中...");
-  if (state.ws) state.ws.close();
-  const ws = new WebSocket(wsUrlFromBackend(backendUrl));
-  state.ws = ws;
-
-  ws.onopen = () => {
-    setConn("已連線", true);
-    ws.send(JSON.stringify({ type:"join_room", code: roomCode, password }));
-  };
-  ws.onclose = () => {
-    setConn("已斷線", false);
-    state.connected = false;
-  };
-  ws.onerror = () => {
-    setConn("連線失敗", false);
-  };
-  ws.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
-    if (msg.type === "hello") {
-      state.yourClientId = msg.clientId;
-      return;
-    }
-    if (msg.type === "error") {
-      alert(msg.message);
-      return;
-    }
-    if (msg.type === "room_state") {
-      state.room = msg.room;
-      if (msg.yourClientId) state.yourClientId = msg.yourClientId;
-      const me = state.room.players[state.yourClientId] || {};
-      state.selectedColor = me.color || state.selectedColor;
-      renderPlayers();
-      renderColorButtons();
-      renderBoard();
-      const code = roomCodeInput.value.trim();
-      roomBadge.textContent = "房間：" + code;
-      const currentName = (state.room.players[state.yourClientId] || {}).name || "";
-      if (currentName && displayNameInput.value.trim() !== currentName) {
-        displayNameInput.value = currentName;
-      }
-    }
-  };
-}
-
-function send(data){
-  if (!state.ws || state.ws.readyState !== 1) return;
-  state.ws.send(JSON.stringify(data));
-}
-
-function currentProfile(){
-  return (state.room && state.room.players && state.room.players[state.yourClientId]) || {};
-}
-
-function setProfile(color = state.selectedColor){
-  const name = displayNameInput.value.trim();
-  state.selectedColor = color || "";
-  send({ type:"set_profile", color: state.selectedColor, name });
-}
-
-function renderPlayers(){
-  playersEl.innerHTML = "";
-  const players = Object.entries((state.room && state.room.players) || {});
-  if (!players.length) {
-    playersEl.innerHTML = '<div class="sub">尚無隊友資料</div>';
-    return;
-  }
-  for (const [clientId, p] of players) {
-    const el = document.createElement("div");
-    el.className = "player";
-    const me = clientId === state.yourClientId ? "（你）" : "";
-    el.innerHTML = `<span class="dot ${p.color || ""}"></span><span>${escapeHtml(p.name || "未命名")} ${me}</span>`;
-    playersEl.appendChild(el);
-  }
-}
-
-function renderColorButtons(){
-  const used = new Map();
-  const players = Object.entries((state.room && state.room.players) || {});
-  for (const [clientId, p] of players) {
-    if (p.color) used.set(p.color, clientId);
-  }
-  colorButtons.forEach(btn => {
-    const color = btn.dataset.color;
-    const owner = used.get(color);
-    const isMine = owner === state.yourClientId;
-    btn.disabled = !!owner && !isMine;
-    btn.classList.toggle("active", state.selectedColor === color);
-  });
-}
-
-function nameByColor(color){
-  const players = Object.values((state.room && state.room.players) || {});
-  const found = players.find(p => p.color === color);
-  return found?.name || color;
-}
-
-function chipHTML(kind, color, name){
-  const safe = escapeHtml(name || color || "未命名");
-  const mark = kind === "success" ? "成功" : "XX";
-  const cls = kind === "success" ? "success" : "fail";
-  return `<span class="chip ${cls}"><span class="dot ${color}"></span><b>${safe}</b><span class="mark">${mark}</span></span>`;
-}
-
-function renderBoard(){
-  boardEl.innerHTML = "";
-  const floors = (state.room && state.room.floors) || {};
-  for (let floor = 10; floor >= 1; floor--) {
-    const f = floors[String(floor)] || { success:{}, fail:{} };
-    const wrap = document.createElement("div");
-    wrap.className = "floor";
-    wrap.innerHTML = `<div class="floorhead"><div class="floor-title">第 ${floor} 層</div><div class="hint">左鍵：成功｜右鍵/長按：XX（共享）</div></div>`;
-    const platforms = document.createElement("div");
-    platforms.className = "platforms";
-
-    for (let platform = 1; platform <= 4; platform++) {
-      const cell = document.createElement("div");
-      cell.className = "cell";
-      cell.dataset.floor = String(floor);
-      cell.dataset.platform = String(platform);
-
-      const successChips = [];
-      for (const [color, pos] of Object.entries(f.success || {})) {
-        if (pos === platform) successChips.push(chipHTML("success", color, nameByColor(color)));
-      }
-
-      const failChips = [];
-      for (const [color, list] of Object.entries(f.fail || {})) {
-        if ((list || []).includes(platform)) failChips.push(chipHTML("fail", color, nameByColor(color)));
-      }
-
-      cell.innerHTML = `
-        <div class="cell-top">
-          <div class="cell-num">平台 ${platform}</div>
-          <div class="hint">${successChips.length + failChips.length} 標記</div>
+    <div id="lobbyView" class="grid top-grid">
+      <div class="card">
+        <h2 style="margin-top:0">建立房間</h2>
+        <div class="grid">
+          <div class="field">
+            <label>房號</label>
+            <input id="createRoomCode" placeholder="例如：rj-001" />
+          </div>
+          <div class="field">
+            <label>房間密碼（可留空）</label>
+            <input id="createRoomPassword" placeholder="選填" />
+          </div>
+          <div class="row">
+            <button id="createRoomBtn">建立並進入</button>
+            <button id="randomRoomBtn" class="secondary">隨機房號</button>
+          </div>
         </div>
-        <div class="chips">${successChips.join("")}${failChips.join("")}</div>
-        <div class="hint">成功與 XX 都會同步</div>
-      `;
+      </div>
 
-      cell.addEventListener("click", (e) => {
-        if (e.defaultPrevented) return;
-        const me = currentProfile();
-        if (!me.color) return alert("請先選顏色");
-        send({ type:"toggle_success", floor, platform });
-      });
+      <div class="card">
+        <h2 style="margin-top:0">加入房間</h2>
+        <div class="grid">
+          <div class="field">
+            <label>房號</label>
+            <input id="joinRoomCode" placeholder="輸入房號或直接開啟 #/房號" />
+          </div>
+          <div class="field">
+            <label>房間密碼（若有）</label>
+            <input id="joinRoomPassword" placeholder="選填" />
+          </div>
+          <div class="row">
+            <button id="joinRoomBtn">加入房間</button>
+          </div>
+          <div class="hint">
+            你也可以直接分享網址 <code class="inline-code">#/房號</code> 給隊友。<br>
+            前端預設會嘗試連到目前網域的 WebSocket 後端；也可點右上角設定自訂伺服器位址。
+          </div>
+        </div>
+      </div>
+    </div>
 
-      cell.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        const me = currentProfile();
-        if (!me.color) return alert("請先選顏色");
-        send({ type:"toggle_fail", floor, platform });
-      });
+    <div id="roomView" class="hidden">
+      <div class="card">
+        <div class="status">
+          <div class="row">
+            <div class="pill">房號：<strong id="roomCodeText"></strong></div>
+            <div class="pill">你的連線 ID：<strong id="clientIdText"></strong></div>
+            <div class="pill">在線人數：<strong id="memberCountText">0</strong></div>
+          </div>
+          <div class="row">
+            <button id="copyRoomBtn" class="secondary" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  複製房間資訊</button>
+            <button id="clearSharedBtn" class="warn"   style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  清空共享標記</button>
+            <button id="leaveRoomBtn" class="danger"   style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  離開房間</button>
+			
+          </div>
+        </div>
 
-      cell.addEventListener("touchstart", () => {
-        state.longPressTimer = setTimeout(() => {
-          const me = currentProfile();
-          if (!me.color) return;
-          send({ type:"toggle_fail", floor, platform });
-        }, 550);
-      }, { passive:true });
+        <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:14px">
+          <div>
+            <h3 style="margin:0 0 8px 0">選擇顏色</h3>
+            <div class="colors" id="colorPicker"></div>
+														
+          </div>
+          <div>
+            <h3 style="margin:0 0 4px 0">操作說明</h3>
+            <div class="hint">
+              左鍵：設定/取消你的共享正解。<br>
+              右鍵：設定/取消你自己的私人錯誤標記。<br>
+              每層共享標記只允許每個顏色一個位置；顏色不可重複選取。
+            </div>
+          </div>
+        </div>
+		<div class="legend" id="memberLegend"></div>
 
-      ["touchend","touchcancel","touchmove"].forEach(evt => {
-        cell.addEventListener(evt, () => clearTimeout(state.longPressTimer), { passive:true });
-      });
+        <div class="board" style="width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; margin-left: auto; margin-right: auto;">
+          <table> 
+            <thead>
+              <tr>
+                <th style="width:50px">樓層</th>
+                <th>　</th>
+                <th>　</th>
+                <th>　</th>
+                <th>　</th>
+              </tr>
+            </thead>
+            <tbody id="boardBody"></tbody>
+          </table>
+		  
+		  <button id="clearSharedBtn2" class="warn"   style="width:100%; height:40px; display:inline-flex; justify-content:center; align-items:center;">  清空共享標記</button>
+		  
+        </div>
 
-      platforms.appendChild(cell);
+        <div class="footer">
+          有任何使用問題請聯繫 Neight奈特 ❤
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const COLORS = {
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim()    || '#ff6b6b' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()   || '#5aa9ff' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim()  || '#4fd18b' },
+      yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim() || '#f3c84b' },
+    };
+    const COLORS2 = {
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red2').trim()    || '#FF969650' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue2').trim()   || '#9696FF50' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green2').trim()  || '#96FF9650' },
+      yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow2').trim() || '#FFFF9650' },
+    };
+
+    const state = {
+      ws: null,
+      connected: false,
+      clientId: '',
+      roomCode: '',
+      roomPassword: '',
+      me: { color: null },
+      room: null,
+      localWrong: loadLocalWrong(),
+      wsUrl: loadWsUrl(),
+      pendingJoin: null,
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const boardBody = $('#boardBody');
+
+    function showToast(text){
+      const toast = $('#toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
     }
-    wrap.appendChild(platforms);
-    boardEl.appendChild(wrap);
-  }
-}
 
-function escapeHtml(text){
-  return String(text ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-}
+    function normalizeRoomCode(s){
+      return (s || '').trim().toLowerCase().replace(/\s+/g, '-');
+    }
 
-document.getElementById("joinBtn").addEventListener("click", connectAndJoin);
-document.getElementById("copyBtn").addEventListener("click", async () => {
-  const text = `Room: ${roomCodeInput.value.trim()}\nPassword: ${roomPasswordInput.value}\nLink: ${location.href}`;
-  try { await navigator.clipboard.writeText(text); alert("已複製房間資訊"); }
-  catch { alert(text); }
-});
-document.getElementById("clearBtn").addEventListener("click", () => {
-  if (!confirm("確定清空全房共享成功 / XX 標記？")) return;
-  send({ type:"clear_shared" });
-});
-displayNameInput.addEventListener("change", () => setProfile());
-displayNameInput.addEventListener("blur", () => setProfile());
-colorButtons.forEach(btn => {
-  btn.style.background = `var(--${btn.dataset.color})`;
-  btn.style.color = btn.dataset.color === "yellow" ? "#2b2200" : "#fff";
-  btn.addEventListener("click", () => setProfile(btn.dataset.color));
-});
+    function randomRoomCode(){
+      return 'rj-' + Math.random().toString(36).slice(2, 8);
+    }
 
-if (roomCodeInput.value.trim()) connectAndJoin();
-renderBoard();
-</script>
+    function normalizeBackendUrl(url){
+      if(!url) return '';
+      url = String(url).trim().replace(/\/$/, '');
+      if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      return url;
+    }
+
+    function wsDefaultUrl(){
+      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
+      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
+      if(fromQuery) return fromQuery.replace(/^http/i, m => m.toLowerCase() === 'https' ? 'wss' : 'ws') + '/ws';
+      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
+      const target = saved || configured;
+      if(target) return target.replace(/^http/i, m => m.toLowerCase() === 'https' ? 'wss' : 'ws') + '/ws';
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${proto}//${location.host}/ws`;
+    }
+
+    function loadWsUrl(){
+      return wsDefaultUrl();
+    }
+
+    function saveWsUrl(url){
+      const normalized = normalizeBackendUrl(url);
+      if(normalized) localStorage.setItem('rjpq_backend_url', normalized);
+      else localStorage.removeItem('rjpq_backend_url');
+      state.wsUrl = loadWsUrl();
+      renderBackendSettings();
+    }
+
+    function currentBackendHttpUrl(){
+      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
+      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
+      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
+      return fromQuery || saved || configured || '';
+    }
+
+    function renderBackendSettings(){
+      const input = $('#backendUrl');
+      const hint = $('#backendHint');
+      if(input) input.value = currentBackendHttpUrl();
+      const active = currentBackendHttpUrl();
+      hint.textContent = active
+        ? `目前會連到：${active}（WebSocket: ${state.wsUrl}）`
+        : `目前未指定後端，將嘗試連到同網域：${state.wsUrl}`;
+    }
+
+    function loadLocalWrong(){
+      try { return JSON.parse(localStorage.getItem('rjpq_local_wrong') || '{}'); } catch { return {}; }
+    }
+
+    function persistLocalWrong(){
+      localStorage.setItem('rjpq_local_wrong', JSON.stringify(state.localWrong));
+    }
+
+    function roomWrongKey(){
+      return state.roomCode || '_lobby';
+    }
+
+    function getWrongSet(){
+      if(!state.localWrong[roomWrongKey()]) state.localWrong[roomWrongKey()] = {};
+      return state.localWrong[roomWrongKey()];
+    }
+
+    function updateHash(){
+      if(state.roomCode) location.hash = '#/' + encodeURIComponent(state.roomCode);
+      else history.replaceState(null, '', location.pathname + location.search);
+    }
+
+    function setConnectionState(text, ok=false){
+      $('#connState').textContent = text;
+      $('#connPill').style.borderColor = ok ? 'rgba(89,211,156,.4)' : '';
+      $('#connPill').style.color = ok ? '#c9ffe7' : '';
+    }
+
+    function connectWs(){
+      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) return;
+      try {
+        const ws = new WebSocket(state.wsUrl);
+        state.ws = ws;
+        setConnectionState('連線中...');
+        ws.onopen = () => {
+          state.connected = true;
+          setConnectionState('已連線', true);
+          if(state.pendingJoin){
+            ws.send(JSON.stringify(state.pendingJoin));
+          }
+        };
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          handleMessage(msg);
+        };
+        ws.onclose = () => {
+          state.connected = false;
+          setConnectionState('已斷線');
+          setTimeout(() => {
+            if(state.roomCode) connectWs();
+          }, 1200);
+        };
+        ws.onerror = () => {
+          setConnectionState('連線失敗');
+        };
+      } catch (e){
+        console.error(e);
+        setConnectionState('連線失敗');
+      }
+    }
+
+    function send(type, data={}){
+      const payload = { type, ...data };
+      if(state.ws && state.ws.readyState === WebSocket.OPEN){
+        state.ws.send(JSON.stringify(payload));
+      } else {
+        state.pendingJoin = payload;
+        connectWs();
+      }
+    }
+
+    function joinOrCreate(mode){
+      const roomCode = normalizeRoomCode(mode === 'create' ? $('#createRoomCode').value : $('#joinRoomCode').value);
+      const password = (mode === 'create' ? $('#createRoomPassword').value : $('#joinRoomPassword').value) || '';
+      if(!roomCode){
+        showToast('請輸入房號');
+        return;
+      }
+      state.roomCode = roomCode;
+      state.roomPassword = password;
+      updateHash();
+      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password };
+      connectWs();
+      if(state.connected) send(state.pendingJoin.type, { roomCode, password });
+    }
+
+    function handleMessage(msg){
+      switch(msg.type){
+        case 'welcome':
+          state.clientId = msg.clientId;
+          $('#clientIdText').textContent = msg.clientId.slice(0, 8);
+          break;
+        case 'room_state':
+          state.room = msg.room;
+          state.me.color = msg.yourColor || state.me.color || null;
+          renderRoom();
+          break;
+        case 'joined_room':
+          state.roomCode = msg.roomCode;
+          state.roomPassword = state.roomPassword || '';
+          updateHash();
+          showRoomView();
+          showToast('已進入房間');
+          break;
+        case 'error':
+          showToast(msg.message || '發生錯誤');
+          break;
+        case 'left_room':
+          leaveRoomLocal(false);
+          break;
+      }
+    }
+
+    function showRoomView(){
+      $('#lobbyView').classList.add('hidden');
+      $('#roomView').classList.remove('hidden');
+    }
+
+    function showLobbyView(){
+      $('#roomView').classList.add('hidden');
+      $('#lobbyView').classList.remove('hidden');
+    }
+
+    function leaveRoomLocal(sendMsg=true){
+      if(sendMsg && state.roomCode) send('leave_room', { roomCode: state.roomCode });
+      state.roomCode = '';
+      state.roomPassword = '';
+      state.me.color = null;
+      state.room = null;
+      updateHash();
+      showLobbyView();
+    }
+
+    function renderRoom(){
+      if(!state.room) return;
+      showRoomView();
+      $('#roomCodeText').textContent = state.room.code;
+      $('#clientIdText').textContent = state.clientId ? state.clientId.slice(0, 8) : '-';
+      $('#memberCountText').textContent = String(state.room.memberCount || 0);
+
+      const picker = $('#colorPicker');
+      picker.innerHTML = '';
+      const taken = state.room.colors || {};
+      Object.entries(COLORS).forEach(([key, meta]) => {
+        const holder = taken[key];
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        if(state.me.color === key) btn.classList.add('selected');
+        if(holder && holder !== state.clientId) btn.classList.add('taken');
+        btn.style.background = meta.hex;
+        btn.title = holder && holder !== state.clientId ? `${meta.label}（已被選取）` : meta.label;
+        btn.disabled = !!holder && holder !== state.clientId;
+        btn.onclick = () => send('select_color', { roomCode: state.roomCode, color: key });
+        picker.appendChild(btn);
+      });
+
+      const legend = $('#memberLegend');
+      legend.innerHTML = '';
+      const members = state.room.members || [];
+      members.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = m.color ? COLORS[m.color].hex : '#777';
+        const text = document.createElement('span');
+        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
+        text.style.display = 'inline-flex';
+        text.style.alignItems = 'center';     // 垂直置中
+        text.style.justifyContent = 'center'; // 水平置中
+        //text.style.width = '56px'
+        item.append(dot, text);
+        legend.appendChild(item);
+      });
+
+      renderBoard();
+    }
+
+    function renderBoard(){
+      const shared = state.room?.board || [];
+      const wrongMap = getWrongSet();
+      boardBody.innerHTML = '';
+      for(let floor = 10; floor >= 1; floor--){
+        const tr = document.createElement('tr');
+        const floorTd = document.createElement('td');
+        floorTd.className = 'floor-cell';
+        //floorTd.textContent = `第 ${floor} 層`;
+		floorTd.textContent = `${floor}`;
+        tr.appendChild(floorTd);
+
+        for(let door = 1; door <= 4; door++)
+		{
+          const td = document.createElement('td');
+          td.className = 'pick';
+          const floorData = shared[floor - 1] || {};
+          let occupantColor = null;
+          let occupantId = null;
+          Object.entries(floorData).forEach(([color, pickDoor]) => {
+            if(pickDoor === door){
+              occupantColor = color;
+              occupantId = state.room.members?.find(m => m.color === color)?.clientId || '';
+            }
+          });
+		  
+          //if(occupantColor) td.classList.add(`shared-${occupantColor}`);
+          const wrongKey = `${floor}-${door}`;
+																   
+
+          //td.innerHTML = `<div class="num">${door}</div>`;
+          if(occupantColor)
+		  {
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            //const dot = document.createElement('span');
+            //dot.className = 'dot';
+            //dot.style.background = COLORS[occupantColor].hex;
+			// 中間條狀寫法
+			//marker.style.background = COLORS2[occupantColor].hex;
+            //const label = document.createElement('span');
+			//label.textContent = '　　　';
+            //marker.append(label);
+			////
+			// 完整填滿寫法
+			marker.textContent = '　　　';
+			marker.style.opacity = '0.0';
+			td.style.background = occupantId === state.clientId ? COLORS[occupantColor].hex : COLORS2[occupantColor].hex;
+			// td.style.opacity = '0.5';
+			////
+			
+            //label.textContent = `${COLORS[occupantColor].label}${occupantId === state.clientId ? ' (你)' : ''}`;
+									  
+            td.appendChild(marker);
+          } 
+		  else if(wrongMap[wrongKey]) 
+		  {
+		    // 移下來節省效能
+            if(wrongMap[wrongKey]) td.classList.add('private-wrong');
+			
+            const sub = document.createElement('div');
+            sub.className = 'submark';
+            sub.textContent = '　　　';
+            td.appendChild(sub);
+          } 
+		  else 
+		  {
+            const sub = document.createElement('div');
+            sub.className = 'submark';
+            //sub.textContent = '未標記';
+			sub.textContent = '　　　';
+            td.appendChild(sub);
+          }
+
+          td.onclick = () => {
+            if(!state.me.color){
+              showToast('請先選擇顏色');
+              return;
+            }
+            send('toggle_shared', { roomCode: state.roomCode, floor, door });
+          };
+          td.oncontextmenu = (e) => {
+            e.preventDefault();
+            togglePrivateWrong(floor, door);
+          };
+          tr.appendChild(td);
+        }
+        boardBody.appendChild(tr);
+      }
+    }
+
+    function togglePrivateWrong(floor, door){
+      const wrongMap = getWrongSet();
+      const key = `${floor}-${door}`;
+      if(wrongMap[key]) delete wrongMap[key];
+      else wrongMap[key] = true;
+      persistLocalWrong();
+      renderBoard();
+    }
+
+    async function copyRoomInfo(){
+      const info = [
+        `Code: ${state.roomCode}`,
+        `Password: ${state.roomPassword || '(none)'}`,
+        `Link: ${location.origin}${location.pathname}#/${encodeURIComponent(state.roomCode)}`
+      ].join('\n');
+      try{
+        await navigator.clipboard.writeText(info);
+        showToast('已複製房間資訊');
+      }catch{
+        showToast('複製失敗');
+      }
+    }
+
+    function applyHashAutoJoin(){
+      const m = location.hash.match(/^#\/(.+)$/);
+      if(!m) return;
+      const code = decodeURIComponent(m[1]);
+      $('#joinRoomCode').value = code;
+    }
+
+    // settings via keyboard
+    window.addEventListener('keydown', (e) => {
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === ','){
+        const next = prompt('輸入後端 HTTP/HTTPS 網址', currentBackendHttpUrl() || '');
+        if(next){
+          saveWsUrl(next.trim());
+          showToast('已更新後端網址');
+        }
+      }
+    });
+
+	const handleClearShared = () => 
+	{
+        if (confirm('確認清除共享標記？')) 
+		{
+            send('clear_shared', { roomCode: state.roomCode });
+        }
+    };
+
+    $('#createRoomBtn').onclick = () => joinOrCreate('create');
+    $('#joinRoomBtn').onclick = () => joinOrCreate('join');
+    $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
+    $('#copyRoomBtn').onclick = copyRoomInfo;
+    //$('#clearSharedBtn').onclick = () => send('clear_shared', { roomCode: state.roomCode });
+    $('#clearSharedBtn').onclick = handleClearShared;
+    $('#clearSharedBtn2').onclick = handleClearShared;
+    $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
+	
+
+
+    $('#saveBackendBtn').onclick = () => {
+      saveWsUrl($('#backendUrl').value);
+      showToast('已儲存後端網址');
+      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)){
+        state.ws.close();
+      }
+    };
+    $('#resetBackendBtn').onclick = () => {
+      saveWsUrl('');
+      showToast('已重設後端網址');
+    };
+
+    renderBackendSettings();
+
+    applyHashAutoJoin();
+    if($('#joinRoomCode').value) showToast('已從網址帶入房號');
+  </script>
 </body>
 </html>
