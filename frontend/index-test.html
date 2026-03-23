@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RJPQ Tool 多人連線版 Astar公會製作-0205</title>
+  <title>RJPQ Tool 多人連線版 Astar公會製作-0210</title>
   <script src="./config.js"></script>
   <style>
     :root{
@@ -422,8 +422,6 @@
     function connectWs(){
       if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) return;
       try {
-		console.log("backendUrl =", backendUrl);
-		console.log("wsUrl =", wsUrl);
         const ws = new WebSocket(state.wsUrl);
         state.ws = ws;
         setConnectionState('連線中...');
