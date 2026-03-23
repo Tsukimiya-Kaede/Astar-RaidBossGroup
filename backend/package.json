@@ -1,14 +1,16 @@
 {
-  "name": "rjpq-web-backend",
+  "name": "rjpq-multiplayer-backend",
   "version": "1.1.0",
   "private": true,
-  "type": "commonjs",
+  "description": "RJPQ multiplayer backend for Render deployment",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "ws": "^8.18.3",
-    "express": "^4.21.2",
-    "cors": "^2.8.5"
+    "ws": "^8.18.0"
   }
 }
