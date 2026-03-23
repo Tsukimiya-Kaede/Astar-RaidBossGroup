@@ -422,6 +422,8 @@
     function connectWs(){
       if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) return;
       try {
+		console.log("backendUrl =", backendUrl);
+		console.log("wsUrl =", wsUrl);
         const ws = new WebSocket(state.wsUrl);
         state.ws = ws;
         setConnectionState('連線中...');
