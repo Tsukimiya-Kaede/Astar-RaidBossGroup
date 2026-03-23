@@ -1,2010 +1,741 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-bs-theme="light">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>🍁MapleStory Astar公會專屬網站🍁</title>
-  
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  
-  <!-- Bootstrap JS (Modal 需要) -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <!-- PapaParse -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RJPQ Tool 多人連線版 Astar公會製作</title>
+  <script src="./config.js"></script>
   <style>
-    body 
-    {
-      overflow-y: scroll;
-      margin: 0;
-      padding: 0;
+    :root{
+      --bg:#0b1220; --panel:#121a2b; --panel2:#182238; --text:#eef3ff; --muted:#9fb0d1;
+      --border:#2a3857; --accent:#7aa2ff; --danger:#ff7b7b; --ok:#59d39c; --warn:#ffd166;
+      --red:   #ff6b6b; 
+	  --blue:  #5aa9ff; 
+	  --green: #4fd18b; 
+	  --yellow:#f3c84b;
+      --red2:   #FF969650; 
+	  --blue2:  #9696FF50; 
+	  --green2: #96FF9650; 
+	  --yellow2:#FFFF9650;
     }
-  
-    .status-badge { font-size: 0.85rem; }
-    .group-row { background: rgba(0,0,0,.03); font-weight: 600; }
-    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    #sourceBadge { display: none !important; }
-    
-    <!-- /* 分頁外框 + 顏色 */ -->
-    .nav-tabs-custom .nav-link
-    {
-      border:2px solid transparent;
-      font-weight:600;
-      margin-right:.5rem;
+    * { box-sizing: border-box; }
+    body{
+      margin:0; font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
+      background:linear-gradient(180deg,#08101d,#0e1526 45%,#0a1120);
+      color:var(--text);
     }
-    .nav-tabs-custom .nav-link:hover
-    {
-      opacity:.9;
+    .wrap{max-width:1200px; margin:0 auto; padding:24px;}
+    .hero{display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:18px;}
+    h1{margin:0; font-size:clamp(28px,4vw,40px)}
+    .sub{color:var(--muted); margin-top:8px}
+    .card{
+      background:rgba(18,26,43,.92); border:1px solid var(--border); border-radius:18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      padding:18px;
     }
-  
-    <!-- /* 普通拉圖斯（藍） */ -->
-    .nav-tabs-custom .tab-latus{
-    color:#0d6efd;
-    border-color:#0d6efd;
+    .grid{display:grid; gap:16px}
+    .top-grid{grid-template-columns: 1.1fr 1.4fr}
+    @media (max-width: 980px){ .top-grid{grid-template-columns:1fr} }
+    .row{display:flex; gap:3px 6px; flex-wrap:wrap; align-items:center}
+    .field{display:flex; flex-direction:column; gap:6px; flex:1; min-width:180px}
+    label{font-size:13px; color:var(--muted)}
+    input{
+      width:100%; background:#0b1324; color:var(--text); border:1px solid var(--border);
+      border-radius:12px; padding:12px 14px; outline:none;
     }
-    .nav-tabs-custom .tab-latus.active{
-    color:#fff;
-    background:#0d6efd;
+    input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(122,162,255,.15)}
+    button{
+      border:0; border-radius:12px; padding:12px 16px; cursor:pointer; color:white;
+      background:#2b61ff; font-weight:700;
     }
-    
-    <!-- /* 困藍拉圖斯（紫） */ -->
-    .nav-tabs-custom .tab-latushard{
-    color:#6f42c1;
-    border-color:#6f42c1;
+    button.secondary{background:#263149}
+    button.ghost{background:transparent; border:1px solid var(--border)}
+    button.warn{background:#8e5b00}
+    button.danger{background:#8a2f36}
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .hidden{display:none !important}
+    .status{
+      display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;
+      margin:4px 0 4px;
     }
-    .nav-tabs-custom .tab-latushard.active{
-    color:#fff;
-    background:#6f42c1;
-    } 
-  
-    <!-- /* 殘暴炎魔（橘） */ -->
-    .nav-tabs-custom .tab-zakum{
-    color:#fd7e14;
-    border-color:#fd7e14;
+    .pill{
+      padding:8px 12px; border-radius:999px; background:#0b1324; border:1px solid var(--border);
+      color:var(--muted); font-size:14px;
     }
-    .nav-tabs-custom .tab-zakum.active{
-    color:#fff;
-    background:#fd7e14;
+    .pill strong{color:var(--text)}
+    .colors{display:flex; gap:6px; flex-wrap:wrap}
+    .color-btn{
+      width:40px; height:40px; border-radius:999px; border:3px solid transparent; position:relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.1);
     }
-  
-    <!-- /* 訓練營&外援（綠） */ -->
-    .nav-tabs-custom .tab-misc{
-    color:#198754;
-    border-color:#198754;
+    .color-btn.selected{border-color:white}
+    .color-btn.taken::after{
+      content:""; position:absolute; inset:8px; border-radius:999px; border:3px solid rgba(255,255,255,.95);
+      transform:rotate(45deg);
     }
-    .nav-tabs-custom .tab-misc.active{
-    color:#fff;
-    background:#198754;
+    .legend{display:flex; gap:3px 6px; flex-wrap:wrap;}
+    .legend-item{
+      display:flex; align-items:center; gap:6px; color:var(--muted); font-size:14px;
+      background:#0b1324; border:1px solid var(--border); padding:8px 10px; border-radius:999px;
     }
-    /* 叔叔一圖流（橘） */
-    .nav-tabs-custom .tab-onep{
-      color:#fd7e14;
-      border-color:#fd7e14;
+    .dot{width:14px; height:14px; border-radius:999px}
+    .board{overflow:auto;}
+    table{width:100%; border-collapse:separate; border-spacing:6px 6px; min-width:240px}
+    th{font-size:13px; color:var(--muted); font-weight:700}
+    td.floor-cell{
+      width:30px; text-align:center; color:var(--muted); font-weight:700;
+      background:#0b1324; border:1px solid var(--border); border-radius:10px; padding:1px 0px 4px 0px;
+	  justify-content: center; align-items: center; height: 40px;
     }
-    .nav-tabs-custom .tab-onep.active{
-      color:#fff;
-      background:#fd7e14;
+    td.pick{
+      position:relative; min-width:0px; text-align:center; user-select:none;
+      background:#101a2f; border:1px solid var(--border); border-radius:10px; padding:1px 0px 4px 0px; cursor:pointer;
+      transition:.15s transform ease,.15s border-color ease,.15s background ease;
+      justify-content: center; align-items: center; height: 40px;
     }
-        
-    .title{font-weight:bold; font-size:1.0rem;}
-    
-    <!-- /* 針對標籤內的內容進行重製 */ -->
-    .reset-content 
-    {
-      <!-- /* all: revert; */ -->   
-      display: table-cell;  
-      line-height: 1.5; 
-      font-size: 1rem;    
-      padding: 0.5;           
-      border: none;         
-    }
-  
-    <!-- /* 如果是針對整個表格，可以更簡單 */ -->
-    .clean-table 
-    {
-      all: revert;
-      width: 100%;
-      border-collapse: collapse;
-    }
+    td.pick:hover{transform:translateY(-1px); border-color:#4560a3; background:#12203c}
+    td.pick .num{font-size:18px; font-weight:800}
+    td.pick .submark{
+	  display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
+      background:rgba(255,255,255,.00); margin-top:0px; font-size:12px; font-weight:700; color:var(--muted); 
+	  justify-content:center; align-items:center; width: 100%; 
+	  }
+    td.pick.shared-red{box-shadow:    inset 0 0 0 1px var(--red)}
+    td.pick.shared-blue{box-shadow:   inset 0 0 0 1px var(--blue)}
+    td.pick.shared-green{box-shadow:  inset 0 0 0 1px var(--green)}
+    td.pick.shared-yellow{box-shadow: inset 0 0 0 1px var(--yellow)}
 	
-	/* 角色名稱右側的小問號按鈕 */
-	.name-history-btn{
-	  display:inline-flex; align-items:center; justify-content:center;
-	  width:22px; height:22px; line-height:22px;
-	  border-radius:50%; border:0;
-	  background:#ffc107; color:#212529; font-weight:700;
-	  cursor:pointer; margin-left:.25rem;
-	}
-	.name-history-btn:hover{ filter: brightness(0.95); }
-	/* 角色清單工具列：讓搜尋框不要把排版撐開 */
-	.toolbar-compact{ gap:.5rem; flex-wrap:wrap; }
-	.toolbar-compact .search-group{
-	  width:180px;          /* 固定窄寬 */
-	  flex:0 0 auto;        /* 不要伸展 */
-	}
-	.toolbar-compact .search-group input{ min-width:0; } /* 防止被內容撐大 */
-	@media (max-width:576px){
-	  .toolbar-compact .search-group{ width:150px; }     /* 手機再小一點 */
-	}
-	/* 捲到列後的高亮動畫 */
-	.row-pulse {
-	  animation: rowPulse 2s ease-out 0s 1;
-	}
-	@keyframes rowPulse {
-	  0%   { background-color: #fff3cd; }   /* 淡黃 */
-	  50%  { background-color: #ffe8a1; }
-	  100% { background-color: transparent; }
-	}
-	/* 營區顏色 badge */
-	.badge-camp{ color:#fff; font-weight:600; }
-	.badge-camp.latus{      background:#0d6efd; } /* 普拉 = 藍 */
-	.badge-camp.latushard{  background:#6f42c1; } /* 困拉 = 紫 */
-	.badge-camp.zakum{      background:#fd7e14; } /* 炎魔 = 橘 */
-	.badge-camp.misc{       background:#198754; } /* 訓練營/外援 = 綠 */
-	
-	/* === 營區彩色 badge（列表 & 編輯器共用）=== */
-	.badge-camp{ color:#fff; font-weight:600; border:0; }
-	.badge-camp.latus{      background:#0d6efd; } /* 普拉 = 藍 */
-	.badge-camp.latushard{  background:#6f42c1; } /* 困拉 = 紫 */
-	.badge-camp.zakum{      background:#fd7e14; } /* 炎魔 = 橘 */
-	.badge-camp.misc{       background:#198754; } /* 訓練/外援 = 綠 */
+    td.pick.private-wrong{
+      background:
+        linear-gradient(135deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
+        linear-gradient(45deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
+        #101a2f;
+    }
+    .marker{
+      display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
+      background:rgba(255,255,255,.05); margin-top:0px; font-size:12px; font-weight:700; color:#FFFFFF64; 
+	  justify-content:center; align-items:center; width: 45%; 
+    }
+    .marker .dot{width:12px; height:12px}
+    .hint{color:var(--muted); font-size:13px; line-height:1.6}
+    .footer{margin-top:16px; color:var(--muted); font-size:13px}
+    code{background:#0b1324; padding:2px 6px; border-radius:6px}
+    .toast{
+      position:fixed; right:20px; bottom:20px; background:#0b1324; border:1px solid var(--border);
+      border-radius:14px; padding:12px 14px; color:var(--text); box-shadow:0 12px 30px rgba(0,0,0,.35);
+      opacity:0; transform:translateY(10px); pointer-events:none; transition:.2s ease;
+    }
+    .toast.show{opacity:1; transform:none}
+    .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
 
-	/* === 編輯器：多選 chips === */
-	.camp-chip{
-	  display:inline-flex; align-items:center; gap:.4rem;
-	  padding:.35rem .55rem; border-radius:999px; color:#fff;
-	  cursor:pointer; user-select:none; transition:transform .05s ease;
-	}
-	.camp-chip input{ display:none; }
-	.camp-chip:active{ transform:scale(.98); }
-	.camp-chip[aria-checked="true"]{ box-shadow:0 0 0 2px rgba(0,0,0,.15) inset; }
-
-	/* 小工具列 */
-	.camp-toolbar{ display:flex; flex-wrap:wrap; gap:.5rem; margin:.25rem 0 .5rem; }
-	.camp-toolbar .btn-sm{ padding:.1rem .5rem; }
+    @media (max-width: 360px){
+      .wrap{padding:12px}
+      .card{padding:14px}
+      .hero{margin-bottom:12px}
+      h1{font-size:24px}
+      .sub{font-size:13px}
+      .status{gap:12px}
+      .status .row{width:100%}
+      .status .row:last-child button{flex:1}
+      .grid[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+      .board{overflow:visible}
+      table{
+        min-width:0;
+        width:100%;
+        border-spacing:0;
+      }
+      thead{display:none}
+      tbody{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+      tbody tr{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:8px;
+        background:#0b1324;
+        border:1px solid var(--border);
+        border-radius:14px;
+        padding:10px;
+      }
+      td.floor-cell{
+        grid-column:1 / -1;
+        width:auto;
+        padding:10px 12px;
+        border-radius:10px;
+        font-size:14px;
+      }
+      td.pick{
+        min-width:0;
+        width:100%;
+        padding:14px 6px;
+        border-radius:12px;
+      }
+      td.pick .num{font-size:16px}
+      td.pick .submark{font-size:11px; margin-top:6px}
+      .marker{
+        width:100%;
+        justify-content:center;
+        gap:6px;
+        padding:6px 8px;
+        font-size:11px;
+        margin-top:6px;
+      }
+      .marker .dot{width:10px; height:10px}
+      .footer{font-size:12px; line-height:1.6}
+    }
   </style>
 </head>
-
-<body class="bg-body">
-  <nav class="navbar navbar-expand-lg bg-primary navbar-dark sticky-top" style="padding:3px">
-    <div class="container-fluid">
-    <span class="navbar-brand btn-sm title" style="font-size:1.25rem;">🍁MapleStory Astar公會專屬網站🍁</span>
-    <div class="ms-auto d-flex align-items-center gap-2">
-      <span id="sourceBadge" class="badge bg-light text-dark status-badge">sheetId=1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs | gid=0</span>
-      <!-- 小夥伴清單 -->
-      <button id="backToList" class="btn btn-outline-light btn-sm title">👨‍👩‍👧‍👦 公會小夥伴</button>
-	  <!-- 跨公會組隊招募網站  -->
-      <a href="https://tsukimiya-kaede.github.io/Astar-RaidBossGroup/TeamLobby.html" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="RaidBoss組隊招募">📣 RaidBoss 隊伍招募</a>
-      <!-- 遊戲攻略 -->
-      <button id="Guide" class="btn btn-outline-light btn-sm title">🚀 遊戲攻略</button>
-      <!-- 楓之谷圖鑑  -->
-      <a href="https://www.artalemaplestory.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="楓之谷圖鑑">🍁 楓之谷圖鑑</a>
-      <!-- 第三方交易平台 -->
-      <a href="https://artale-market.org/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="第三方交易平台">🏪 第三方交易平台</a>
-      <!-- 怪物掉落物查詢工具按鈕（怪物圖案） -->
-      <a href="https://a2983456456.github.io/artale-drop/" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm title" title="怪物掉落物查詢工具">👾 怪物掉落物查詢工具</a>
-      <!-- 夜間模式 -->
-      <button id="toggleTheme" class="btn btn-outline-light btn-sm title"">🌙 夜間模式</button>
-    </div>
-    </div>
-  </nav>
-
-  <!-- 公會小夥伴 -->
-  <div id="homePage" class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-2">
-      <h3 class="mb-0"><b>👩‍👩‍👧‍👦 公會小夥伴</b></h3>
-    </div>
-    
-    <!-- 提示卡片 -->
-    <div class="card shadow-sm mb-4">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-0">
-        <h4 class="card-title mb-2">➡️ 資料來源</h4>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>RJPQ Tool 多人連線版 Astar 公會製作</h1>
+        <div class="sub">羅密歐與茱麗葉組隊任務平台協作工具</div>
       </div>
-      <p class="mb-0 text-muted">請各位檢視一下自己的資料是否須更新，若要更新請點擊【修改】按鈕進行更新。若遇無法更新情形請進以下網址進入Excel表找到自己的欄位更新資料 　～感恩的心～</p>
-      <small class="text-muted">
-      <a href="https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer">
-        https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0
-      </a>
-      </small>
-      <div id="msg" class="text-danger mt-2"></div>
-    </div>
-    </div>
-	<div class="card shadow-sm">
-      <div class="card-body">
-        <div class="d-flex align-items-center mb-2">
-		  <h4 class="card-title mb-2 mb-sm-0">🏋️ 角色清單</h4>
-		  <!-- 右側工具列：推到最右、可自動換行；搜尋框不撐開 -->
-		  <div class="d-flex align-items-center gap-2 flex-wrap ms-auto" style="min-width:0;">
-			<button id="addBtn" class="btn btn-primary btn-sm">新增角色</button>
-
-			<!-- 搜尋框（固定寬度、不伸展） -->
-			<input id="charSearchInput" type="text" class="form-control w-auto" placeholder="搜尋角色" style="min-width:0;">
-			<button id="charSearchBtn" class="btn btn-outline-secondary btn-sm">搜尋</button>
-			<a class="btn btn-outline-success btn-sm" href="https://docs.google.com/forms/d/e/1FAIpQLSf8cD32ZkhEh38MIL2bHP3Rypm1fWdmCDzlzuEKkxdQLlgkTg/viewform" target="_blank" rel="noopener noreferrer">參加王團意願填寫表</a>
-			<button id="btnJobStats" class="btn btn-outline-primary btn-sm">📊 公會職業分佈統計</button>
-			<button id="reloadBtn" class="btn btn-outline-secondary btn-sm">重新整理</button>
-		  </div>
-		</div>
-		
-      <!-- ★ 新增：分頁切換（僅切換顯示營區） -->
-      <ul class="nav nav-pills nav-tabs-custom mb-3" id="campTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button id="tabLatus" class="nav-link tab-latus active" type="button" role="tab">拉圖斯(普通)</button>
-        </li>
-        <!-- 放在 id="tabLatus" 之後、id="tabZakumList" 之前 -->
-        <li class="nav-item" role="presentation">
-          <button id="tabLatusHard" class="nav-link tab-latushard" type="button" role="tab">拉圖斯(困難)</button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button id="tabZakumList" class="nav-link tab-zakum" type="button" role="tab">殘暴炎魔</button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button id="tabTrainExt" class="nav-link tab-misc" type="button" role="tab">訓練營&外援專區</button>
-        </li>
-      </ul>
-	  
-    </div>
-  
-      <!-- 腳色表格 -->
-      <div class="table-responsive">
-      <table class="table table-striped table-hover align-middle reset-content">
-        <thead class="table-secondary">
-        <tr>
-          <th style="width: 20%;">角色名稱</th>
-          <th style="width: 10%;">角色代碼</th>
-          <th style="width: 20%;">角色職業</th>
-          <th style="width: 10%;">角色等級</th>
-          <th style="width: 10%;">角色乾表</th>
-          <th style="width: 20%;">所在營區</th>
-          <th style="width: 10%;">修改資料</th>
-        </tr>
-        </thead>
-        <tbody id="tableBody">
-        <tr>
-          <td colspan="7" class="text-center text-muted">尚未讀取資料</td>
-        </tr>
-        </tbody>
-      </table>
-      </div>
-    </div>
-    </div>
-  </div>
-
-  <!-- 遊戲攻略 -->
-  <div id="GuidePage" class="container py-4 d-none">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h3 class="mb-0"><b>🚀 遊戲攻略（Game Guide）<b></h3>
-      <div class="d-flex align-items-center gap-2">
-        <button id="backToList" class="btn btn-outline-secondary btn-sm">← 返回角色清單</button>
-      </div>
+      <div class="pill" id="connPill">連線狀態：<strong id="connState">未連線</strong></div>
     </div>
 
-    <div class="card shadow-sm">
-      <div class="card-body">
-      <!-- 導覽按鈕列（用 button.nav-link 取代 label） -->
-<ul class="nav nav-pills nav-tabs-custom mb-3" id="guideTabs" role="tablist">
-  <li class="nav-item" role="presentation">
-    <!-- 叔叔一圖流：沿用橘色風格 -->
-    <button id="tabOneP" class="nav-link tab-onep active" type="button" role="tab" data-target="#pane-onep">
-    叔叔一圖流
-  </button>
-
-  </li>
-
-  <li class="nav-item" role="presentation">
-    <!-- 外部連結可用 <a> 仍保留 nav-link 視覺 -->
-    <a class="nav-link tab-latus" role="tab" target="_blank" rel="noopener noreferrer"
-       href="https://docs.google.com/spreadsheets/d/1lPS_dyOfFe04SbmavvqAZT6GVTOuN-F-qSXDhQlpfUY/edit?gid=0#gid=0">
-      全職業攻略
-    </a>
-  </li>
-
-  <li class="nav-item" role="presentation">
-    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
-       href="https://docs.google.com/document/u/0/d/1fripMi-WrPOh9ZpdAfUlyiUZd42Btt_tIpNohXLLE3A/mobilebasic">
-      全職業四轉技能
-    </a>
-  </li>
-
-  <li class="nav-item" role="presentation">
-    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
-       href="https://rvgin.github.io/tower-of-goddess/">
-      女神400小工具
-    </a>
-  </li>
-
-  <li class="nav-item" role="presentation">
-    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
-       href="https://forum.gamer.com.tw/C.php?bsn=79354&snA=9763">
-      羅朱組任攻略(包含其他小工具連結)
-    </a>
-  </li>
-  
-  <li class="nav-item" role="presentation">
-    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
-       href="https://tsukimiya-kaede.github.io/Astar-RaidBossGroup/frontend/index.html">
-      羅朱組任平台小工具(奈特自製版)
-    </a>
-  </li>
-  
-  <li class="nav-item" role="presentation">
-    <a class="nav-link tab-misc" role="tab" target="_blank" rel="noopener noreferrer"
-       href="https://philipc-1.github.io/MapleStory/HPsimulator.html">
-      補品生存模擬器
-    </a>
-  </li>
-  
-  <li class="nav-item" role="presentation">
-    <button id="tabLatusHardGuide" class="nav-link tab-latushard" type="button" role="tab"
-            data-target="#pane-latus-hard">
-      ⏰困難拉圖斯
-    </button>
-  </li>
-  
-  <li class="nav-item" role="presentation">
-    <button id="tabZakumGuide" class="nav-link tab-latushard" type="button" role="tab"
-        data-target="#pane-zakum">
-    🗿殘暴炎魔
-  </button>
-
-  </li>
-</ul>
-
-      </div>
-	  
-<!-- 內容面板：用 div.pane 搭配 d-none 切換 -->
-<div id="pane-onep" class="tab-pane">
-  <!-- 這裡放你原本「叔叔一圖流」面板（搜尋、表格）內容 -->
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <div style="padding-left:16px">
-    <h4 class="card-title mb-2">🌟 叔叔一圖流</h4>
-	</div>
-    <div class="d-flex align-items-center gap-2">
-      <input type="text" name="txt_Search" style="min-width: 200px !important; display: block !important;" placeholder="輸入搜尋內容">
-      <button id="btn_SearchOneP" class="btn btn-outline-secondary btn-sm">搜尋</button>
-      <button id="btn_ResetOneP" class="btn btn-outline-secondary btn-sm">重置</button>
-      <button id="reloadBtn_OneP" class="btn btn-outline-secondary btn-sm">重新整理</button>
-    </div>
-  </div>
-
-  <div class="table-responsive">
-    <table class="table table-striped table-hover align-middle reset-content">
-      <thead class="table-secondary">
-        <tr>
-          <th style="width: 15%;">分類</th>
-          <th style="width: 25%;">名稱</th>
-          <th style="width: 25%;">關鍵字</th>
-          <th style="width: 35%;">圖片 (點擊開啟大圖)</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody_OneP">
-        <tr>
-          <td colspan="4" class="text-center text-muted">尚未讀取資料</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div id="pane-latus-hard" class="tab-pane d-none">
-  <div style="padding-left:16px">
-  <h4 class="card-title mb-2">⏰ 困難拉圖斯攻略（Hard Papulatus Guide）</h4>
-  </div>
-  <div class="ratio ratio-16x9">
-    <iframe id="latusHardFrame"
-            src="https://docs.google.com/document/d/1UrV2RrEJwLZJ8X5t88GXRuxKbbxp9vq6W2Qeu1nqzV0/preview"
-            title="Latus Hard Doc" allowfullscreen style="border:0;"></iframe>
-  </div>
-  <small class="text-muted d-block mt-2">
-    若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
-  </small>
-</div>
-
-<div id="pane-zakum" class="tab-pane d-none">
-  <div style="padding-left:16px">
-  <h4 class="card-title mb-2">🗿 殘暴炎魔攻略（Zakum Guide）</h4>
-  </div>
-  <div class="ratio ratio-16x9">
-    <iframe id="zakumFrame"
-            src="https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/preview"
-            title="Zakum Doc" allowfullscreen style="border:0;"></iframe>
-  </div>
-  <small class="text-muted d-block mt-2">
-    若未顯示，請確認 Google 文件已「發佈到網路」或權限設定允許內嵌。
-  </small>
-</div>
-    
-    </div>
-    
-  </div>
-
-<script>
-// 放在全域（或 $(function(){ ... }) 裡面最上面一點）
-// ====== 修正 1：建立單一 Modal 實例 ======
-function getJobModal() {
-  const el = document.getElementById('jobStatsModal');
-  // getOrCreateInstance 會在沒有實例時自動 new，一定要等到 el 存在時才呼叫
-  return bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
-}
-
-// 開啟按鈕：只呼叫 show()，不要每次 new
-$(document).on('click', '#btnJobStats', function () {
-  if (!Array.isArray(lastData) || lastData.length === 0) {
-    alert('尚未讀取到資料，請先等待列表載入或點擊重新整理後再試。');
-    return;
-  }
-  getJobModal().show();
-  setTimeout(renderJobChart, 150);
-});
-
-// ====== 修正 2：關閉時不手動清理 backdrop/body（交由 Bootstrap） ======
-$(document).on('hidden.bs.modal', '#jobStatsModal', function () {
-  const box = document.getElementById('jobHitList');
-  if (box) box.innerHTML = '（點一下左邊的統計圖切片，這裡會列出角色名稱）';
-});
-
-/* =========================
-   歷史角色更名：讀取 + 顯示
-========================= */
-// 你的 LOG 表：同一份 Sheet，改 gid 即可
-const RENAME_LOG_GID = '170886432';
-
-// 快取（依代碼、依新名）
-let renameLogByCode = new Map();
-let renameLogByName = new Map();
-
-/** 讀取更名 LOG（CSV） */
-function loadRenameLog(sheetId) {
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${RENAME_LOG_GID}`;
-  Papa.parse(csvUrl, {
-    download: true,
-    skipEmptyLines: true,
-    complete: (res) => {
-      try {
-        if (!res.data || res.data.length < 2) return;
-
-        // 嘗試從表頭判斷欄位（盡量容錯）
-        const header = res.data[0].map(h => String(h || '').trim());
-        const idx = {
-          time: header.findIndex(h => /^(時間|timestamp|time)$/i.test(h)),
-          code: header.findIndex(h => /^(角色代碼|代碼|code)$/i.test(h)),
-          old : header.findIndex(h => /^(舊名|old.*name)$/i.test(h)),
-          name: header.findIndex(h => /^(新名|名稱|name|new.*name)$/i.test(h))
-        };
-
-        // 若沒偵測到表頭，就用預設位置（0:時間 1:舊名 2:新名 3:代碼）可按照你表的實際順序調整
-        const safe = (arr, i) => (i >= 0 ? arr[i] : '');
-        renameLogByCode.clear();
-        renameLogByName.clear();
-
-        for (let i = 1; i < res.data.length; i++) {
-          const r = res.data[i];
-          const rec = {
-            time: safe(r, idx.time) || safe(r, 0),
-            old : safe(r, idx.old)  || safe(r, 1),
-            name: safe(r, idx.name) || safe(r, 2),
-            code: String(safe(r, idx.code) || safe(r, 3) || '').trim()
-          };
-
-          // 依代碼建索引
-          if (rec.code) {
-            if (!renameLogByCode.has(rec.code)) renameLogByCode.set(rec.code, []);
-            renameLogByCode.get(rec.code).push(rec);
-          }
-          // 也用「新名」建一份（避免代碼缺漏時也能查）
-          if (rec.name) {
-            if (!renameLogByName.has(rec.name)) renameLogByName.set(rec.name, []);
-            renameLogByName.get(rec.name).push(rec);
-          }
-        }
-
-        // 依時間字串做粗略排序（新→舊）；若不是可解析日期也沒關係
-        const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
-        [...renameLogByCode.values()].forEach(arr => arr.sort(sorter));
-        [...renameLogByName.values()].forEach(arr => arr.sort(sorter));
-      } catch (e) {
-        console.error('解析更名 LOG 失敗', e);
-      }
-    },
-    error: (err) => console.error('讀取更名 LOG 失敗', err)
-  });
-}
-/* =========================
-   搜尋：同時比對清單與更名 LOG
-========================= */
-
-// ★ 補充：也以「舊名」建一份索引，讓舊名能被搜尋到
-let renameLogByOldName = new Map();
-
-// ⬇︎ 把這段「補建舊名索引」加到你現有的 loadRenameLog(...) 內部、for 迴圈 push 完之後
-// ----（說明：若你不想改 loadRenameLog，本段也可在它 complete 結束後另外跑一遍 map，但直接寫在原函式最省事）----
-//   if (rec.old) {
-//     if (!renameLogByOldName.has(rec.old)) renameLogByOldName.set(rec.old, []);
-//     renameLogByOldName.get(rec.old).push(rec);
-//   }
-//   // 完整度：讓舊名/新名 map 都依時間新→舊排序（保險）
-/*
-const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
-[...renameLogByOldName.values()].forEach(arr => arr.sort(sorter));
-*/
-
-//
-// 若你不方便回頭改 loadRenameLog，可以在這裡做一次同步（保險寫法）：
-function rebuildOldNameIndexFromCaches() {
-  renameLogByOldName = new Map();
-  if (renameLogByCode.size === 0 && renameLogByName.size === 0) return;
-  // 由 code cache 重建（最完整）
-  for (const arr of renameLogByCode.values()) {
-    for (const rec of arr) {
-      const old = (rec?.old || '').trim();
-      if (!old) continue;
-      if (!renameLogByOldName.has(old)) renameLogByOldName.set(old, []);
-      renameLogByOldName.get(old).push(rec);
-    }
-  }
-  const sorter = (a, b) => String(b.time).localeCompare(String(a.time));
-  [...renameLogByOldName.values()].forEach(a => a.sort(sorter));
-}
-
-// ★ 工具：大小寫不敏感 + 去空白 的「包含」判斷
-function includesLike(haystack, needle) {
-  if (!needle) return false;
-  const a = String(haystack || '').toLowerCase().trim();
-  const b = String(needle || '').toLowerCase().trim();
-  return a.includes(b);
-}
-
-// 回傳：符合條件的「角色代碼」集合（從當前清單名字 or LOG 舊名/新名）
-function findCodesByNameKeyword(keyword) {
-  const codes = new Set();
-
-  // 1) 直接掃當前清單的名字
-  for (const r of (lastData || [])) {
-    if (includesLike(r?.name, keyword)) {
-      if (r?.code) codes.add(String(r.code).trim());
-    }
-  }
-
-  // 2) 掃 LOG：新名
-  for (const [newName, arr] of renameLogByName.entries()) {
-    if (!includesLike(newName, keyword)) continue;
-    arr.forEach(rec => rec?.code && codes.add(String(rec.code).trim()));
-  }
-
-  // 3) 掃 LOG：舊名
-  for (const [oldName, arr] of renameLogByOldName.entries()) {
-    if (!includesLike(oldName, keyword)) continue;
-    arr.forEach(rec => rec?.code && codes.add(String(rec.code).trim()));
-  }
-
-  return codes;
-}
-
-// 依代碼拿當前清單資料
-function getCurrentRowsByCodes(codeSet) {
-  const out = [];
-  const want = new Set(Array.from(codeSet).map(c => String(c).trim()));
-  for (const r of (lastData || [])) {
-    const c = String(r?.code || '').trim();
-    if (c && want.has(c)) out.push(r);
-  }
-  return out;
-}
-
-// 取某代碼的完整更名紀錄（新→舊）
-function getSortedLogByCode(code) {
-  const arr = renameLogByCode.get(String(code).trim()) || [];
-  // 這裡的排序在 loadRenameLog 已做；再保險一次
-  return [...arr].sort((a,b)=> String(b.time).localeCompare(String(a.time)));
-}
-
-// 渲染搜尋結果
-function renderSearchResults(keyword, rows, codeSet) {
-  // Echo 關鍵字
-  $('#searchQueryEcho').text(`關鍵字：${keyword || '（空）'}`);
-
-  const tbody = $('#searchResultBody');
-  if (!rows || rows.length === 0) {
-    tbody.html(`<tr><td colspan="7" class="text-center text-muted">無符合項目</td></tr>`);
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('searchResultModal')).show();
-    return;
-  }
-
-  const html = rows.map(r => {
-    const logs = getSortedLogByCode(r.code);
-    // 將更名紀錄做成小列表
-    const logHtml = logs.length
-      ? logs.map(x => `
-          <div class="small">
-            <span class="badge text-bg-secondary">${x.time || ''}</span>
-            ${x.old ? `「${x.old}」→` : ''}「${x.name || ''}」
+    <div id="lobbyView" class="grid top-grid">
+      <div class="card">
+        <h2 style="margin-top:0">建立房間</h2>
+        <div class="grid">
+          <div class="field">
+            <label>房號</label>
+            <input id="createRoomCode" placeholder="例如：rj-001" />
           </div>
-        `).join('')
-      : `<span class="text-muted small">（無紀錄）</span>`;
-
-    return `
-      <tr>
-        <td>${r.name ?? ''}</td>
-        <td>${r.code ?? ''}</td>
-        <td>${r.job ?? ''}</td>
-        <td>${r.level ?? ''}</td>
-        <td>${r.attack ?? ''}</td>
-        <td>${r.camp ?? ''}</td>
-        <td>
-		  ${logHtml}
-		  <div class="mt-1">
-		    <button type="button"
-		  	  class="btn btn-sm btn-outline-primary btn-locate-row"
-			  data-code="${r.code ?? ''}"
-		  	  data-camp="${r.camp ?? ''}">
-		  	  🔎 定位此列
-		    </button>
-		  </div>
-		</td>
-      </tr>
-    `;
-  }).join('');
-
-  tbody.html(html);
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('searchResultModal')).show();
-}
-
-// 綁定搜尋框（按鈕 + Enter）
-function doCharacterSearch() {
-  const kw = $('#charSearchInput').val().trim();
-  if (!kw) {
-    // 空字串：直接提示
-    $('#searchQueryEcho').text('關鍵字：（空）');
-    $('#searchResultBody').html(`<tr><td colspan="7" class="text-center text-muted">請輸入關鍵字</td></tr>`);
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('searchResultModal')).show();
-    return;
-  }
-
-  // 確保舊名索引存在
-  if (!renameLogByOldName || renameLogByOldName.size === 0) {
-    rebuildOldNameIndexFromCaches();
-  }
-
-  const codes = findCodesByNameKeyword(kw);
-  const rows  = getCurrentRowsByCodes(codes);
-
-  renderSearchResults(kw, rows, codes);
-}
-
-// 事件綁定（放在 $(function(){ ... }) 內或外皆可；若放外層建議保險用委派）：
-$(document).on('click', '#charSearchBtn', doCharacterSearch);
-$(document).on('keypress', '#charSearchInput', function(e){
-  if (e.which === 13) doCharacterSearch();
-});
-
-/** 取得某角色的更名紀錄（優先用代碼匹配，否則用目前名稱） */
-function getRenameHistory(name, code) {
-  const byCode = (code && renameLogByCode.get(String(code).trim())) || [];
-  if (byCode.length) return byCode;
-  return (name && renameLogByName.get(String(name).trim())) || [];
-}
-
-/** 開啟 Modal 並渲染清單 */
-function openRenameLogModal(name, code) {
-  const list = getRenameHistory(name, code);
-  const box  = document.getElementById('renameLogList');
-  const who  = document.getElementById('renameLogTarget');
-
-  who.textContent = `查詢角色：${name || '(未填)'}${code ? `（代碼：${code}）` : ''}`;
-
-  if (!list.length) {
-    box.innerHTML = `<div class="text-muted">此角色目前沒有更名紀錄。</div>`;
-  } else {
-    // 顯示成簡單時間軸
-    const html = list.map(x => `
-      <div class="d-flex align-items-start gap-2 py-1">
-        <span class="badge text-bg-secondary">${x.time || ''}</span>
-        <div>
-          <div><b>${x.name || ''}</b></div>
-          ${x.old ? `<div class="small text-muted">由「${x.old}」更名為「${x.name}」</div>` : ''}
-          ${x.code ? `<div class="small text-muted">角色代碼：${x.code}</div>` : ''}
+          <div class="field">
+            <label>房間密碼（可留空）</label>
+            <input id="createRoomPassword" placeholder="選填" />
+          </div>
+          <div class="row">
+            <button id="createRoomBtn">建立並進入</button>
+            <button id="randomRoomBtn" class="secondary">隨機房號</button>
+          </div>
         </div>
       </div>
-      <hr class="my-1">
-    `).join('');
-    box.innerHTML = html;
-  }
 
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('renameLogModal')).show();
-}
-
-// 綁定：點問號開啟 Modal（事件委派）
-$(document).on('click', '.name-history-btn', function () {
-  const name = $(this).data('name') || '';
-  const code = $(this).data('code') || '';
-  openRenameLogModal(name, code);
-});
-
-
-// 殘暴炎魔攻略：Google 文件嵌入網址（建議用發佈到網路後的 /pub?embedded=true）
-//const ZAKUM_DOC_EMBED = "https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/pub?embedded=true";
-// 若未發佈、但分享權限開放，也可暫用 preview（可能會被 X-Frame-Options 擋）
- const ZAKUM_DOC_EMBED = "https://docs.google.com/document/d/19iRUhl0Es049i5dgVkJlBAuDK3icESjuEqmAGj44cHs/preview";
-
-/* =========================
-   設定：請填你的 Apps Script Web App（exec）URL
-========================= */
-const GAS_UPDATE_URL = 'https://script.google.com/macros/s/AKfycbwAAMocuEMv_Q1xbEqP7yykZ61Wvo-8v_aMDvzyDjrxHtBFtS2MDYr1rTXZfRUaAfL8/exec';
-//'https://script.google.com/macros/s/AKfycbwbEW15caNLWOUqm8VKby2tN_JfCySTT6xFtreuFz9K0Ex51qioyeqNi476jVH4vlGo/exec';
-// 把「新增角色」事件記錄到 歷史更名LOG（gid=170886432）
-async function appendRenameLogToGAS({ code, name, when }) {
-  if (!code || !name) throw new Error('appendRenameLog 需要 code 與 name');
-  const form = new URLSearchParams();
-  form.set('action', 'appendRenameLog');   // 後端會用這個分流
-  form.set('code',   String(code).trim());
-  form.set('name',   String(name).trim());
-  // 送本地時間的 ISO 字串（後端會再依台北時區格式化）
-  form.set('when',   when || new Date().toISOString());
-
-  const resp = await fetch(GAS_UPDATE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-    body: form.toString(),
-    cache: 'no-store',
-    redirect: 'follow'
-  });
-  const text = await resp.text();
-  let json; try { json = JSON.parse(text); } catch(e) { throw new Error('GAS 回傳非 JSON'); }
-  if (!resp.ok || json.status !== 'ok') throw new Error(json.message || 'appendRenameLog 失敗');
-  return json;
-}
-
-/* =========================
-   夜間模式切換
-========================= */
-$('#toggleTheme').on('click', function () 
-{
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-bs-theme') === 'dark';
-  html.setAttribute('data-bs-theme', isDark ? 'light' : 'dark');
-  $(this).text(isDark ? '🌙 夜間模式' : '☀️ 日間模式');
-});
-
-
-/* ==== 返回角色清單：擴充既有處理，讓兩個攻略頁都能返回 ==== */
-// 將你原本的 backToList 事件「替換」成下面這段（或直接覆寫）
-$(document).off('click', '#backToList').on('click', '#backToList', function () 
-{
-  $('#GuidePage').addClass('d-none');     // 隱藏清單
-  $('#homePage').removeClass('d-none');
-});
-
-$('#Guide').on('click', function () 
-{
-  $('#homePage').addClass('d-none');       // 隱藏清單
-  $('#GuidePage').removeClass('d-none');   // 顯示攻略
-});
-
-/* =========================
-   殘暴炎魔攻略：單頁切換
-========================= */
-//（保留你的註解與未使用的程式碼）
-
-/* =========================
-   公用：解析 URL 參數
-========================= */
-function getQueryParams() 
-{
-  const params = new URLSearchParams(window.location.search);
-  return Object.fromEntries(params.entries());
-}
-function parseSheetFromUrl(url) 
-{
-  if (!url) return null;
-  const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!idMatch) return null;
-  const sheetId = idMatch[1];
-  const urlObj = new URL(url);
-  const gid = urlObj.searchParams.get('gid') || (url.includes('#gid=') ? url.split('#gid=')[1] : '0');
-  return { sheetId, gid };
-}
-
-/* =========================
-   全域狀態（★ 新增）
-========================= */
-let currentTab = 'latus';   // 'latus' | 'latushard' | 'zakum' | 'trainext'
-let lastData   = [];        // 讀取後保存，切分頁時重繪使用
-let lastData_OneP   = [];        // 讀取後保存，切分頁時重繪使用
-
-/* =========================
-   讀取 Google Sheet（以 CSV 匯出）
-========================= */
-function loadFromSheet(sheetId, gid = '0') 
-{
-  $('#msg').text('');
-  $('#tableBody').html(`
-    <tr>
-    <td colspan="7" class="text-center text-muted">讀取中...</td>
-    </tr>
-  `);
-  
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  
-  Papa.parse(csvUrl, {
-    download: true,
-    skipEmptyLines: true,
-    complete: function (result) {
-    try {
-      if (!result.data || result.data.length < 2) {
-      $('#msg').text('沒有資料可顯示');
-      lastData = [];
-      renderTable(lastData);
-      return;
-      }
-  
-      const rows = result.data.slice(1);
-      lastData = rows
-      .map((r, i) => ({
-        name:  r[1], // B
-        code:  r[2], // C（主鍵）
-        job:   r[3], // D
-        level: r[4], // E
-        attack:r[6], // F 乾表
-        camp:  r[9],                 // 原始字串（顯示/寫回用）
-		camps: extractCamps(r[9]),   // ← 解析後的陣列（運算用）
-        rowIndex: i + 2
-      }))
-      .filter(r => r && r.name);
-  
-      renderTable(lastData);
-    } catch (e) {
-      console.error(e);
-      $('#msg').text('解析資料時發生錯誤');
-      lastData = [];
-      renderTable(lastData);
-    }
-    },
-    error: function (err) {
-    console.error(err);
-    $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
-    lastData = [];
-    renderTable(lastData);
-    }
-  });
-}
-
-/* =========================
-   依分頁過濾 + 分組顯示（★ 調整）
-========================= */
-function renderTable(data) {
-  // 依目前分頁決定要命中的營區型別
-  const zhNums = '一二三四五六七八九十';
-  const reLatus     = new RegExp(`^普拉[${zhNums}]營$`);
-  const reLatusHard = new RegExp(`^困拉[${zhNums}]營$`);
-  const reZakum     = new RegExp(`^炎魔[${zhNums}]營$`);
-
-  const groupNotes = {
-    '普拉一營': '🔰歐皇指定席🎗️',
-    '普拉二營': '🔰瑞氣千條團💎',
-    '普拉三營': '🔰馬到成功團🐎',
-    '普拉四營': '🔰傳奇空殼團🥥',
-    '普拉五營': '🔰祖宗保佑我⛩️',
-    '普拉六營': '🔰拉圖娛樂城🎰',
-    '普拉七營': '🔰非洲畢業班🗿',
-  };
-
-  // 先把每列依照「當前分頁」挑出命中的營區
-  function matchCampsByTab(row) {
-    const camps = Array.isArray(row.camps) ? row.camps : extractCamps(row.camp);
-    if (currentTab === 'latus')     return camps.filter(c => reLatus.test(c));
-    if (currentTab === 'latushard') return camps.filter(c => reLatusHard.test(c));
-    if (currentTab === 'zakum')     return camps.filter(c => reZakum.test(c));
-    if (currentTab === 'trainext')  return camps.filter(c => (c === '訓練營' || c === '外援大大'));
-    return camps;
-  }
-
-  // 依群組累積；同一角色可能出現在多個群組（複選）
-  const groups = {};
-  (data || []).forEach(r => {
-    const hitCamps = matchCampsByTab(r);
-    hitCamps.forEach(campKey => {
-      if (!groups[campKey]) groups[campKey] = [];
-      groups[campKey].push(r);
-    });
-  });
-
-  const groupKeys = Object.keys(groups);
-  if (groupKeys.length === 0) {
-    $('#tableBody').html(`
-      <tr><td colspan="7" class="text-center text-muted">此分頁下沒有符合的資料</td></tr>
-    `);
-    return;
-  }
-
-  // 中文數字排序（同你原本）
-  const mapCN = { '零':0,'〇':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
-  const cn2i = t => {
-    const m = (t||'').match(/[零〇一二兩三四五六七八九十]/g);
-    if (!m) return NaN;
-    const s = m.join('');
-    if (s === '十') return 10;
-    const k = s.indexOf('十');
-    if (k === -1) return mapCN[s] ?? NaN;
-    const L = (k===0)?1:(mapCN[s[0]]??0);
-    const R = (k===s.length-1)?0:(mapCN[s[k+1]]??0);
-    return L*10+R;
-  };
-  const orderedKeys = groupKeys.sort((a,b)=>{
-    const na = cn2i(a), nb = cn2i(b);
-    if (!isNaN(na) && !isNaN(nb)) return na - nb;
-    return a.localeCompare(b,'zh-Hant');
-  });
-
-  // 工具：把 row.camps 渲染成 badge
-  const renderCampBadges = (row) => {
-  const camps = Array.isArray(row.camps) ? row.camps : extractCamps(row.camp);
-  if (!camps.length) return `<span class="text-muted">未填寫</span>`;
-  return camps.map(c => {
-    const cls = campColorClass(c);
-    return `<span class="badge badge-camp ${cls} me-1 mb-1">${c}</span>`;
-  }).join('');
-};
-
-  let html = '';
-  for (const k of orderedKeys) {
-    const note = groupNotes[k] ? `　${groupNotes[k]}` : '';
-    html += `
-      <tr class="group-row"><td colspan="7">所在營區：${k}${note}（${groups[k].length}）</td></tr>
-    `;
-    html += groups[k].map(r => `
-      <tr id="row-${(r.code||'').toString().trim().replace(/[^a-zA-Z0-9_-]/g,'_')}">
-        <td>${r.name ?? ''}</td>
-        <td>
-          <div class="d-inline-flex align-items-center" style="gap:.5rem;">
-            <button type="button" class="name-history-btn" title="查看更名紀錄"
-              data-name="${r.name ?? ''}" data-code="${r.code ?? ''}">?</button>
-            <span class="font-monospace">${r.code ?? ''}</span>
+      <div class="card">
+        <h2 style="margin-top:0">加入房間</h2>
+        <div class="grid">
+          <div class="field">
+            <label>房號</label>
+            <input id="joinRoomCode" placeholder="輸入房號或直接開啟 #/房號" />
           </div>
-        </td>
-        <td>${r.job ?? ''}</td>
-        <td>${r.level ?? ''}</td>
-        <td>${r.attack ?? ''}</td>
-        <td>${renderCampBadges(r)}</td>
-        <td>
-          <button class="btn btn-outline-secondary btn-edit"
-            data-row="${r.rowIndex || ''}"
-            data-name="${r.name ?? ''}"
-            data-code="${r.code ?? ''}"
-            data-job="${r.job ?? ''}"
-            data-level="${r.level ?? ''}"
-            data-attack="${r.attack ?? ''}"
-            data-camp="${r.camp ?? ''}">修改</button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  $('#tableBody').html(html);
-
-  // 綁定「修改」（沿用你原本的）
-  $('#tableBody').off('click', '.btn-edit').on('click', '.btn-edit', function(){
-    const $btn = $(this);
-    openEditor({
-      name:  $btn.data('name'),
-      code:  $btn.data('code'),
-      job:   $btn.data('job'),
-      level: $btn.data('level'),
-      attack:$btn.data('attack'),
-      camp:  $btn.data('camp'),
-      rowIndex: Number($btn.data('row') || 0)
-    }, (updated) => {
-      const tr = $btn.closest('tr')[0];
-      const tds = tr.querySelectorAll('td');
-      tds[0].textContent = updated.name;
-      //tds[1].textContent = updated.code; //20260212 KuanTa* 重新刷新列時增加Log查詢按鈕
-	  tds[1].innerHTML = 
-	      `<div class="d-inline-flex align-items-center" style="gap:.5rem;">
-		     <button type="button"
-		             class="name-history-btn"
-		             title="查看更名紀錄"
-		             data-name="${updated.name ?? ''}"
-		             data-code="${updated.code ?? ''}">?</button>
-	         <span class="font-monospace">${updated.code ?? ''}</span>
-		   </div>`;
-      tds[2].textContent = updated.job;
-      tds[3].textContent = updated.level;
-      tds[4].textContent = updated.attack;
-      tds[5].innerHTML = (() => {
-	    const camps = extractCamps(updated.camp);
-	    if (!camps.length) return '<span class="text-muted">未填寫</span>';
-	    return camps.map(c => `<span class="badge badge-camp ${campColorClass(c)} me-1 mb-1">${c}</span>`).join('');
-	  })();
-      $btn.data('name',  updated.name);
-      $btn.data('code',  updated.code);
-      $btn.data('job',   updated.job);
-      $btn.data('level', updated.level);
-      $btn.data('attack',updated.attack);
-      $btn.data('camp',  updated.camp);
-	
-	  //20260212 KuanTa+ 重新載入更名Log
-      const target = resolveSheetTarget(DEFAULT_SHEET_URL);
-      if (!target.sheetId) 
-	  {
-        $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
-        return;
-      }
-	  loadRenameLog(target.sheetId); 
-    });
-  });
-}
-
-
-/* =========================
-   分頁切換（★ 新增）
-========================= */
-function setTab(tab) 
-{
-  currentTab = tab; // 'latus' | 'zakum' | 'trainext'
-  // 切換樣式
-  $('#tabLatus').toggleClass('active', tab === 'latus');
-  $('#tabLatusHard').toggleClass('active', tab === 'latushard');
-  $('#tabZakumList').toggleClass('active', tab === 'zakum');
-  $('#tabTrainExt').toggleClass('active', tab === 'trainext');
-  // 依目前分頁重繪
-  renderTable(lastData);
-}
-
-  $('#tabLatus').on('click',     () => setTab('latus'));
-  $('#tabLatusHard').on('click', () => setTab('latushard'));
-  $('#tabZakumList').on('click', () => setTab('zakum'));
-  $('#tabTrainExt').on('click',  () => setTab('trainext'));
-
-
-function loadFromSheet_OneP(sheetId, gid = '0', searchWord = "") 
-{
-  $('#msg').text('');
-  $('#tableBody').html(`
-    <tr>
-    <td colspan="4" class="text-center text-muted">讀取中...</td>
-    </tr>
-  `);
-  
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-  
-  Papa.parse(csvUrl, {
-    download: true,
-    skipEmptyLines: true,
-    complete: function (result) {
-    try {
-      if (!result.data || result.data.length < 2) 
-      {
-        $('#msg').text('沒有資料可顯示');
-        lastData_OneP = [];
-        renderTable_OneP(lastData_OneP);
-        return;
-      }
-  
-      const rows = result.data.slice(1);
-      lastData_OneP = rows
-      .map((r, i) => ({
-        category:   r[0], // A
-        name:     r[1], // B
-        keyword:  r[2], // C
-        link:     r[3], // D
-        rowIndex:   i + 2
-      }))
-      .filter(r => r && r.name);
-  
-      renderTable_OneP(lastData_OneP);
-    } 
-    catch (e) 
-    {
-      console.error(e);
-      $('#msg').text('解析資料時發生錯誤');
-      lastData_OneP = [];
-      renderTable_OneP(lastData_OneP);
-    }
-    },
-    error: function (err) 
-    {
-      console.error(err);
-      $('#msg').text('讀取失敗，請確認該 Google Sheet 已設為「知道連結的任何人可檢視」。');
-      lastData_OneP = [];
-      renderTable_OneP(lastData_OneP);
-    }
-  });
-}
-
-
-
-function renderTable_OneP(data, searchWord = "") 
-{
-  const groupNotes = 
-  {
-    '遊戲知識': '',
-    'BOO攻略': '',
-  };
-  
-  const filtered = data;  
-  // ...（你原本 renderTable 後續的分組/排序/輸出保持不變）
-  
-  if (!filtered.length) 
-  {
-    $('#tableBody_OneP').html(`
-    <tr>
-      <td colspan="4" class="text-center text-muted">此分頁下沒有符合的資料</td>
-    </tr>
-    `);
-    return;
-  }
-  
-  // 分類分組
-  const groups = {};
-  for (const r of filtered) 
-  {
-    const key = (r.category || '未填寫').toString().trim();
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(r);
-  }
-  
-  const orderedKeys = Object.keys(groups);
-  
-  let html = '';
-  for (const k of orderedKeys) 
-  {
-    const note = groupNotes[k] ? `　${groupNotes[k]}` : ''; // 有對照就加，沒有就空字串
-    if (searchWord == "")
-    {
-      html += `
-      <tr class="group-row">
-        <td colspan="4">一圖流分類：${k}${note}（${groups[k].length}）</td>
-      </tr>`;
-      
-      html += groups[k].map(r => `
-      <tr>
-        <td>${r.category ?? ''}</td>
-        <td>${r.name ?? ''}</td>
-        <td>${r.keyword ?? ''}</td>
-        <td>
-        ${r.link ? `
-        <a href="https://drive.google.com/file/d/${r.link}/" target="_blank">
-        <img src="https://lh3.googleusercontent.com/d/${r.link}=h800?authuser=0" alt=${r.name} title=${r.name} width="350px;">
-        </a>
-        ` : '無圖片'}
-        </td>
-      </tr>`).join('');
-    }
-    else
-    {
-      for (const p of groups[k]) 
-      {
-        if (p.category.indexOf(searchWord) != -1 || p.name.indexOf(searchWord) != -1 || p.keyword.indexOf(searchWord) != -1)
-        {
-          html += `
-          <tr>
-            <td>${p.category ?? ''}</td>
-            <td>${p.name ?? ''}</td>
-            <td>${p.keyword ?? ''}</td>
-            <td>
-            ${p.link ? `
-            <a href="https://drive.google.com/file/d/${p.link}/" target="_blank">
-            <img src="https://lh3.googleusercontent.com/d/${p.link}=h800?authuser=0" alt=${p.name} title=${p.name} width="350px;">
-            </a>
-            ` : '無圖片'}
-            </td>
-          </tr>`;  
-        }
-      }
-    }
-  }
-  
-  $('#tableBody_OneP').html(html);
-
-}
-
-
-
-/* =========================
-   啟動流程：自動讀取
-========================= */
-const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1-j04395CPwDlZnJ2vUt3k4wsT5rPHgQWmujSQCi76Fs/edit?gid=0#gid=0';
-const OnePicture_URL = 'https://docs.google.com/spreadsheets/d/1ZFHkpsHKc0LWQDNPrP8Y5NS27aee0mOniK2uB8C2zD4/edit?gid=0#gid=0';
-function resolveSheetTarget(resolveURL) 
-{
-  const qp = getQueryParams();
-  if (qp.sheetUrl) {
-    const parsed = parseSheetFromUrl(qp.sheetUrl);
-    if (parsed) return parsed;
-  }
-  if (qp.sheetId) {
-    return { sheetId: qp.sheetId, gid: qp.gid || '0' };
-  }
-  const parsedDefault = parseSheetFromUrl(resolveURL);
-  return parsedDefault || { sheetId: '', gid: '0' };
-}
-function updateSourceBadge(sheetId, gid) 
-{
-  if (!sheetId) return;
-  const badge = $('#sourceBadge');
-  badge.text(`sheetId=${sheetId} | gid=${gid}`);
-  badge.removeClass('d-none');
-}
-
-$(function () 
-{
-  // 載入小夥伴清單
-  const target = resolveSheetTarget(DEFAULT_SHEET_URL);
-  if (!target.sheetId) {
-    $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
-    return;
-  }
-  updateSourceBadge(target.sheetId, target.gid);
-  loadFromSheet(target.sheetId, target.gid);
-  loadRenameLog(target.sheetId); 	// ★ 新增：同時把更名 LOG 讀進來（gid=170886432）
-  
-  // Event 小夥伴清單：重新整理
-  $('#reloadBtn').on('click', function () 
-  {
-    loadFromSheet(target.sheetId, target.gid);
-  });
-  
-  // Event 小夥伴清單：新增角色
-  $('#addBtn').on('click', function () 
-  {
-    openEditor({
-    name: '', code: '', job: '', level: '', attack: '', camp: '',
-    rowIndex: 0, __isNew: true
-    }, () => { alert('已新增'); });
-  });
-  
-  
-  // 載入叔叔一圖流
-  const target_OneP = resolveSheetTarget(OnePicture_URL);
-  if (!target_OneP.sheetId) {
-    $('#msg').text('無法解析指定的 Google Sheet 連結或 sheetId');
-    return;
-  }
-  updateSourceBadge(target_OneP.sheetId, target_OneP.gid);
-  loadFromSheet_OneP(target_OneP.sheetId, target_OneP.gid);
-  
-  // Event 叔叔一圖流：重新整理
-  $('#reloadBtn_OneP').on('click', function () 
-  {
-    loadFromSheet_OneP(target_OneP.sheetId, target_OneP.gid);
-  });
-  
-  // Event 叔叔一圖流：搜尋
-  $('#btn_SearchOneP').on('click', function () 
-  {
-    const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
-    renderTable_OneP(lastData_OneP, m_SearchWord);
-  });
-  
-  $('input[name="txt_Search"]').on('keypress', function (e) 
-  {
-    if (e.which === 13) 
-    { // 13 是 Enter 鍵的代碼
-      const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
-      renderTable_OneP(lastData_OneP, m_SearchWord);
-    }
-  });
-  
-  // Event 叔叔一圖流：重置
-  $('#btn_ResetOneP').on('click', function () 
-  {
-    const m_SearchWord = document.querySelector('input[name="txt_Search"]').value;
-    renderTable_OneP(lastData_OneP);
-  });
-  
-}
-);
-
-/* =========================
-   編輯視窗（含營區下拉）— 保留你原本的寫回 GAS 做法
-========================= */
-function createEditor() 
-{
-  const overlay = document.createElement('div');
-  overlay.id = 'editOverlay';
-  Object.assign(overlay.style, {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-  });
-  
-  const card = document.createElement('div');
-  Object.assign(card.style, {
-    position: 'relative',
-    background: '#fff', borderRadius: '12px', padding: '18px', width: 'min(520px, 92vw)',
-    boxShadow: '0 10px 30px rgba(0,0,0,.2)', color: '#222', fontFamily: 'system-ui,-apple-system,BlinkMacSystemFont'
-  });
-  card.innerHTML = `
-    <h3 style="margin:0 0 12px;font-size:18px;">修改資料</h3>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色名稱（B）</span>
-      <input id="edit_name" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-    </label>
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色代碼（C）</span>
-      <input id="edit_code" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-    </label>
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色職業（D）</span>
-      <input id="edit_job" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-    </label>
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色等級（E）</span>
-      <input id="edit_level" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-    </label>
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>角色乾表（F）</span>
-      <input id="edit_attack" type="text" style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;">
-    </label>
-    <label style="display:flex;flex-direction:column;gap:6px;">
-      <span>所在營區（G）</span>
-		<label style="grid-column:1 / -1; display:flex;flex-direction:column;gap:6px;">
-		  <span>所在營區（G，可複選）</span>
-		  <!-- chips mount -->
-		  <div id="camp_selector" class="border rounded p-2"></div>
-		  <!-- 只讀：顯示將寫回的字串（你要也可隱藏） -->
-		  <input id="edit_camp" type="text" class="form-control form-control-sm"
-				 placeholder="（會自動由上方勾選生成）" readonly>
-		</label>
-    </label>
-    </div>
-    <div class="d-flex gap-2 justify-content-end mt-3">
-    <button id="btn_cancel" class="btn btn-light border">取消</button>
-    <button id="btn_save" class="btn btn-primary">儲存</button>
-    </div>
-
-    <!-- Loading 遮罩（預設隱藏） -->
-    <div id="editLoadingMask" style="
-      display:none; position:absolute; inset:0; background:rgba(255,255,255,.75);
-      border-radius:12px; z-index:10; backdrop-filter:saturate(180%) blur(2px);
-      align-items:center; justify-content:center;">
-      <div class="text-center">
-        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
-        <div class="mt-2 fw-semibold">處理中，請稍候…</div>
+          <div class="field">
+            <label>房間密碼（若有）</label>
+            <input id="joinRoomPassword" placeholder="選填" />
+          </div>
+          <div class="row">
+            <button id="joinRoomBtn">加入房間</button>
+          </div>
+          <div class="hint">
+            你也可以直接分享網址 <code class="inline-code">#/房號</code> 給隊友。<br>
+            前端預設會嘗試連到目前網域的 WebSocket 後端；也可點右上角設定自訂伺服器位址。
+          </div>
+        </div>
       </div>
     </div>
-  `;
-  overlay.appendChild(card);
-  document.body.appendChild(overlay);
-  return overlay;
-}
 
-function openEditor(values, onSave) {
-  let overlay = document.getElementById('editOverlay');
-  if (!overlay) overlay = createEditor();
+    <div id="roomView" class="hidden">
+      <div class="card">
+        <div class="status">
+          <div class="row">
+            <div class="pill">房號：<strong id="roomCodeText"></strong></div>
+            <div class="pill">你的連線 ID：<strong id="clientIdText"></strong></div>
+            <div class="pill">在線人數：<strong id="memberCountText">0</strong></div>
+          </div>
+          <div class="row">
+            <button id="copyRoomBtn" class="secondary" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  複製房間資訊</button>
+            <button id="clearSharedBtn" class="warn"   style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  清空共享標記</button>
+            <button id="leaveRoomBtn" class="danger"   style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">  離開房間</button>
+			
+          </div>
+        </div>
 
-  overlay.querySelector('#edit_name').value   = values.name  ?? '';
-  overlay.querySelector('#edit_code').value   = values.code  ?? '';
-  overlay.querySelector('#edit_job').value    = values.job   ?? '';
-  overlay.querySelector('#edit_level').value  = values.level ?? '';
-  overlay.querySelector('#edit_attack').value = values.attack?? '';
+        <div class="grid" style="grid-template-columns:1fr 1fr; margin-top:14px">
+          <div>
+            <h3 style="margin:0 0 8px 0">選擇顏色</h3>
+            <div class="colors" id="colorPicker"></div>
+														
+          </div>
+          <div>
+            <h3 style="margin:0 0 4px 0">操作說明</h3>
+            <div class="hint">
+              左鍵：設定/取消你的共享正解。<br>
+              右鍵：設定/取消你自己的私人錯誤標記。<br>
+              每層共享標記只允許每個顏色一個位置；顏色不可重複選取。
+            </div>
+          </div>
+        </div>
+		<div class="legend" id="memberLegend"></div>
 
-  const ALL_CAMPS = [
-    '普拉一營','普拉二營','普拉三營','普拉四營','普拉五營',
-    '普拉六營','普拉七營','普拉八營','普拉九營','普拉十營',
-    '困拉一營','困拉二營','困拉三營','困拉四營','困拉五營',
-    '困拉六營','困拉七營','困拉八營','困拉九營','困拉十營',
-    '炎魔一營','炎魔二營','炎魔三營','炎魔四營','炎魔五營',
-    '炎魔六營','炎魔七營','炎魔八營','炎魔九營','炎魔十營',
-    '訓練營','外援大大'
-  ];
-  const selectorBox = overlay.querySelector('#camp_selector');
-  const campPreview = overlay.querySelector('#edit_camp');
-  const initialSelected = new Set(extractCamps(values.camp));
+        <div class="board" style="width: 100%; max-width: 450px; display: flex; flex-direction: column; align-items: center; margin-left: auto; margin-right: auto;">
+          <table> 
+            <thead>
+              <tr>
+                <th style="width:50px">樓層</th>
+                <th>　</th>
+                <th>　</th>
+                <th>　</th>
+                <th>　</th>
+              </tr>
+            </thead>
+            <tbody id="boardBody"></tbody>
+          </table>
+		  
+		  <button id="clearSharedBtn2" class="warn"   style="width:100%; height:40px; display:inline-flex; justify-content:center; align-items:center;">  清空共享標記</button>
+		  
+        </div>
 
-  function colorClass(camp) { return 'badge-camp ' + (campColorClass(camp) || 'misc'); }
+        <div class="footer">
+          有任何使用問題請聯繫 Neight奈特 ❤
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function renderCampSelector() {
-    selectorBox.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    ALL_CAMPS.forEach(camp => {
-      const chip = document.createElement('span');
-      chip.textContent = camp;
-      chip.className = `badge rounded-pill ${colorClass(camp)} me-1 mb-1`;
-      chip.style.cursor = 'pointer';
-      chip.dataset.value = camp;
-      if (initialSelected.has(camp)) chip.classList.add('active');
-      chip.addEventListener('click', () => {
-        if (chip.classList.contains('active')) {
-          chip.classList.remove('active');
-          initialSelected.delete(camp);
-        } else {
-          chip.classList.add('active');
-          initialSelected.add(camp);
-        }
-        campPreview.value = Array.from(initialSelected).join('、');
-      });
-      frag.appendChild(chip);
-    });
-    selectorBox.appendChild(frag);
-    campPreview.value = Array.from(initialSelected).join('、');
-  }
-  function readSelectedCamps() {
-    return Array.from(selectorBox.querySelectorAll('span.badge.active'))
-      .map(el => el.dataset.value || el.textContent.trim());
-  }
-  renderCampSelector();
+  <div id="toast" class="toast"></div>
 
-  const btnCancel = overlay.querySelector('#btn_cancel');
-  const btnSave   = overlay.querySelector('#btn_save');
-  const mask      = overlay.querySelector('#editLoadingMask');
-
-  const setBusy = (busy) => {
-    mask.style.display = busy ? 'flex' : 'none';
-    btnSave.disabled = busy;
-    btnCancel.disabled = busy;
-    overlay.querySelectorAll('input, select, textarea').forEach(el => el.disabled = busy);
-    if (busy) {
-      btnSave.dataset._orig = btnSave.innerHTML;
-      btnSave.innerHTML = `儲存中… <span class="spinner-border spinner-border-sm ms-1" role="status" aria-hidden="true"></span>`;
-    } else if (btnSave.dataset._orig) {
-      btnSave.innerHTML = btnSave.dataset._orig;
-      delete btnSave.dataset._orig;
-    }
-  };
-
-  const close = () => overlay.remove();
-  btnCancel.onclick = () => { if (!btnCancel.disabled) close(); };
-
-  btnSave.onclick = async () => {
-    if (btnSave.disabled) return;
-
-    const updated = {
-      name:   overlay.querySelector('#edit_name').value.trim(),
-      code:   overlay.querySelector('#edit_code').value.trim(),
-      job:    overlay.querySelector('#edit_job').value.trim(),
-      level:  overlay.querySelector('#edit_level').value.trim(),
-      attack: overlay.querySelector('#edit_attack').value.trim(),
-      camp:   readSelectedCamps().join('、')
+  <script>
+    const COLORS = {
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red').trim()    || '#ff6b6b' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()   || '#5aa9ff' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green').trim()  || '#4fd18b' },
+      yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow').trim() || '#f3c84b' },
     };
-    const isNew   = !!values.__isNew;
-    const oldName = String(values.name || '').trim();
+    const COLORS2 = {
+      red:    { label: '紅', hex: getComputedStyle(document.documentElement).getPropertyValue('--red2').trim()    || '#FF969650' },
+      blue:   { label: '藍', hex: getComputedStyle(document.documentElement).getPropertyValue('--blue2').trim()   || '#9696FF50' },
+      green:  { label: '綠', hex: getComputedStyle(document.documentElement).getPropertyValue('--green2').trim()  || '#96FF9650' },
+      yellow: { label: '黃', hex: getComputedStyle(document.documentElement).getPropertyValue('--yellow2').trim() || '#FFFF9650' },
+    };
 
-    if (!GAS_UPDATE_URL || GAS_UPDATE_URL.includes('/dev')) {
-      alert('請設定正確的 GAS_UPDATE_URL（必須是 /exec）');
-      return;
+    const state = {
+      ws: null,
+      connected: false,
+      clientId: '',
+      roomCode: '',
+      roomPassword: '',
+      me: { color: null },
+      room: null,
+      localWrong: loadLocalWrong(),
+      wsUrl: loadWsUrl(),
+      pendingJoin: null,
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const boardBody = $('#boardBody');
+
+    function showToast(text){
+      const toast = $('#toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
     }
-    if (!updated.code) {
-      alert('角色代碼不可為空（用來定位要更新的列）');
-      return;
+
+    function normalizeRoomCode(s){
+      return (s || '').trim().toLowerCase().replace(/\s+/g, '-');
     }
 
-    try {
-      setBusy(true);
-
-      const form = new URLSearchParams();
-      form.set('action', 'upsertByCode');
-      form.set('code',   updated.code);
-      form.set('name',   updated.name);
-      form.set('job',    updated.job);
-      form.set('level',  updated.level);
-      form.set('attack', updated.attack);
-      form.set('camp',   updated.camp);
-
-      const resp = await fetch(GAS_UPDATE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: form.toString(),
-        cache: 'no-store',
-        redirect: 'follow'
-      });
-      const text = await resp.text();
-      let result; try { result = JSON.parse(text); } catch { throw new Error('GAS 回傳非 JSON'); }
-      if (!resp.ok || result.status !== 'ok') throw new Error(result.message || '更新/新增失敗');
-
-      // ✅ 前端不再主動寫 LOG，交給後端 upsertByCode 處理
-      // if (isNew) { await appendRenameLogToGAS(...); }  ← 移除
-      // if (!isNew && updated.name !== oldName) { await appendRenameLogToGAS(...); } ← 移除
-
-      if (isNew) {
-        const t = resolveSheetTarget(DEFAULT_SHEET_URL);
-        loadFromSheet(t.sheetId, t.gid);
-        loadRenameLog(t.sheetId);
-      } else {
-        onSave?.(updated);
-        // 重新載入 LOG（讓右側問號視窗內容是最新）
-        const t = resolveSheetTarget(DEFAULT_SHEET_URL);
-        loadRenameLog(t.sheetId);
-      }
-
-      alert(isNew ? '新增成功！' : '更新成功！');
-      close();
-    } catch (e) {
-      console.error(e);
-      alert('送出失敗：' + e.message);
-      setBusy(false);
+    function randomRoomCode(){
+      return 'rj-' + Math.random().toString(36).slice(2, 8);
     }
-  };
-}
 
+    function normalizeBackendUrl(url){
+      if(!url) return '';
+      url = String(url).trim().replace(/\/$/, '');
+      if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      return url;
+    }
 
+    function wsDefaultUrl(){
+      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
+      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
+      if(fromQuery) return fromQuery.replace(/^http/i, m => m.toLowerCase() === 'https' ? 'wss' : 'ws') + '/ws';
+      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
+      const target = saved || configured;
+      if(target) return target.replace(/^http/i, m => m.toLowerCase() === 'https' ? 'wss' : 'ws') + '/ws';
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${proto}//${location.host}/ws`;
+    }
 
-/* =========================
-   公會職業分佈統計（Chart.js）
-========================= */
-// 職業名稱正規化（同義合併）
-function normalizeJob(raw) 
-{
-  if (!raw) return '（未填寫）';
-  let s = String(raw).trim();
-  
-  // 統一標點
-  s = s.replace(/，/g, '、');
-  
-  // 對照表（左邊是條件，右邊是最終歸戶名稱）
-  const map = [
-    { test: /^(十字軍|英雄)$/ , to: '英雄' },
-    { test: /^(騎士|聖騎士)$/ , to: '聖騎士' },
-    { test: /^(龍騎士|黑騎士)$/ , to: '黑騎士' },
-  
-    { test: /^(火魔導士|大魔導士\(火、毒\))$/ , to: '大魔導士(火、毒)' },
-    { test: /^(冰魔導士|大魔導士\(冰、雷\))$/ , to: '大魔導士(冰、雷)' },
-  
-    { test: /^(祭司|主教)$/ , to: '主教' },
-    { test: /^(遊俠|箭神)$/ , to: '箭神' },
-    { test: /^(狙擊手|神射手)$/ , to: '神射手' },
-  
-    { test: /^(暗殺者|夜使者)$/ , to: '夜使者' },
-    { test: /^(神偷|暗影神偷)$/ , to: '暗影神偷' },
-  
-    { test: /^(格鬥家|拳霸)$/ , to: '拳霸' },
-    { test: /^(神槍手|槍神)$/ , to: '槍神' },
-  
-    { test: /^初新者$/, to: '初新者' } // 依你提供的字樣
-  ];
-  
-  for (const rule of map) {
-    if (rule.test.test(s)) return rule.to;
-  }
-  return s; // 其他職業維持原名
-}
+    function loadWsUrl(){
+      return wsDefaultUrl();
+    }
 
-/* ===== 顏色對照（依你指定的色系） ===== */
-const JOB_COLOR = {
-  '英雄':            '#FFD24D', // 黃色
-  '聖騎士':          '#F5F5F0', // 奶白色
-  '黑騎士':          '#1F1F1F', // 黑色
-  
-  '大魔導士(火、毒)': '#FF9999', // 淺紅色
-  '大魔導士(冰、雷)': '#99CCFF', // 淺藍色
-  '主教':            '#FFF3B0', // 淡黃色
-  '箭神':            '#4CAF50', // 綠色
-  '神射手':          '#26A69A', // 藍綠色
-  
-  '夜使者':          '#5E35B1', // 深紫色
-  '暗影神偷':        '#4A4A4A', // 黑灰色
-  '拳霸':            '#D4AF37', // 金色
-  '槍神':            '#E0E0E0', // 白灰色
-  '初新者':          '#FFFFFF'  // 白色
-};
+    function saveWsUrl(url){
+      const normalized = normalizeBackendUrl(url);
+      if(normalized) localStorage.setItem('rjpq_backend_url', normalized);
+      else localStorage.removeItem('rjpq_backend_url');
+      state.wsUrl = loadWsUrl();
+      renderBackendSettings();
+    }
 
-// 取得顏色（未知職業給中性灰）
-function getJobColor(name) 
-{
-  return JOB_COLOR[name] || '#9E9E9E';
-}
+    function currentBackendHttpUrl(){
+      const saved = normalizeBackendUrl(localStorage.getItem('rjpq_backend_url') || '');
+      const configured = normalizeBackendUrl(window.APP_CONFIG?.backendUrl || '');
+      const fromQuery = normalizeBackendUrl(new URLSearchParams(location.search).get('backend') || '');
+      return fromQuery || saved || configured || '';
+    }
 
-// 白/奶白等很淺的顏色加深邊框，其他統一深邊框，讓切片有界線
-function getJobBorderColor(name) 
-{
-  const c = (JOB_COLOR[name] || '').toLowerCase();
-  if (c === '#ffffff' || c === '#f5f5f0' || c === '#fff3b0' || c === '#ff9999' || c === '#99ccff') {
-    return '#333333';
-  }
-  return '#222222';
-}
+    function renderBackendSettings(){
+      const input = $('#backendUrl');
+      const hint = $('#backendHint');
+      if(input) input.value = currentBackendHttpUrl();
+      const active = currentBackendHttpUrl();
+      hint.textContent = active
+        ? `目前會連到：${active}（WebSocket: ${state.wsUrl}）`
+        : `目前未指定後端，將嘗試連到同網域：${state.wsUrl}`;
+    }
 
-// 生成統計資料（不含外援大大）＋ 名單
-function buildJobStatsData() {
-  const source = Array.isArray(lastData) ? lastData : [];
-    // 同時排除 camp 為「外援大大」或「離營」
-  const EXCLUDE = new Set(['外援大大', '離營']);
-  const rows = source.filter(r => !EXCLUDE.has((r?.camp || '').trim()));
+    function loadLocalWrong(){
+      try { return JSON.parse(localStorage.getItem('rjpq_local_wrong') || '{}'); } catch { return {}; }
+    }
 
-  const counter = Object.create(null);
-  const namesByJob = Object.create(null);
+    function persistLocalWrong(){
+      localStorage.setItem('rjpq_local_wrong', JSON.stringify(state.localWrong));
+    }
 
-  for (const r of rows) {
-    const key = normalizeJob(r?.job);
-    counter[key] = (counter[key] || 0) + 1;
+    function roomWrongKey(){
+      return state.roomCode || '_lobby';
+    }
 
-    if (!namesByJob[key]) namesByJob[key] = [];
-    if (r?.name) namesByJob[key].push(r.name);
-  }
+    function getWrongSet(){
+      if(!state.localWrong[roomWrongKey()]) state.localWrong[roomWrongKey()] = {};
+      return state.localWrong[roomWrongKey()];
+    }
 
-  // 依數量排序（多→少）
-  const entries = Object.entries(counter).sort((a,b) => b[1] - a[1]);
+    function updateHash(){
+      if(state.roomCode) location.hash = '#/' + encodeURIComponent(state.roomCode);
+      else history.replaceState(null, '', location.pathname + location.search);
+    }
 
-  // 也把名單依照職業順序做對齊（名單內依字母序）
-  const labels = entries.map(e => e[0]);
-  for (const k of Object.keys(namesByJob)) {
-    namesByJob[k].sort((a,b) => a.localeCompare(b, 'zh-Hant'));
-  }
+    function setConnectionState(text, ok=false){
+      $('#connState').textContent = text;
+      $('#connPill').style.borderColor = ok ? 'rgba(89,211,156,.4)' : '';
+      $('#connPill').style.color = ok ? '#c9ffe7' : '';
+    }
 
-  return {
-    labels,
-    values: entries.map(e => e[1]),
-    total: rows.length,
-    namesByJob
-  };
-}
-
-let _jobChartInstance = null;
-let _jobStatsCache = null; // 暫存 namesByJob 等
-
-function renderHitList(jobName, list) {
-  const box = document.getElementById('jobHitList');
-  if (!box) return;
-  if (!list || list.length === 0) {
-    box.innerHTML = `<span class="text-muted">（沒有資料）</span>`;
-    return;
-  }
-  const items = list.map(n => `<li class="list-group-item py-1">${n}</li>`).join('');
-  box.innerHTML = `
-    <div class="mb-2"><b>${jobName}</b>　<span class="badge text-bg-secondary">${list.length} 人</span></div>
-    <ul class="list-group list-group-flush small">${items}</ul>
-  `;
-}
-
-function renderJobChart() {
-  const ctx = document.getElementById('jobStatsCanvas');
-  if (!ctx) return;
-
-  const data = buildJobStatsData();
-  _jobStatsCache = data; // 存起來給 onClick 用
-
-  const bgColors = data.labels.map((name) => getJobColor(name));
-  const borderColors = data.labels.map((name) => getJobBorderColor(name));
-
-  const chartData = {
-    labels: data.labels,
-    datasets: [{
-      label: '人數',
-      data: data.values,
-      backgroundColor: bgColors,
-      borderColor: borderColors,
-      borderWidth: 1.5,
-      hoverOffset: 6
-    }]
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: { display: true, position: 'bottom' },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-            const value = ctx.parsed;
-            const total = data.total || 1;
-            const pct = (value * 100 / total).toFixed(1);
-            return `${ctx.label}: ${value} 人（${pct}%）`;
+    function connectWs(){
+      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) return;
+      try {
+        const ws = new WebSocket(state.wsUrl);
+        state.ws = ws;
+        setConnectionState('連線中...');
+        ws.onopen = () => {
+          state.connected = true;
+          setConnectionState('已連線', true);
+          if(state.pendingJoin){
+            ws.send(JSON.stringify(state.pendingJoin));
           }
-        }
-      },
-      title: {
-        display: true,
-        text: `公會職業分佈（總數：${data.total}）`
+        };
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          handleMessage(msg);
+        };
+        ws.onclose = () => {
+          state.connected = false;
+          setConnectionState('已斷線');
+          setTimeout(() => {
+            if(state.roomCode) connectWs();
+          }, 1200);
+        };
+        ws.onerror = () => {
+          setConnectionState('連線失敗');
+        };
+      } catch (e){
+        console.error(e);
+        setConnectionState('連線失敗');
       }
-    },
-    // ★ 這裡加點擊事件
-    onClick: (evt, elements) => {
-      const chart = evt.chart;
-      // 如果點到切片
-      if (elements && elements.length > 0) {
-        const idx = elements[0].index;
-        const jobName = chart.data.labels[idx];
-        const list = _jobStatsCache?.namesByJob?.[jobName] || [];
-        renderHitList(jobName, list);
+    }
+
+    function send(type, data={}){
+      const payload = { type, ...data };
+      if(state.ws && state.ws.readyState === WebSocket.OPEN){
+        state.ws.send(JSON.stringify(payload));
       } else {
-        // 點在空白處時，清空右邊
-        renderHitList('', []);
+        state.pendingJoin = payload;
+        connectWs();
       }
     }
-  };
 
-  if (_jobChartInstance) {
-    _jobChartInstance.data = chartData;
-    _jobChartInstance.options = options;
-    _jobChartInstance.update();
-  } else {
-    _jobChartInstance = new Chart(ctx, { type: 'doughnut', data: chartData, options });
-  }
-
-  // 第一次打開圖表時，把右側清空提示
-  renderHitList('', []);
-}
-
-
-// Guide 分頁按鈕切換：只切換「button.nav-link」對應的面板
-$('#guideTabs').on('click', 'button.nav-link', function () {
-  const $btn = $(this);
-  const targetSel = $btn.data('target'); // e.g. "#pane-onep"
-
-  // 切 active 樣式（只改同一列的 nav-link）
-  $('#guideTabs .nav-link').removeClass('active');
-  $btn.addClass('active');
-
-  // 顯示對應面板
-  $('.tab-pane').addClass('d-none');
-  $(targetSel).removeClass('d-none');
-});
-
-// ====== （重要）刪除你原本在底部重複的兩個事件綁定，避免再次 new 與重複綁定 ======
-// （已在前面統一綁定 #btnJobStats 與 #jobStatsModal hidden 事件）
-/* ========= 讓分頁自動切到該列所在營區（若有需要） ========= */
-function resolveTabByCamp(campText){
-  const camps = extractCamps(campText);
-  if (!camps.length) return currentTab;
-  const first = camps[0];
-  if (/^普拉[一二三四五六七八九十]營$/.test(first)) return 'latus';
-  if (/^困拉[一二三四五六七八九十]營$/.test(first)) return 'latushard';
-  if (/^炎魔[一二三四五六七八九十]營$/.test(first)) return 'zakum';
-  if (first === '訓練營' || first === '外援大大') return 'trainext';
-  return currentTab;
-}
-
-
-/* ========= 捲動 + 高亮 ========= */
-function scrollToRowByCode(code, campOptional){
-  if (!code) return;
-
-  // 1) 若有提供營區，先切到正確分頁（避免找不到）
-  if (campOptional){
-    const tab = resolveTabByCamp(campOptional);
-    if (tab !== currentTab) setTab(tab);
-  }
-
-  // 2) 設個小延遲，等分頁重繪完再找元素
-  setTimeout(() => {
-    const safeId = String(code).trim().replace(/[^a-zA-Z0-9_-]/g,'_');
-    const tr = document.getElementById(`row-${safeId}`);
-    if (!tr) {
-      // 找不到就不處理
-      return;
+    function joinOrCreate(mode){
+      const roomCode = normalizeRoomCode(mode === 'create' ? $('#createRoomCode').value : $('#joinRoomCode').value);
+      const password = (mode === 'create' ? $('#createRoomPassword').value : $('#joinRoomPassword').value) || '';
+      if(!roomCode){
+        showToast('請輸入房號');
+        return;
+      }
+      state.roomCode = roomCode;
+      state.roomPassword = password;
+      updateHash();
+      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password };
+      connectWs();
+      if(state.connected) send(state.pendingJoin.type, { roomCode, password });
     }
 
-    // 捲到畫面中央
-    tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    function handleMessage(msg){
+      switch(msg.type){
+        case 'welcome':
+          state.clientId = msg.clientId;
+          $('#clientIdText').textContent = msg.clientId.slice(0, 8);
+          break;
+        case 'room_state':
+          state.room = msg.room;
+          state.me.color = msg.yourColor || state.me.color || null;
+          renderRoom();
+          break;
+        case 'joined_room':
+          state.roomCode = msg.roomCode;
+          state.roomPassword = state.roomPassword || '';
+          updateHash();
+          showRoomView();
+          showToast('已進入房間');
+          break;
+        case 'error':
+          showToast(msg.message || '發生錯誤');
+          break;
+        case 'left_room':
+          leaveRoomLocal(false);
+          break;
+      }
+    }
 
-    // 高亮動畫（加 class -> 等動畫完移除）
-    tr.classList.remove('row-pulse'); // 先移除一次，方便連續點
-    // 觸發 reflow 讓動畫可重播
-    void tr.offsetWidth;
-    tr.classList.add('row-pulse');
+    function showRoomView(){
+      $('#lobbyView').classList.add('hidden');
+      $('#roomView').classList.remove('hidden');
+    }
 
-    // 2 秒後移除 class（與動畫時間對齊）
-    setTimeout(() => tr.classList.remove('row-pulse'), 2000);
-  }, 80);
-}
+    function showLobbyView(){
+      $('#roomView').classList.add('hidden');
+      $('#lobbyView').classList.remove('hidden');
+    }
 
-// 搜尋結果「定位此列」按鈕
-$(document).on('click', '.btn-locate-row', function(){
-  const code = $(this).data('code') || '';
-  const camp = $(this).data('camp') || '';
-  // 關掉搜尋結果 Modal
-  const modalEl = document.getElementById('searchResultModal');
-  if (modalEl) bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+    function leaveRoomLocal(sendMsg=true){
+      if(sendMsg && state.roomCode) send('leave_room', { roomCode: state.roomCode });
+      state.roomCode = '';
+      state.roomPassword = '';
+      state.me.color = null;
+      state.room = null;
+      updateHash();
+      showLobbyView();
+    }
 
-  // 捲動 + 高亮
-  scrollToRowByCode(code, camp);
-});
+    function renderRoom(){
+      if(!state.room) return;
+      showRoomView();
+      $('#roomCodeText').textContent = state.room.code;
+      $('#clientIdText').textContent = state.clientId ? state.clientId.slice(0, 8) : '-';
+      $('#memberCountText').textContent = String(state.room.memberCount || 0);
 
-$(document).on('click', '.name-history-btn', function () {
-  const name = $(this).data('name') || '';
-  const code = $(this).data('code') || '';
-  openRenameLogModal(name, code);
-  // 同步高亮目前這一列
-  scrollToRowByCode(code);
-});
-
-// 把任意字串中的有效營區片段擷取出來（順序保留、去重）
-// 萃取多選營區
-function extractCamps(raw) {
-  const txt = String(raw || '').replace(/\u3000/g, ' ').trim();
-  if (!txt) return [];
-  const re = /(普拉[一二三四五六七八九十]營|困拉[一二三四五六七八九十]營|炎魔[一二三四五六七八九十]營|訓練營|外援大大)/g;
-  const seen = new Set(), out = [];
-  let m; while ((m = re.exec(txt)) !== null) {
-    const v = m[1]; if (!seen.has(v)) { seen.add(v); out.push(v); }
-  }
-  return out;
-}
-
-// 依營區名稱回傳對應的顏色 class（藍/紫/橘/綠）
-function campColorClass(camp) {
-  if (/^普拉[一二三四五六七八九十]營$/.test(camp)) return 'latus';
-  if (/^困拉[一二三四五六七八九十]營$/.test(camp)) return 'latushard';
-  if (/^炎魔[一二三四五六七八九十]營$/.test(camp)) return 'zakum';
-  if (camp === '訓練營' || camp === '外援大大') return 'misc';
-  return 'misc'; // 預設給綠，或你想回傳空字串也可
-}
-
-/* 建立完整的營區清單 */
-const CAMP_OPTIONS = [
-  ...Array.from({length:10}, (_,i)=>`普拉${'一二三四五六七八九十'[i]}營`),
-  ...Array.from({length:10}, (_,i)=>`困拉${'一二三四五六七八九十'[i]}營`),
-  ...Array.from({length:10}, (_,i)=>`炎魔${'一二三四五六七八九十'[i]}營`),
-  '訓練營','外援大大'
-];
-
-/* 若你尚未定義這個函式，解註解即可
-function campColorClass(camp) {
-  if (/^普拉[一二三四五六七八九十]營$/.test(camp)) return 'latus';
-  if (/^困拉[一二三四五六七八九十]營$/.test(camp)) return 'latushard';
-  if (/^炎魔[一二三四五六七八九十]營$/.test(camp)) return 'zakum';
-  if (camp === '訓練營' || camp === '外援大大') return 'misc';
-  return 'misc';
-}
-*/
-
-/* 產生多選 Chips（mountEl: 容器, selected: Set<string>） */
-function renderCampSelector(mountEl, selected = new Set()) {
-  if (!mountEl) return;
-  // 工具列（快速選群組 / 清空 / 全選）
-  const toolsHtml = `
-    <div class="camp-toolbar">
-      <button type="button" class="btn btn-outline-primary btn-sm" data-preset="latus">全選 普拉</button>
-      <button type="button" class="btn btn-outline-purple btn-sm"  data-preset="latushard" style="--bs-btn-color:#6f42c1;--bs-btn-border-color:#6f42c1;">全選 困拉</button>
-      <button type="button" class="btn btn-outline-warning btn-sm" data-preset="zakum">全選 炎魔</button>
-      <button type="button" class="btn btn-outline-success btn-sm" data-preset="misc">全選 訓練/外援</button>
-      <button type="button" class="btn btn-outline-secondary btn-sm" data-action="clear">清空</button>
-      <button type="button" class="btn btn-outline-dark btn-sm" data-action="all">全選全部</button>
-    </div>
-  `;
-
-  const chipsHtml = CAMP_OPTIONS.map(v=>{
-    const checked = selected.has(v);
-    const cls = campColorClass(v);
-    return `
-      <label class="camp-chip badge-camp ${cls}" aria-checked="${checked?'true':'false'}">
-        <input type="checkbox" value="${v}" ${checked?'checked':''}>
-        <span>${v}</span>
-      </label>
-    `;
-  }).join('');
-
-  mountEl.innerHTML = toolsHtml + `<div class="d-flex flex-wrap gap-2">${chipsHtml}</div>`;
-
-  // 點 chip 切換
-  mountEl.querySelectorAll('.camp-chip').forEach(lbl=>{
-    const cb = lbl.querySelector('input[type=checkbox]');
-    lbl.addEventListener('click', (ev)=>{
-      // 避免雙觸發：點 label 即可
-      if (ev.target.tagName === 'INPUT') return;
-      cb.checked = !cb.checked;
-      lbl.setAttribute('aria-checked', cb.checked ? 'true' : 'false');
-      mountEl.dispatchEvent(new CustomEvent('campChanged', {bubbles:true}));
-    });
-  });
-
-  // 工具列：快速選取
-  mountEl.querySelectorAll('[data-preset]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const key = btn.dataset.preset; // latus/latushard/zakum/misc
-      mountEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-        const camp = cb.value;
-        const hit = campColorClass(camp) === key;
-        cb.checked = hit;
-        cb.closest('.camp-chip')?.setAttribute('aria-checked', hit?'true':'false');
+      const picker = $('#colorPicker');
+      picker.innerHTML = '';
+      const taken = state.room.colors || {};
+      Object.entries(COLORS).forEach(([key, meta]) => {
+        const holder = taken[key];
+        const btn = document.createElement('button');
+        btn.className = 'color-btn';
+        if(state.me.color === key) btn.classList.add('selected');
+        if(holder && holder !== state.clientId) btn.classList.add('taken');
+        btn.style.background = meta.hex;
+        btn.title = holder && holder !== state.clientId ? `${meta.label}（已被選取）` : meta.label;
+        btn.disabled = !!holder && holder !== state.clientId;
+        btn.onclick = () => send('select_color', { roomCode: state.roomCode, color: key });
+        picker.appendChild(btn);
       });
-      mountEl.dispatchEvent(new CustomEvent('campChanged', {bubbles:true}));
-    });
-  });
-  // 清空/全選
-  mountEl.querySelectorAll('[data-action]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const act = btn.dataset.action;
-      const chk = (act==='all');
-      mountEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-        cb.checked = chk;
-        cb.closest('.camp-chip')?.setAttribute('aria-checked', chk?'true':'false');
+
+      const legend = $('#memberLegend');
+      legend.innerHTML = '';
+      const members = state.room.members || [];
+      members.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.background = m.color ? COLORS[m.color].hex : '#777';
+        const text = document.createElement('span');
+        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
+        text.style.display = 'inline-flex';
+        text.style.alignItems = 'center';     // 垂直置中
+        text.style.justifyContent = 'center'; // 水平置中
+        //text.style.width = '56px'
+        item.append(dot, text);
+        legend.appendChild(item);
       });
-      mountEl.dispatchEvent(new CustomEvent('campChanged', {bubbles:true}));
+
+      renderBoard();
+    }
+
+    function renderBoard(){
+      const shared = state.room?.board || [];
+      const wrongMap = getWrongSet();
+      boardBody.innerHTML = '';
+      for(let floor = 10; floor >= 1; floor--){
+        const tr = document.createElement('tr');
+        const floorTd = document.createElement('td');
+        floorTd.className = 'floor-cell';
+        //floorTd.textContent = `第 ${floor} 層`;
+		floorTd.textContent = `${floor}`;
+        tr.appendChild(floorTd);
+
+        for(let door = 1; door <= 4; door++)
+		{
+          const td = document.createElement('td');
+          td.className = 'pick';
+          const floorData = shared[floor - 1] || {};
+          let occupantColor = null;
+          let occupantId = null;
+          Object.entries(floorData).forEach(([color, pickDoor]) => {
+            if(pickDoor === door){
+              occupantColor = color;
+              occupantId = state.room.members?.find(m => m.color === color)?.clientId || '';
+            }
+          });
+		  
+          //if(occupantColor) td.classList.add(`shared-${occupantColor}`);
+          const wrongKey = `${floor}-${door}`;
+																   
+
+          //td.innerHTML = `<div class="num">${door}</div>`;
+          if(occupantColor)
+		  {
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            //const dot = document.createElement('span');
+            //dot.className = 'dot';
+            //dot.style.background = COLORS[occupantColor].hex;
+			// 中間條狀寫法
+			//marker.style.background = COLORS2[occupantColor].hex;
+            //const label = document.createElement('span');
+			//label.textContent = '　　　';
+            //marker.append(label);
+			////
+			// 完整填滿寫法
+			marker.textContent = '　　　';
+			marker.style.opacity = '0.0';
+			td.style.background = occupantId === state.clientId ? COLORS[occupantColor].hex : COLORS2[occupantColor].hex;
+			// td.style.opacity = '0.5';
+			////
+			
+            //label.textContent = `${COLORS[occupantColor].label}${occupantId === state.clientId ? ' (你)' : ''}`;
+									  
+            td.appendChild(marker);
+          } 
+		  else if(wrongMap[wrongKey]) 
+		  {
+		    // 移下來節省效能
+            if(wrongMap[wrongKey]) td.classList.add('private-wrong');
+			
+            const sub = document.createElement('div');
+            sub.className = 'submark';
+            sub.textContent = '　　　';
+            td.appendChild(sub);
+          } 
+		  else 
+		  {
+            const sub = document.createElement('div');
+            sub.className = 'submark';
+            //sub.textContent = '未標記';
+			sub.textContent = '　　　';
+            td.appendChild(sub);
+          }
+
+          td.onclick = () => {
+            if(!state.me.color){
+              showToast('請先選擇顏色');
+              return;
+            }
+            send('toggle_shared', { roomCode: state.roomCode, floor, door });
+          };
+          td.oncontextmenu = (e) => {
+            e.preventDefault();
+            togglePrivateWrong(floor, door);
+          };
+          tr.appendChild(td);
+        }
+        boardBody.appendChild(tr);
+      }
+    }
+
+    function togglePrivateWrong(floor, door){
+      const wrongMap = getWrongSet();
+      const key = `${floor}-${door}`;
+      if(wrongMap[key]) delete wrongMap[key];
+      else wrongMap[key] = true;
+      persistLocalWrong();
+      renderBoard();
+    }
+
+    async function copyRoomInfo(){
+      const info = [
+        `Code: ${state.roomCode}`,
+        `Password: ${state.roomPassword || '(none)'}`,
+        `Link: ${location.origin}${location.pathname}#/${encodeURIComponent(state.roomCode)}`
+      ].join('\n');
+      try{
+        await navigator.clipboard.writeText(info);
+        showToast('已複製房間資訊');
+      }catch{
+        showToast('複製失敗');
+      }
+    }
+
+    function applyHashAutoJoin(){
+      const m = location.hash.match(/^#\/(.+)$/);
+      if(!m) return;
+      const code = decodeURIComponent(m[1]);
+      $('#joinRoomCode').value = code;
+    }
+
+    // settings via keyboard
+    window.addEventListener('keydown', (e) => {
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === ','){
+        const next = prompt('輸入後端 HTTP/HTTPS 網址', currentBackendHttpUrl() || '');
+        if(next){
+          saveWsUrl(next.trim());
+          showToast('已更新後端網址');
+        }
+      }
     });
-  });
-}
 
-/* 從 selector 取回選取的營區陣列 */
-function readSelectedCamps(mountEl) {
-  return Array.from(mountEl.querySelectorAll('input[type=checkbox]:checked')).map(x=>x.value);
-}
-</script>
+	const handleClearShared = () => 
+	{
+        if (confirm('確認清除共享標記？')) 
+		{
+            send('clear_shared', { roomCode: state.roomCode });
+        }
+    };
 
-  <!---->
-  <!-- 職業分佈統計 Modal -->
-  <div class="modal fade" id="jobStatsModal" tabindex="-1" aria-labelledby="jobStatsLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-    <div class="modal-header">
-      <h5 class="modal-title" id="jobStatsLabel">公會職業分佈統計（不含外援大大）</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-    </div>
-    <div class="modal-body">
-      <div class="row g-3">
-      <div class="col-12 col-lg-7">
-        <canvas id="jobStatsCanvas" height="220"></canvas>
-      </div>
-      <div class="col-12 col-lg-5">
-        <div class="border rounded p-3 h-100" style="background: rgba(0,0,0,.02);">
-        <h6 class="mb-2">被統計到的角色</h6>
-        <div id="jobHitList" class="small text-muted">（點一下左邊的統計圖切片，這裡會列出角色名稱）</div>
-        </div>
-      </div>
-      </div>
-      <small class="text-muted d-block mt-2">
-      說明：統計來源為列表讀入的 Google Sheet；同義職業會自動合併（如「十字軍=英雄」）。
-      </small>
-    </div>
+    $('#createRoomBtn').onclick = () => joinOrCreate('create');
+    $('#joinRoomBtn').onclick = () => joinOrCreate('join');
+    $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
+    $('#copyRoomBtn').onclick = copyRoomInfo;
+    //$('#clearSharedBtn').onclick = () => send('clear_shared', { roomCode: state.roomCode });
+    $('#clearSharedBtn').onclick = handleClearShared;
+    $('#clearSharedBtn2').onclick = handleClearShared;
+    $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
+	
 
-    <div class="modal-footer">
-      <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
-    </div>
-    </div>
-  </div>
-  </div>
-  <!---->
-	<!-- 歷史更名紀錄 Modal -->
-	<div class="modal fade" id="renameLogModal" tabindex="-1" aria-labelledby="renameLogLabel" aria-hidden="true">
-	  <div class="modal-dialog modal-dialog-scrollable">
-		<div class="modal-content">
-		  <div class="modal-header">
-			<h5 class="modal-title" id="renameLogLabel">歷史角色更名紀錄</h5>
-			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		  </div>
-		  <div class="modal-body">
-			<div class="small text-muted mb-2" id="renameLogTarget">查詢角色：—</div>
-			<div id="renameLogList" class="border rounded p-2" style="min-height:120px;">
-			  （尚無紀錄）
-			</div>
-		  </div>
-		  <div class="modal-footer">
-			<button class="btn btn-primary btn-sm" data-bs-dismiss="modal">關閉</button>
-		  </div>
-		</div>
-	  </div>
-	</div>
-  <!-- 搜尋結果 Modal -->
-	<div class="modal fade" id="searchResultModal" tabindex="-1" aria-labelledby="searchResultLabel" aria-hidden="true">
-	  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-		<div class="modal-content">
-		  <div class="modal-header">
-			<h5 class="modal-title" id="searchResultLabel">搜尋結果</h5>
-			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		  </div>
-		  <div class="modal-body">
-			<div class="small text-muted mb-2" id="searchQueryEcho">關鍵字：—</div>
-			<div class="table-responsive">
-			  <table class="table table-sm table-hover align-middle">
-				<thead class="table-secondary">
-				  <tr>
-					<th style="width:20%;">角色名稱</th>
-					<th style="width:12%;">角色代碼</th>
-					<th style="width:18%;">角色職業</th>
-					<th style="width:10%;">等級</th>
-					<th style="width:10%;">乾表</th>
-					<th style="width:15%;">所在營區</th>
-					<th style="width:15%;">更名紀錄</th>
-				  </tr>
-				</thead>
-				<tbody id="searchResultBody">
-				  <tr><td colspan="7" class="text-center text-muted">無符合項目</td></tr>
-				</tbody>
-			  </table>
-			</div>
-		  </div>
-		  <div class="modal-footer">
-			<button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">關閉</button>
-		  </div>
-		</div>
-	  </div>
-	</div>
+
+    $('#saveBackendBtn').onclick = () => {
+      saveWsUrl($('#backendUrl').value);
+      showToast('已儲存後端網址');
+      if(state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)){
+        state.ws.close();
+      }
+    };
+    $('#resetBackendBtn').onclick = () => {
+      saveWsUrl('');
+      showToast('已重設後端網址');
+    };
+
+    renderBackendSettings();
+
+    applyHashAutoJoin();
+    if($('#joinRoomCode').value) showToast('已從網址帶入房號');
+  </script>
 </body>
 </html>
