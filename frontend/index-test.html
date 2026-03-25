@@ -115,6 +115,33 @@
     }
     .toast.show{opacity:1; transform:none}
     .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+    .pick.has-public-mark{box-shadow:inset 0 0 0 1px rgba(255,209,102,.55)}
+    .public-xx-badge{
+      position:absolute; top:4px; right:4px; min-width:26px; height:18px; padding:0 6px;
+      border-radius:999px; background:rgba(255,209,102,.18); border:1px solid rgba(255,209,102,.5);
+      color:#ffe7a6; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;
+      letter-spacing:.4px;
+    }
+    .floating-window{
+      position:fixed; right:18px; bottom:18px; width:min(360px, calc(100vw - 24px)); max-height:min(70vh, 760px);
+      z-index:50; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:18px;
+      background:rgba(12,18,31,.96); border:1px solid rgba(122,162,255,.28); box-shadow:0 18px 45px rgba(0,0,0,.38);
+      backdrop-filter:blur(14px);
+    }
+    .floating-window.minimized{height:auto; max-height:none}
+    .floating-header{display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:move}
+    .floating-title{font-size:14px; font-weight:800}
+    .floating-actions{display:flex; gap:6px}
+    .floating-actions button{padding:8px 12px; border-radius:10px; font-size:12px}
+    .floating-meta{display:flex; flex-wrap:wrap; gap:6px}
+    .floating-pill{
+      padding:6px 10px; border-radius:999px; background:#0b1324; border:1px solid var(--border);
+      color:var(--muted); font-size:12px;
+    }
+    .floating-board{overflow:auto; padding-right:2px}
+    .floating-board table{border-spacing:4px 4px; min-width:0}
+    .floating-board td.floor-cell,.floating-board td.pick{height:32px; padding:0}
+    .floating-board .submark,.floating-board .marker{font-size:10px; width:100%}
 
     @media (max-width: 360px){
       .wrap{padding:12px}
@@ -162,6 +189,9 @@
         margin-top:6px;
       }
       .footer{font-size:12px; line-height:1.6}
+      .floating-window{
+        right:12px; bottom:12px; width:calc(100vw - 24px); max-height:60vh;
+      }
     }
   </style>
 </head>
@@ -295,10 +325,13 @@
       roomPassword: '',
       me: { color: null },
       room: null,
+      profileName: loadProfileName(),
       localWrong: loadLocalWrong(),
       wsUrl: loadWsUrl(),
       pendingJoin: null,
       autoJoinAttempted: false,
+      floatingOpen: false,
+      floatingMinimized: false,
     };
 
     const $ = (sel) => document.querySelector(sel);
@@ -371,6 +404,40 @@
       try { return JSON.parse(localStorage.getItem('rjpq_local_wrong') || '{}'); } catch { return {}; }
     }
 
+    function loadProfileName(){
+      return (localStorage.getItem('rjpq_profile_name') || '').trim();
+    }
+
+    function saveProfileName(name){
+      const next = String(name || '').trim().slice(0, 20);
+      state.profileName = next;
+      if(next) localStorage.setItem('rjpq_profile_name', next);
+      else localStorage.removeItem('rjpq_profile_name');
+    }
+
+    function fallbackName(clientId){
+      return `Player-${String(clientId || '').slice(0, 4)}`;
+    }
+
+    function getDisplayName(member){
+      if(!member) return fallbackName('');
+      return (member.name || '').trim() || fallbackName(member.clientId);
+    }
+
+    function getMemberById(clientId){
+      return state.room?.members?.find(member => member.clientId === clientId) || null;
+    }
+
+    function getPublicMarkMembers(floor, door){
+      const key = `${floor}-${door}`;
+      const ids = state.room?.publicMarks?.[key] || [];
+      return ids.map(id => getMemberById(id)).filter(Boolean);
+    }
+
+    function currentProfileName(){
+      return (state.profileName || '').trim();
+    }
+
     function persistLocalWrong(){
       localStorage.setItem('rjpq_local_wrong', JSON.stringify(state.localWrong));
     }
@@ -401,6 +468,187 @@
       return url.toString();
     }
 
+    function ensureUtilityButtons(){
+      const actionRow = document.querySelector('#roomView .status .row:last-child');
+      if(!actionRow || $('#renameBtn')) return;
+
+      const renameBtn = document.createElement('button');
+      renameBtn.id = 'renameBtn';
+      renameBtn.className = 'ghost';
+      renameBtn.style.width = '115px';
+      renameBtn.style.height = '40px';
+      renameBtn.style.display = 'inline-flex';
+      renameBtn.style.justifyContent = 'center';
+      renameBtn.style.alignItems = 'center';
+      renameBtn.textContent = 'Rename';
+
+      const floatingBtn = document.createElement('button');
+      floatingBtn.id = 'floatingBtn';
+      floatingBtn.className = 'ghost';
+      floatingBtn.style.width = '115px';
+      floatingBtn.style.height = '40px';
+      floatingBtn.style.display = 'inline-flex';
+      floatingBtn.style.justifyContent = 'center';
+      floatingBtn.style.alignItems = 'center';
+      floatingBtn.textContent = 'Float';
+
+      actionRow.append(renameBtn, floatingBtn);
+    }
+
+    function ensureFloatingWindow(){
+      if($('#floatingWindow')) return;
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="floatingWindow" class="floating-window hidden">
+          <div id="floatingWindowHeader" class="floating-header">
+            <div class="floating-title">RJPQ Float Window</div>
+            <div class="floating-actions">
+              <button id="floatingMinBtn" class="secondary" type="button">Min</button>
+              <button id="floatingCloseBtn" class="ghost" type="button">Close</button>
+            </div>
+          </div>
+          <div id="floatingMeta" class="floating-meta"></div>
+          <div id="floatingBoard" class="floating-board"></div>
+          <div id="floatingHint" class="hint">Desktop: left click shared, right click public XX. Mobile: long press public XX.</div>
+        </div>
+      `);
+
+      const floating = $('#floatingWindow');
+      const header = $('#floatingWindowHeader');
+      let dragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      header.addEventListener('mousedown', (event) => {
+        dragging = true;
+        const rect = floating.getBoundingClientRect();
+        offsetX = event.clientX - rect.left;
+        offsetY = event.clientY - rect.top;
+        floating.style.left = `${rect.left}px`;
+        floating.style.top = `${rect.top}px`;
+        floating.style.right = 'auto';
+        floating.style.bottom = 'auto';
+      });
+
+      document.addEventListener('mousemove', (event) => {
+        if(!dragging) return;
+        floating.style.left = `${Math.max(8, event.clientX - offsetX)}px`;
+        floating.style.top = `${Math.max(8, event.clientY - offsetY)}px`;
+      });
+
+      document.addEventListener('mouseup', () => {
+        dragging = false;
+      });
+
+      $('#floatingCloseBtn').onclick = () => toggleFloatingWindow(false);
+      $('#floatingMinBtn').onclick = () => {
+        state.floatingMinimized = !state.floatingMinimized;
+        renderFloatingWindow();
+      };
+    }
+
+    function toggleFloatingWindow(force){
+      ensureFloatingWindow();
+      state.floatingOpen = typeof force === 'boolean' ? force : !state.floatingOpen;
+      renderFloatingWindow();
+    }
+
+    function renderFloatingWindow(){
+      ensureFloatingWindow();
+      const floating = $('#floatingWindow');
+      const board = $('#floatingBoard');
+      const meta = $('#floatingMeta');
+      const minBtn = $('#floatingMinBtn');
+      const hint = $('#floatingHint');
+      const toggleBtn = $('#floatingBtn');
+      const canShow = state.floatingOpen && !!state.room;
+
+      floating.classList.toggle('hidden', !canShow);
+      floating.classList.toggle('minimized', !!state.floatingMinimized);
+      if(toggleBtn) toggleBtn.textContent = canShow ? 'Hide Float' : 'Float';
+      if(!canShow) return;
+
+      const me = getMemberById(state.clientId);
+      meta.innerHTML = '';
+      [
+        `Room ${state.room.code}`,
+        `Players ${state.room.memberCount || 0}`,
+        `Name ${getDisplayName(me)}`,
+      ].forEach(text => {
+        const item = document.createElement('div');
+        item.className = 'floating-pill';
+        item.textContent = text;
+        meta.appendChild(item);
+      });
+
+      minBtn.textContent = state.floatingMinimized ? 'Open' : 'Min';
+      board.classList.toggle('hidden', !!state.floatingMinimized);
+      hint.classList.toggle('hidden', !!state.floatingMinimized);
+      if(state.floatingMinimized) return;
+
+      const shared = state.room?.board || [];
+      board.innerHTML = '<table><tbody></tbody></table>';
+      const tbody = board.querySelector('tbody');
+      for(let floor = 10; floor >= 1; floor--){
+        const tr = document.createElement('tr');
+        const floorTd = document.createElement('td');
+        floorTd.className = 'floor-cell';
+        floorTd.textContent = `${floor}`;
+        tr.appendChild(floorTd);
+
+        for(let door = 1; door <= 4; door++){
+          const td = document.createElement('td');
+          td.className = 'pick';
+          const floorData = shared[floor - 1] || {};
+          const markMembers = getPublicMarkMembers(floor, door);
+          let occupantColor = null;
+
+          Object.entries(floorData).forEach(([color, pickDoor]) => {
+            if(pickDoor === door) occupantColor = color;
+          });
+
+          if(occupantColor){
+            td.style.background = COLORS2[occupantColor].hex;
+          } else {
+            const wrongMap = getWrongSet();
+            if(wrongMap[`${floor}-${door}`]) td.classList.add('private-wrong');
+          }
+
+          const sub = document.createElement('div');
+          sub.className = 'submark';
+          sub.textContent = markMembers.length ? `XX ${markMembers.length}` : '　　　';
+          td.appendChild(sub);
+
+          if(markMembers.length){
+            td.classList.add('has-public-mark');
+            td.title = `Public XX: ${markMembers.map(member => getDisplayName(member)).join(', ')}`;
+          }
+
+          bindCellInteractions(td, floor, door);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+    }
+
+    function promptRename(){
+      const current = state.profileName || getDisplayName(getMemberById(state.clientId));
+      const next = prompt('Input display name (max 20 chars)', current);
+      if(next == null) return;
+
+      const normalized = String(next).trim().slice(0, 20);
+      if(!normalized){
+        showToast('Name is required');
+        return;
+      }
+
+      saveProfileName(normalized);
+      const me = getMemberById(state.clientId);
+      if(me) me.name = normalized;
+      if(state.roomCode) send('update_name', { roomCode: state.roomCode, name: normalized });
+      renderRoom();
+      showToast('Name updated');
+    }
+
     function setConnectionState(text, ok=false){
       $('#connState').textContent = text;
       $('#connPill').style.borderColor = ok ? 'rgba(89,211,156,.4)' : '';
@@ -427,6 +675,14 @@
         ws.onclose = () => {
           state.connected = false;
           setConnectionState('已斷線');
+          if(state.roomCode){
+            state.pendingJoin = {
+              type: 'join_room',
+              roomCode: state.roomCode,
+              password: state.roomPassword || '',
+              name: currentProfileName(),
+            };
+          }
           setTimeout(() => {
             if(state.roomCode) connectWs();
           }, 1200);
@@ -453,6 +709,7 @@
     function joinOrCreate(mode){
       const roomCode = normalizeRoomCode(mode === 'create' ? $('#createRoomCode').value : $('#joinRoomCode').value);
       const password = (mode === 'create' ? $('#createRoomPassword').value : $('#joinRoomPassword').value) || '';
+      const name = currentProfileName();
       if(!roomCode){
         showToast('請輸入房號');
         return;
@@ -460,9 +717,9 @@
       state.roomCode = roomCode;
       state.roomPassword = password;
       updateHash();
-      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password };
+      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password, name };
       connectWs();
-      if(state.connected) send(state.pendingJoin.type, { roomCode, password });
+      if(state.connected) send(state.pendingJoin.type, { roomCode, password, name });
     }
 
     function handleMessage(msg){
@@ -510,10 +767,12 @@
       state.room = null;
       updateHash();
       showLobbyView();
+      renderFloatingWindow();
     }
 
     function renderRoom(){
       if(!state.room) return;
+      ensureUtilityButtons();
       showRoomView();
       $('#roomCodeText').textContent = state.room.code;
       $('#clientIdText').textContent = state.clientId ? state.clientId.slice(0, 8) : '-';
@@ -545,7 +804,7 @@
         dot.className = 'dot';
         dot.style.background = m.color ? COLORS[m.color].hex : '#777';
         const text = document.createElement('span');
-        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
+        text.textContent = `${getDisplayName(m)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
         text.style.display = 'inline-flex';
         text.style.alignItems = 'center';
         text.style.justifyContent = 'center';
@@ -554,10 +813,12 @@
       });
 
       renderBoard();
+      renderFloatingWindow();
     }
 
     function renderBoard(){
       const shared = state.room?.board || [];
+      const publicMarks = state.room?.publicMarks || {};
       const wrongMap = getWrongSet();
       boardBody.innerHTML = '';
       for(let floor = 10; floor >= 1; floor--){
@@ -581,6 +842,9 @@
           });
 
           const wrongKey = `${floor}-${door}`;
+          const publicMarkMembers = (publicMarks[wrongKey] || [])
+            .map(id => getMemberById(id))
+            .filter(Boolean);
 
           if(occupantColor){
             const marker = document.createElement('div');
@@ -602,17 +866,16 @@
             td.appendChild(sub);
           }
 
-          td.onclick = () => {
-            if(!state.me.color){
-              showToast('請先選擇顏色');
-              return;
-            }
-            send('toggle_shared', { roomCode: state.roomCode, floor, door });
-          };
-          td.oncontextmenu = (e) => {
-            e.preventDefault();
-            togglePrivateWrong(floor, door);
-          };
+          if(publicMarkMembers.length){
+            td.classList.add('has-public-mark');
+            td.title = `Public XX: ${publicMarkMembers.map(member => getDisplayName(member)).join(', ')}`;
+            const badge = document.createElement('div');
+            badge.className = 'public-xx-badge';
+            badge.textContent = publicMarkMembers.length > 1 ? `XX ${publicMarkMembers.length}` : 'XX';
+            td.appendChild(badge);
+          }
+
+          bindCellInteractions(td, floor, door);
           tr.appendChild(td);
         }
         boardBody.appendChild(tr);
@@ -626,6 +889,65 @@
       else wrongMap[key] = true;
       persistLocalWrong();
       renderBoard();
+    }
+
+    function togglePublicMark(floor, door){
+      send('toggle_public_mark', { roomCode: state.roomCode, floor, door });
+    }
+
+    function handleSharedPick(floor, door){
+      if(!state.me.color){
+        showToast('請先選擇顏色');
+        return;
+      }
+      send('toggle_shared', { roomCode: state.roomCode, floor, door });
+    }
+
+    function bindCellInteractions(td, floor, door){
+      let longPressTimer = null;
+      let longPressTriggered = false;
+      let pointerDown = false;
+      const longPressMs = 450;
+
+      const clearLongPress = () => {
+        pointerDown = false;
+        if(longPressTimer){
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      };
+
+      td.onclick = () => {
+        if(longPressTriggered){
+          longPressTriggered = false;
+          return;
+        }
+        handleSharedPick(floor, door);
+      };
+
+      td.oncontextmenu = (event) => {
+        event.preventDefault();
+        if(event.shiftKey){
+          togglePrivateWrong(floor, door);
+          return;
+        }
+        togglePublicMark(floor, door);
+      };
+
+      td.addEventListener('pointerdown', (event) => {
+        if(event.pointerType !== 'touch') return;
+        pointerDown = true;
+        longPressTriggered = false;
+        longPressTimer = setTimeout(() => {
+          if(!pointerDown) return;
+          longPressTriggered = true;
+          togglePublicMark(floor, door);
+        }, longPressMs);
+      });
+
+      td.addEventListener('pointerup', clearLongPress);
+      td.addEventListener('pointercancel', clearLongPress);
+      td.addEventListener('pointerleave', clearLongPress);
     }
 
     async function copyRoomInfo(){
@@ -675,6 +997,9 @@
       }
     };
 
+    ensureUtilityButtons();
+    ensureFloatingWindow();
+
     $('#createRoomBtn').onclick = () => joinOrCreate('create');
     $('#joinRoomBtn').onclick = () => joinOrCreate('join');
     $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
@@ -682,6 +1007,8 @@
     $('#clearSharedBtn').onclick = handleClearShared;
     $('#clearSharedBtn2').onclick = handleClearShared;
     $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
+    $('#renameBtn').onclick = promptRename;
+    $('#floatingBtn').onclick = () => toggleFloatingWindow();
 
     if($('#saveBackendBtn')){
       $('#saveBackendBtn').onclick = () => {
