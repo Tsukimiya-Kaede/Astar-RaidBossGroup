@@ -94,16 +94,20 @@
       background:rgba(255,255,255,.00); margin-top:0px; font-size:12px; font-weight:700; color:var(--muted);
       justify-content:center; align-items:center; width: 100%;
     }
-    td.pick.private-wrong{
-      background:
-        linear-gradient(135deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
-        linear-gradient(45deg, transparent 47%, rgba(255,123,123,.9) 47%, rgba(255,123,123,.9) 53%, transparent 53%),
-        #101a2f;
-    }
     .marker{
       display:inline-flex; align-items:center; gap:6px; padding:0px 4px; border-radius:999px;
       background:rgba(255,255,255,.05); margin-top:0px; font-size:12px; font-weight:700; color:#FFFFFF64;
       justify-content:center; align-items:center; width: 45%;
+    }
+    .wrong-stack{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center; gap:2px;
+      pointer-events:none; padding:0 4px;
+    }
+    .wrong-mark{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:14px; height:14px; font-size:14px; font-weight:900; line-height:1;
+      text-shadow:0 0 10px rgba(0,0,0,.35);
     }
     .hint{color:var(--muted); font-size:13px; line-height:1.6}
     .footer{margin-top:16px; color:var(--muted); font-size:13px}
@@ -115,33 +119,96 @@
     }
     .toast.show{opacity:1; transform:none}
     .inline-code{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-    .pick.has-public-mark{box-shadow:inset 0 0 0 1px rgba(255,209,102,.55)}
-    .public-xx-badge{
-      position:absolute; top:4px; right:4px; min-width:26px; height:18px; padding:0 6px;
-      border-radius:999px; background:rgba(255,209,102,.18); border:1px solid rgba(255,209,102,.5);
-      color:#ffe7a6; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;
-      letter-spacing:.4px;
+    .pip-mode{
+      max-width:none;
+      margin:0;
+      padding:0;
+      display:flex;
+      justify-content:stretch;
+      align-items:flex-start;
+      min-height:100vh;
+      background:transparent;
+      overflow-x:hidden;
+      overflow-y:auto;
     }
-    .floating-window{
-      position:fixed; right:18px; bottom:18px; width:min(360px, calc(100vw - 24px)); max-height:min(70vh, 760px);
-      z-index:50; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:18px;
-      background:rgba(12,18,31,.96); border:1px solid rgba(122,162,255,.28); box-shadow:0 18px 45px rgba(0,0,0,.38);
-      backdrop-filter:blur(14px);
+    .pip-mode #roomView{
+      width:100%;
+      max-width:none;
     }
-    .floating-window.minimized{height:auto; max-height:none}
-    .floating-header{display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:move}
-    .floating-title{font-size:14px; font-weight:800}
-    .floating-actions{display:flex; gap:6px}
-    .floating-actions button{padding:8px 12px; border-radius:10px; font-size:12px}
-    .floating-meta{display:flex; flex-wrap:wrap; gap:6px}
-    .floating-pill{
-      padding:6px 10px; border-radius:999px; background:#0b1324; border:1px solid var(--border);
-      color:var(--muted); font-size:12px;
+    .pip-mode #roomView .card{
+      min-height:auto;
+      border-radius:0;
+      box-shadow:none;
+      border:0;
+      background:rgba(18,26,43,.88);
+      padding:12px 12px 14px;
     }
-    .floating-board{overflow:auto; padding-right:2px}
-    .floating-board table{border-spacing:4px 4px; min-width:0}
-    .floating-board td.floor-cell,.floating-board td.pick{height:32px; padding:0}
-    .floating-board .submark,.floating-board .marker{font-size:10px; width:100%}
+    .pip-mode #roomView .status{
+      gap:8px;
+      align-items:flex-start;
+    }
+    .pip-mode #roomView .status > .row{
+      width:100%;
+      justify-content:center;
+      gap:6px;
+    }
+    .pip-mode #roomView .status > .row:last-child{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+    .pip-mode #roomView .status > .row:last-child button{
+      width:100% !important;
+      height:36px !important;
+      font-size:12px;
+      padding:8px 10px;
+    }
+    .pip-mode #roomView .pill{
+      padding:6px 10px;
+      font-size:13px;
+    }
+    .pip-mode #roomView .grid[style*="grid-template-columns:1fr 1fr"]{
+      gap:10px;
+      margin-top:10px !important;
+    }
+    .pip-mode #roomView h3{
+      margin-bottom:6px !important;
+      font-size:15px;
+    }
+    .pip-mode #roomView .hint,
+    .pip-mode #roomView .legend-item,
+    .pip-mode #roomView .footer{
+      font-size:12px;
+    }
+    .pip-mode #roomView .board{
+      max-width:440px !important;
+    }
+    .pip-mode #roomView table{
+      min-width:0;
+      border-spacing:4px 4px;
+    }
+    .pip-mode #roomView td.floor-cell,
+    .pip-mode #roomView td.pick{
+      height:34px;
+    }
+    .pip-mode #roomView td.pick .submark,
+    .pip-mode #roomView .marker{
+      font-size:11px;
+    }
+    .pip-mode #roomView .wrong-mark{
+      width:12px;
+      height:12px;
+      font-size:12px;
+    }
+    .pip-mode #roomView .footer{
+      text-align:center;
+      margin-top:10px;
+    }
+
+    @media (max-width: 640px){
+      .pip-mode #roomView .status > .row:last-child{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+      }
+    }
 
     @media (max-width: 360px){
       .wrap{padding:12px}
@@ -189,9 +256,6 @@
         margin-top:6px;
       }
       .footer{font-size:12px; line-height:1.6}
-      .floating-window{
-        right:12px; bottom:12px; width:calc(100vw - 24px); max-height:60vh;
-      }
     }
   </style>
 </head>
@@ -255,6 +319,7 @@
             <div class="pill">在線人數：<strong id="memberCountText">0</strong></div>
           </div>
           <div class="row">
+            <button id="floatRoomBtn" class="ghost" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">懸浮視窗</button>
             <button id="copyRoomBtn" class="secondary" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">複製房間資訊</button>
             <button id="clearSharedBtn" class="warn" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">清空共享標記</button>
             <button id="leaveRoomBtn" class="danger" style="width:115px; height:40px; display:inline-flex; justify-content:center; align-items:center;">離開房間</button>
@@ -270,8 +335,8 @@
             <h3 style="margin:0 0 4px 0">操作說明</h3>
             <div class="hint">
               左鍵：設定/取消你的共享正解。<br>
-              右鍵：設定/取消你自己的私人錯誤標記。<br>
-              每層共享標記只允許每個顏色一個位置；顏色不可重複選取。
+              右鍵：設定/取消共享 X 標記。<br>
+              每層共享標記只允許每個顏色一個位置；同一格最多顯示三個不同顏色的 X。
             </div>
           </div>
         </div>
@@ -325,17 +390,119 @@
       roomPassword: '',
       me: { color: null },
       room: null,
-      profileName: loadProfileName(),
-      localWrong: loadLocalWrong(),
       wsUrl: loadWsUrl(),
       pendingJoin: null,
       autoJoinAttempted: false,
-      floatingOpen: false,
-      floatingMinimized: false,
+      pipWindow: null,
+      pipRestoreParent: null,
+      pipRestoreNextSibling: null,
     };
 
-    const $ = (sel) => document.querySelector(sel);
+    const $ = (sel) => (state.pipWindow?.document.querySelector(sel) || document.querySelector(sel));
     const boardBody = $('#boardBody');
+
+    function copyDocumentStyles(targetDoc){
+      [...document.styleSheets].forEach((sheet) => {
+        try{
+          if(sheet.href){
+            const link = targetDoc.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = sheet.href;
+            targetDoc.head.appendChild(link);
+            return;
+          }
+
+          const style = targetDoc.createElement('style');
+          style.textContent = [...sheet.cssRules].map((rule) => rule.cssText).join('\n');
+          targetDoc.head.appendChild(style);
+        }catch(err){
+          console.warn('Failed to mirror stylesheet into PiP window', err);
+        }
+      });
+    }
+
+    function getPiPWindowSize(roomView){
+      const viewportWidth = window.innerWidth || 1280;
+      const viewportHeight = window.innerHeight || 900;
+      const contentHeight = roomView.scrollHeight || 760;
+      const contentWidth = roomView.scrollWidth || 560;
+
+      const width = Math.max(430, Math.min(520, Math.max(440, Math.round(contentWidth * 0.78), Math.round(viewportWidth * 0.32))));
+      const height = Math.max(640, Math.min(760, Math.max(680, Math.round(viewportHeight * 0.76), Math.round(contentHeight * 0.7))));
+
+      return { width, height };
+    }
+
+    function updateFloatButtonLabel(){
+      const btn = $('#floatRoomBtn');
+      if(btn) btn.textContent = state.pipWindow ? '收回視窗' : '懸浮視窗';
+    }
+
+    function restoreRoomViewFromPiP(){
+      const roomView = state.pipWindow?.document.getElementById('roomView') || document.getElementById('roomView');
+      if(!state.pipRestoreParent || !roomView) return;
+
+      state.pipRestoreParent.insertBefore(roomView, state.pipRestoreNextSibling);
+      state.pipWindow = null;
+      state.pipRestoreParent = null;
+      state.pipRestoreNextSibling = null;
+      updateFloatButtonLabel();
+    }
+
+    async function toggleFloatWindow(){
+      if(state.pipWindow){
+        state.pipWindow.close();
+        return;
+      }
+
+      const roomView = document.getElementById('roomView');
+      if(!roomView || roomView.classList.contains('hidden')){
+        showToast('請先進入房間後再開啟懸浮視窗');
+        return;
+      }
+
+      if(!('documentPictureInPicture' in window)){
+        showToast('目前瀏覽器不支援懸浮視窗，請使用新版 Chrome 或 Edge');
+        return;
+      }
+
+      try{
+        state.pipRestoreParent = roomView.parentNode;
+        state.pipRestoreNextSibling = roomView.nextSibling;
+        const pipSize = getPiPWindowSize(roomView);
+
+        const pipWindow = await window.documentPictureInPicture.requestWindow({
+          width: pipSize.width,
+          height: pipSize.height,
+        });
+
+        state.pipWindow = pipWindow;
+        pipWindow.document.title = `RJPQ Room ${state.roomCode || ''}`.trim();
+        copyDocumentStyles(pipWindow.document);
+        pipWindow.document.body.classList.add('pip-mode');
+        pipWindow.document.body.style.margin = '0';
+        pipWindow.document.body.style.background = 'linear-gradient(180deg,#08101d,#0e1526 45%,#0a1120)';
+        pipWindow.document.body.style.color = getComputedStyle(document.body).color;
+        pipWindow.document.body.style.fontFamily = getComputedStyle(document.body).fontFamily;
+        pipWindow.document.documentElement.style.overflowX = 'hidden';
+        pipWindow.document.documentElement.style.overflowY = 'auto';
+        pipWindow.document.body.style.overflowX = 'hidden';
+        pipWindow.document.body.style.overflowY = 'auto';
+
+        pipWindow.document.body.appendChild(roomView);
+        updateFloatButtonLabel();
+
+        pipWindow.addEventListener('pagehide', () => {
+          restoreRoomViewFromPiP();
+        }, { once: true });
+      }catch(err){
+        console.error(err);
+        state.pipWindow = null;
+        state.pipRestoreParent = null;
+        state.pipRestoreNextSibling = null;
+        showToast('懸浮視窗建立失敗');
+      }
+    }
 
     function showToast(text){
       const toast = $('#toast');
@@ -400,55 +567,6 @@
       }
     }
 
-    function loadLocalWrong(){
-      try { return JSON.parse(localStorage.getItem('rjpq_local_wrong') || '{}'); } catch { return {}; }
-    }
-
-    function loadProfileName(){
-      return (localStorage.getItem('rjpq_profile_name') || '').trim();
-    }
-
-    function saveProfileName(name){
-      const next = String(name || '').trim().slice(0, 20);
-      state.profileName = next;
-      if(next) localStorage.setItem('rjpq_profile_name', next);
-      else localStorage.removeItem('rjpq_profile_name');
-    }
-
-    function fallbackName(clientId){
-      return `Player-${String(clientId || '').slice(0, 4)}`;
-    }
-
-    function getDisplayName(member){
-      if(!member) return fallbackName('');
-      return (member.name || '').trim() || fallbackName(member.clientId);
-    }
-
-    function getMemberById(clientId){
-      return state.room?.members?.find(member => member.clientId === clientId) || null;
-    }
-
-    function getPublicMarkMembers(floor, door){
-      const key = `${floor}-${door}`;
-      const ids = state.room?.publicMarks?.[key] || [];
-      return ids.map(id => getMemberById(id)).filter(Boolean);
-    }
-
-    function currentProfileName(){
-      return (state.profileName || '').trim();
-    }
-
-    function persistLocalWrong(){
-      localStorage.setItem('rjpq_local_wrong', JSON.stringify(state.localWrong));
-    }
-
-    function roomWrongKey(){ return state.roomCode || '_lobby'; }
-
-    function getWrongSet(){
-      if(!state.localWrong[roomWrongKey()]) state.localWrong[roomWrongKey()] = {};
-      return state.localWrong[roomWrongKey()];
-    }
-
     function updateHash(){
       if(state.roomCode) {
         const url = new URL(location.href);
@@ -466,187 +584,6 @@
       else url.searchParams.delete('pwd');
       url.searchParams.set('autojoin', '1');
       return url.toString();
-    }
-
-    function ensureUtilityButtons(){
-      const actionRow = document.querySelector('#roomView .status .row:last-child');
-      if(!actionRow || $('#renameBtn')) return;
-
-      const renameBtn = document.createElement('button');
-      renameBtn.id = 'renameBtn';
-      renameBtn.className = 'ghost';
-      renameBtn.style.width = '115px';
-      renameBtn.style.height = '40px';
-      renameBtn.style.display = 'inline-flex';
-      renameBtn.style.justifyContent = 'center';
-      renameBtn.style.alignItems = 'center';
-      renameBtn.textContent = 'Rename';
-
-      const floatingBtn = document.createElement('button');
-      floatingBtn.id = 'floatingBtn';
-      floatingBtn.className = 'ghost';
-      floatingBtn.style.width = '115px';
-      floatingBtn.style.height = '40px';
-      floatingBtn.style.display = 'inline-flex';
-      floatingBtn.style.justifyContent = 'center';
-      floatingBtn.style.alignItems = 'center';
-      floatingBtn.textContent = 'Float';
-
-      actionRow.append(renameBtn, floatingBtn);
-    }
-
-    function ensureFloatingWindow(){
-      if($('#floatingWindow')) return;
-      document.body.insertAdjacentHTML('beforeend', `
-        <div id="floatingWindow" class="floating-window hidden">
-          <div id="floatingWindowHeader" class="floating-header">
-            <div class="floating-title">RJPQ Float Window</div>
-            <div class="floating-actions">
-              <button id="floatingMinBtn" class="secondary" type="button">Min</button>
-              <button id="floatingCloseBtn" class="ghost" type="button">Close</button>
-            </div>
-          </div>
-          <div id="floatingMeta" class="floating-meta"></div>
-          <div id="floatingBoard" class="floating-board"></div>
-          <div id="floatingHint" class="hint">Desktop: left click shared, right click public XX. Mobile: long press public XX.</div>
-        </div>
-      `);
-
-      const floating = $('#floatingWindow');
-      const header = $('#floatingWindowHeader');
-      let dragging = false;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      header.addEventListener('mousedown', (event) => {
-        dragging = true;
-        const rect = floating.getBoundingClientRect();
-        offsetX = event.clientX - rect.left;
-        offsetY = event.clientY - rect.top;
-        floating.style.left = `${rect.left}px`;
-        floating.style.top = `${rect.top}px`;
-        floating.style.right = 'auto';
-        floating.style.bottom = 'auto';
-      });
-
-      document.addEventListener('mousemove', (event) => {
-        if(!dragging) return;
-        floating.style.left = `${Math.max(8, event.clientX - offsetX)}px`;
-        floating.style.top = `${Math.max(8, event.clientY - offsetY)}px`;
-      });
-
-      document.addEventListener('mouseup', () => {
-        dragging = false;
-      });
-
-      $('#floatingCloseBtn').onclick = () => toggleFloatingWindow(false);
-      $('#floatingMinBtn').onclick = () => {
-        state.floatingMinimized = !state.floatingMinimized;
-        renderFloatingWindow();
-      };
-    }
-
-    function toggleFloatingWindow(force){
-      ensureFloatingWindow();
-      state.floatingOpen = typeof force === 'boolean' ? force : !state.floatingOpen;
-      renderFloatingWindow();
-    }
-
-    function renderFloatingWindow(){
-      ensureFloatingWindow();
-      const floating = $('#floatingWindow');
-      const board = $('#floatingBoard');
-      const meta = $('#floatingMeta');
-      const minBtn = $('#floatingMinBtn');
-      const hint = $('#floatingHint');
-      const toggleBtn = $('#floatingBtn');
-      const canShow = state.floatingOpen && !!state.room;
-
-      floating.classList.toggle('hidden', !canShow);
-      floating.classList.toggle('minimized', !!state.floatingMinimized);
-      if(toggleBtn) toggleBtn.textContent = canShow ? 'Hide Float' : 'Float';
-      if(!canShow) return;
-
-      const me = getMemberById(state.clientId);
-      meta.innerHTML = '';
-      [
-        `Room ${state.room.code}`,
-        `Players ${state.room.memberCount || 0}`,
-        `Name ${getDisplayName(me)}`,
-      ].forEach(text => {
-        const item = document.createElement('div');
-        item.className = 'floating-pill';
-        item.textContent = text;
-        meta.appendChild(item);
-      });
-
-      minBtn.textContent = state.floatingMinimized ? 'Open' : 'Min';
-      board.classList.toggle('hidden', !!state.floatingMinimized);
-      hint.classList.toggle('hidden', !!state.floatingMinimized);
-      if(state.floatingMinimized) return;
-
-      const shared = state.room?.board || [];
-      board.innerHTML = '<table><tbody></tbody></table>';
-      const tbody = board.querySelector('tbody');
-      for(let floor = 10; floor >= 1; floor--){
-        const tr = document.createElement('tr');
-        const floorTd = document.createElement('td');
-        floorTd.className = 'floor-cell';
-        floorTd.textContent = `${floor}`;
-        tr.appendChild(floorTd);
-
-        for(let door = 1; door <= 4; door++){
-          const td = document.createElement('td');
-          td.className = 'pick';
-          const floorData = shared[floor - 1] || {};
-          const markMembers = getPublicMarkMembers(floor, door);
-          let occupantColor = null;
-
-          Object.entries(floorData).forEach(([color, pickDoor]) => {
-            if(pickDoor === door) occupantColor = color;
-          });
-
-          if(occupantColor){
-            td.style.background = COLORS2[occupantColor].hex;
-          } else {
-            const wrongMap = getWrongSet();
-            if(wrongMap[`${floor}-${door}`]) td.classList.add('private-wrong');
-          }
-
-          const sub = document.createElement('div');
-          sub.className = 'submark';
-          sub.textContent = markMembers.length ? `XX ${markMembers.length}` : '　　　';
-          td.appendChild(sub);
-
-          if(markMembers.length){
-            td.classList.add('has-public-mark');
-            td.title = `Public XX: ${markMembers.map(member => getDisplayName(member)).join(', ')}`;
-          }
-
-          bindCellInteractions(td, floor, door);
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-      }
-    }
-
-    function promptRename(){
-      const current = state.profileName || getDisplayName(getMemberById(state.clientId));
-      const next = prompt('Input display name (max 20 chars)', current);
-      if(next == null) return;
-
-      const normalized = String(next).trim().slice(0, 20);
-      if(!normalized){
-        showToast('Name is required');
-        return;
-      }
-
-      saveProfileName(normalized);
-      const me = getMemberById(state.clientId);
-      if(me) me.name = normalized;
-      if(state.roomCode) send('update_name', { roomCode: state.roomCode, name: normalized });
-      renderRoom();
-      showToast('Name updated');
     }
 
     function setConnectionState(text, ok=false){
@@ -675,14 +612,6 @@
         ws.onclose = () => {
           state.connected = false;
           setConnectionState('已斷線');
-          if(state.roomCode){
-            state.pendingJoin = {
-              type: 'join_room',
-              roomCode: state.roomCode,
-              password: state.roomPassword || '',
-              name: currentProfileName(),
-            };
-          }
           setTimeout(() => {
             if(state.roomCode) connectWs();
           }, 1200);
@@ -709,7 +638,6 @@
     function joinOrCreate(mode){
       const roomCode = normalizeRoomCode(mode === 'create' ? $('#createRoomCode').value : $('#joinRoomCode').value);
       const password = (mode === 'create' ? $('#createRoomPassword').value : $('#joinRoomPassword').value) || '';
-      const name = currentProfileName();
       if(!roomCode){
         showToast('請輸入房號');
         return;
@@ -717,9 +645,9 @@
       state.roomCode = roomCode;
       state.roomPassword = password;
       updateHash();
-      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password, name };
+      state.pendingJoin = { type: mode === 'create' ? 'create_room' : 'join_room', roomCode, password };
       connectWs();
-      if(state.connected) send(state.pendingJoin.type, { roomCode, password, name });
+      if(state.connected) send(state.pendingJoin.type, { roomCode, password });
     }
 
     function handleMessage(msg){
@@ -760,6 +688,9 @@
     }
 
     function leaveRoomLocal(sendMsg=true){
+      if(state.pipWindow){
+        state.pipWindow.close();
+      }
       if(sendMsg && state.roomCode) send('leave_room', { roomCode: state.roomCode });
       state.roomCode = '';
       state.roomPassword = '';
@@ -767,12 +698,10 @@
       state.room = null;
       updateHash();
       showLobbyView();
-      renderFloatingWindow();
     }
 
     function renderRoom(){
       if(!state.room) return;
-      ensureUtilityButtons();
       showRoomView();
       $('#roomCodeText').textContent = state.room.code;
       $('#clientIdText').textContent = state.clientId ? state.clientId.slice(0, 8) : '-';
@@ -804,7 +733,7 @@
         dot.className = 'dot';
         dot.style.background = m.color ? COLORS[m.color].hex : '#777';
         const text = document.createElement('span');
-        text.textContent = `${getDisplayName(m)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
+        text.textContent = `${m.clientId.slice(0,8)}${m.clientId === state.clientId ? ' (你)' : ''}${m.color ? ` · ${COLORS[m.color].label}` : ' · 未選色'}`;
         text.style.display = 'inline-flex';
         text.style.alignItems = 'center';
         text.style.justifyContent = 'center';
@@ -813,13 +742,10 @@
       });
 
       renderBoard();
-      renderFloatingWindow();
     }
 
     function renderBoard(){
       const shared = state.room?.board || [];
-      const publicMarks = state.room?.publicMarks || {};
-      const wrongMap = getWrongSet();
       boardBody.innerHTML = '';
       for(let floor = 10; floor >= 1; floor--){
         const tr = document.createElement('tr');
@@ -831,20 +757,18 @@
         for(let door = 1; door <= 4; door++){
           const td = document.createElement('td');
           td.className = 'pick';
-          const floorData = shared[floor - 1] || {};
+          const floorData = shared[floor - 1] || { picks: {}, wrongs: {} };
+          const picks = floorData.picks || {};
+          const wrongs = floorData.wrongs || {};
           let occupantColor = null;
           let occupantId = null;
-          Object.entries(floorData).forEach(([color, pickDoor]) => {
+          Object.entries(picks).forEach(([color, pickDoor]) => {
             if(pickDoor === door){
               occupantColor = color;
               occupantId = state.room.members?.find(m => m.color === color)?.clientId || '';
             }
           });
-
-          const wrongKey = `${floor}-${door}`;
-          const publicMarkMembers = (publicMarks[wrongKey] || [])
-            .map(id => getMemberById(id))
-            .filter(Boolean);
+          const wrongColors = Array.isArray(wrongs[String(door)]) ? wrongs[String(door)] : [];
 
           if(occupantColor){
             const marker = document.createElement('div');
@@ -853,8 +777,17 @@
             marker.style.opacity = '0.0';
             td.style.background = occupantId === state.clientId ? COLORS[occupantColor].hex : COLORS2[occupantColor].hex;
             td.appendChild(marker);
-          } else if(wrongMap[wrongKey]) {
-            td.classList.add('private-wrong');
+          } else if(wrongColors.length) {
+            const wrongStack = document.createElement('div');
+            wrongStack.className = 'wrong-stack';
+            wrongColors.slice(0, 3).forEach((color) => {
+              const wrongMark = document.createElement('span');
+              wrongMark.className = 'wrong-mark';
+              wrongMark.textContent = '✕';
+              wrongMark.style.color = COLORS[color]?.hex || '#ff7b7b';
+              wrongStack.appendChild(wrongMark);
+            });
+            td.appendChild(wrongStack);
             const sub = document.createElement('div');
             sub.className = 'submark';
             sub.textContent = '　　　';
@@ -866,88 +799,25 @@
             td.appendChild(sub);
           }
 
-          if(publicMarkMembers.length){
-            td.classList.add('has-public-mark');
-            td.title = `Public XX: ${publicMarkMembers.map(member => getDisplayName(member)).join(', ')}`;
-            const badge = document.createElement('div');
-            badge.className = 'public-xx-badge';
-            badge.textContent = publicMarkMembers.length > 1 ? `XX ${publicMarkMembers.length}` : 'XX';
-            td.appendChild(badge);
-          }
-
-          bindCellInteractions(td, floor, door);
+          td.onclick = () => {
+            if(!state.me.color){
+              showToast('請先選擇顏色');
+              return;
+            }
+            send('toggle_shared', { roomCode: state.roomCode, floor, door });
+          };
+          td.oncontextmenu = (e) => {
+            e.preventDefault();
+            if(!state.me.color){
+              showToast('請先選擇顏色');
+              return;
+            }
+            send('toggle_wrong', { roomCode: state.roomCode, floor, door });
+          };
           tr.appendChild(td);
         }
         boardBody.appendChild(tr);
       }
-    }
-
-    function togglePrivateWrong(floor, door){
-      const wrongMap = getWrongSet();
-      const key = `${floor}-${door}`;
-      if(wrongMap[key]) delete wrongMap[key];
-      else wrongMap[key] = true;
-      persistLocalWrong();
-      renderBoard();
-    }
-
-    function togglePublicMark(floor, door){
-      send('toggle_public_mark', { roomCode: state.roomCode, floor, door });
-    }
-
-    function handleSharedPick(floor, door){
-      if(!state.me.color){
-        showToast('請先選擇顏色');
-        return;
-      }
-      send('toggle_shared', { roomCode: state.roomCode, floor, door });
-    }
-
-    function bindCellInteractions(td, floor, door){
-      let longPressTimer = null;
-      let longPressTriggered = false;
-      let pointerDown = false;
-      const longPressMs = 450;
-
-      const clearLongPress = () => {
-        pointerDown = false;
-        if(longPressTimer){
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-      };
-
-      td.onclick = () => {
-        if(longPressTriggered){
-          longPressTriggered = false;
-          return;
-        }
-        handleSharedPick(floor, door);
-      };
-
-      td.oncontextmenu = (event) => {
-        event.preventDefault();
-        if(event.shiftKey){
-          togglePrivateWrong(floor, door);
-          return;
-        }
-        togglePublicMark(floor, door);
-      };
-
-      td.addEventListener('pointerdown', (event) => {
-        if(event.pointerType !== 'touch') return;
-        pointerDown = true;
-        longPressTriggered = false;
-        longPressTimer = setTimeout(() => {
-          if(!pointerDown) return;
-          longPressTriggered = true;
-          togglePublicMark(floor, door);
-        }, longPressMs);
-      });
-
-      td.addEventListener('pointerup', clearLongPress);
-      td.addEventListener('pointercancel', clearLongPress);
-      td.addEventListener('pointerleave', clearLongPress);
     }
 
     async function copyRoomInfo(){
@@ -992,23 +862,20 @@
     });
 
     const handleClearShared = () => {
-      if (confirm('確認清除共享標記？')) {
+      const activeWindow = state.pipWindow || window;
+      if (activeWindow.confirm('確認清除共享標記？')) {
         send('clear_shared', { roomCode: state.roomCode });
       }
     };
 
-    ensureUtilityButtons();
-    ensureFloatingWindow();
-
     $('#createRoomBtn').onclick = () => joinOrCreate('create');
     $('#joinRoomBtn').onclick = () => joinOrCreate('join');
     $('#randomRoomBtn').onclick = () => $('#createRoomCode').value = randomRoomCode();
+    $('#floatRoomBtn').onclick = toggleFloatWindow;
     $('#copyRoomBtn').onclick = copyRoomInfo;
     $('#clearSharedBtn').onclick = handleClearShared;
     $('#clearSharedBtn2').onclick = handleClearShared;
     $('#leaveRoomBtn').onclick = () => leaveRoomLocal(true);
-    $('#renameBtn').onclick = promptRename;
-    $('#floatingBtn').onclick = () => toggleFloatingWindow();
 
     if($('#saveBackendBtn')){
       $('#saveBackendBtn').onclick = () => {
@@ -1028,6 +895,7 @@
     }
 
     renderBackendSettings();
+    updateFloatButtonLabel();
     applyHashAutoJoin();
     if($('#joinRoomCode').value && new URLSearchParams(location.search).get('autojoin') !== '1'){
       showToast('已從網址帶入房號');
