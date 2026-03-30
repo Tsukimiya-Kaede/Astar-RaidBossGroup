@@ -16,7 +16,7 @@ function getOrCreateRoom(code, password = '') {
       password,
       colors: { red: null, blue: null, green: null, yellow: null },
       members: new Map(), // clientId -> { clientId, ws, color }
-      board: Array.from({ length: 10 }, () => ({})), // floor 1..10 => { red:door, blue:door... }
+      board: Array.from({ length: 10 }, () => ({ picks: {}, wrongs: {} })),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -24,7 +24,26 @@ function getOrCreateRoom(code, password = '') {
   return rooms.get(code);
 }
 
+function normalizeFloorState(floorState) {
+  if (!floorState || typeof floorState !== 'object') {
+    return { picks: {}, wrongs: {} };
+  }
+  if ('picks' in floorState || 'wrongs' in floorState) {
+    return {
+      picks: { ...(floorState.picks || {}) },
+      wrongs: { ...(floorState.wrongs || {}) },
+    };
+  }
+  return { picks: { ...floorState }, wrongs: {} };
+}
+
+function forEachFloor(room, callback) {
+  room.board = room.board.map(normalizeFloorState);
+  room.board.forEach((floorState, index) => callback(floorState, index));
+}
+
 function serializeRoom(room) {
+  room.board = room.board.map(normalizeFloorState);
   return {
     code: room.code,
     memberCount: room.members.size,
@@ -55,6 +74,19 @@ function leaveRoom(client, roomCode) {
 
   const member = room.members.get(client.clientId);
   if (member) {
+    if (member.color) {
+      forEachFloor(room, (floorState) => {
+        if (floorState.picks[member.color]) {
+          delete floorState.picks[member.color];
+        }
+        Object.keys(floorState.wrongs).forEach((door) => {
+          const colors = Array.isArray(floorState.wrongs[door]) ? floorState.wrongs[door] : [];
+          const nextColors = colors.filter((color) => color !== member.color);
+          if (nextColors.length > 0) floorState.wrongs[door] = nextColors;
+          else delete floorState.wrongs[door];
+        });
+      });
+    }
     if (member.color && room.colors[member.color] === client.clientId) {
       room.colors[member.color] = null;
     }
@@ -76,6 +108,7 @@ function handleSelectColor(client, room, color) {
   }
   const me = room.members.get(client.clientId);
   if (!me) return;
+  const previousColor = me.color;
 
   // release old color
   if (me.color && room.colors[me.color] === client.clientId) {
@@ -87,6 +120,21 @@ function handleSelectColor(client, room, color) {
     // revert previous color if taken
     if (me.color) room.colors[me.color] = client.clientId;
     return safeSend(client.ws, { type: 'error', message: '這個顏色已被選走' });
+  }
+
+  if (previousColor && previousColor !== color) {
+    forEachFloor(room, (floorState) => {
+      if (floorState.picks[previousColor]) {
+        floorState.picks[color] = floorState.picks[previousColor];
+        delete floorState.picks[previousColor];
+      }
+      Object.keys(floorState.wrongs).forEach((door) => {
+        const colors = Array.isArray(floorState.wrongs[door]) ? floorState.wrongs[door] : [];
+        if (!colors.includes(previousColor)) return;
+        const nextColors = colors.map((item) => (item === previousColor ? color : item));
+        floorState.wrongs[door] = [...new Set(nextColors)].slice(0, 3);
+      });
+    });
   }
 
   room.colors[color] = client.clientId;
@@ -105,26 +153,66 @@ function handleToggleShared(client, room, floor, door) {
   if (floor < 1 || floor > 10 || door < 1 || door > 4) {
     return safeSend(client.ws, { type: 'error', message: '無效座標' });
   }
-  const floorState = room.board[floor - 1];
+  const floorState = normalizeFloorState(room.board[floor - 1]);
+  room.board[floor - 1] = floorState;
+  const picks = floorState.picks;
+  const wrongs = floorState.wrongs;
 
   // Each door can only be occupied by one color.
-  for (const [color, pickedDoor] of Object.entries(floorState)) {
+  for (const [color, pickedDoor] of Object.entries(picks)) {
     if (pickedDoor === door && color !== me.color) {
       return safeSend(client.ws, { type: 'error', message: '此門已被其他顏色占用' });
     }
   }
 
-  if (floorState[me.color] === door) {
-    delete floorState[me.color];
+  if (picks[me.color] === door) {
+    delete picks[me.color];
   } else {
-    floorState[me.color] = door;
+    picks[me.color] = door;
+    delete wrongs[String(door)];
   }
   room.updatedAt = Date.now();
   broadcastRoomState(room);
 }
 
+function handleToggleWrong(client, room, floor, door) {
+  const me = room.members.get(client.clientId);
+  if (!me || !me.color) {
+    return safeSend(client.ws, { type: 'error', message: '請先選擇顏色' });
+  }
+  floor = Number(floor);
+  door = Number(door);
+  if (floor < 1 || floor > 10 || door < 1 || door > 4) {
+    return safeSend(client.ws, { type: 'error', message: '無效座標' });
+  }
+
+  const floorState = normalizeFloorState(room.board[floor - 1]);
+  room.board[floor - 1] = floorState;
+  const picks = floorState.picks;
+  const wrongs = floorState.wrongs;
+
+  if (Object.values(picks).includes(door)) {
+    return safeSend(client.ws, { type: 'error', message: '已有共享正解，無法加上 X 標記' });
+  }
+
+  const key = String(door);
+  const colors = Array.isArray(wrongs[key]) ? wrongs[key] : [];
+  if (colors.includes(me.color)) {
+    wrongs[key] = colors.filter((color) => color !== me.color);
+    if (wrongs[key].length === 0) delete wrongs[key];
+  } else {
+    if (colors.length >= 3) {
+      return safeSend(client.ws, { type: 'error', message: '同一格最多只能有三個共享 X 標記' });
+    }
+    wrongs[key] = [...colors, me.color];
+  }
+
+  room.updatedAt = Date.now();
+  broadcastRoomState(room);
+}
+
 function handleClearShared(client, room) {
-  for (let i = 0; i < 10; i++) room.board[i] = {};
+  for (let i = 0; i < 10; i++) room.board[i] = { picks: {}, wrongs: {} };
   room.updatedAt = Date.now();
   broadcastRoomState(room);
 }
@@ -211,6 +299,12 @@ wss.on('connection', (ws) => {
           const room = rooms.get(client.roomCode);
           if (!room) return safeSend(ws, { type: 'error', message: '尚未加入房間' });
           handleToggleShared(client, room, msg.floor, msg.door);
+          break;
+        }
+        case 'toggle_wrong': {
+          const room = rooms.get(client.roomCode);
+          if (!room) return safeSend(ws, { type: 'error', message: '尚未加入房間' });
+          handleToggleWrong(client, room, msg.floor, msg.door);
           break;
         }
         case 'clear_shared': {
